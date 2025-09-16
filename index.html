@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Game</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 25px;
+            background: #ccc;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: #667eea;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 21px;
+            height: 21px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(25px);
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 1px;
+            background: #333;
+            border: 3px solid #333;
+            margin: 20px auto;
+            max-width: 450px;
+            aspect-ratio: 1;
+        }
+
+        .sudoku-grid .cell {
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 300;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            color: #0066CC;
+        }
+
+        .sudoku-grid .cell:hover {
+            background: #e3f2fd;
+        }
+
+        .sudoku-grid .cell.selected {
+            background: #FFFFAA !important;
+            color: #333 !important;
+            border: 2px solid #FFD700 !important;
+        }
+
+        .sudoku-grid .cell.given {
+            background: #f5f5f5 !important;
+            color: #000 !important;
+            cursor: default;
+            font-weight: 900 !important;
+        }
+
+        .sudoku-grid .cell.row-highlight {
+            background: #FFFFE6 !important;
+        }
+
+        .sudoku-grid .cell.col-highlight {
+            background: #FFFFE6 !important;
+        }
+
+        .sudoku-grid .cell.row-highlight.col-highlight {
+            background: #FFFFD4 !important;
+        }
+
+        .sudoku-grid .cell.given.row-highlight,
+        .sudoku-grid .cell.given.col-highlight {
+            background: #F5F5D3 !important;
+        }
+
+        .sudoku-grid .cell.number-highlight {
+            background: #EFEFBC !important;
+            color: #333 !important;
+            font-weight: bold !important;
+        }
+
+        .sudoku-grid .cell.conflict {
+            background: #ffebee !important;
+            color: #d32f2f !important;
+        }
+
+        .sudoku-grid .cell.conflict.selected {
+            background: #f44336 !important;
+            color: white !important;
+        }
+
+        .cell:nth-child(3n):not(:nth-child(9n)) {
+            border-right: 2px solid #333;
+        }
+
+        .cell:nth-child(n+19):nth-child(-n+27),
+        .cell:nth-child(n+46):nth-child(-n+54) {
+            border-bottom: 2px solid #333;
+        }
+
+        .number-pad {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin: 20px auto;
+            max-width: 300px;
+        }
+
+        .number-btn {
+            aspect-ratio: 1;
+            font-size: 20px;
+            font-weight: bold;
+            position: relative;
+        }
+
+        .number-btn.disabled {
+            background: #e0e0e0 !important;
+            color: #999 !important;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .number-count {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 4px;
+            border-radius: 8px;
+            line-height: 1;
+            min-width: 12px;
+            text-align: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .number-btn.disabled .number-count {
+            background: rgba(200, 200, 200, 0.9);
+            color: #666;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .message {
+            text-align: center;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .candidates {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 8px;
+            color: #888;
+            line-height: 1;
+            pointer-events: none;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1px;
+            max-width: 80%;
+        }
+
+        .candidate-number {
+            font-size: 8px;
+            color: #888;
+            width: 8px;
+            height: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes completionFlash {
+            0% { background-color: inherit; }
+            50% { background-color: #4CAF50; color: white; }
+            100% { background-color: inherit; }
+        }
+
+        .completion-flash {
+            animation: completionFlash 0.8s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🧩 Sudoku</h1>
+        
+        <div class="controls">
+            <button onclick="newGame('easy')">Easy</button>
+            <button onclick="newGame('medium')">Medium</button>
+            <button onclick="newGame('hard')">Hard</button>
+            <button onclick="newGame('test')" style="background: #ff6b6b;">Super Easy (Test)</button>
+            <button onclick="undo()" id="undo-btn">↶ Undo</button>
+            <button onclick="redo()" id="redo-btn">↷ Redo</button>
+            <button onclick="clearCell()">Clear</button>
+            <button onclick="showHint()">Hint</button>
+        </div>
+
+        <div class="toggle-container">
+            <span class="toggle-label">Show Candidates</span>
+            <div class="toggle-switch active" id="candidates-toggle" onclick="toggleCandidates()">
+                <div class="toggle-slider"></div>
+            </div>
+        </div>
+
+        <div class="toggle-container">
+            <span class="toggle-label">Number First Mode</span>
+            <button onclick="toggleNumberFirstMode()" id="number-first-btn" style="padding: 8px 16px; border-radius: 8px; border: none; background: #ccc; cursor: pointer;">OFF</button>
+        </div>
+
+        <div class="toggle-container">
+            <span class="toggle-label">Show Mistakes</span>
+            <div class="toggle-switch active" id="mistakes-toggle" onclick="toggleShowMistakes()">
+                <div class="toggle-slider"></div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">Time</div>
+                <div class="stat-value" id="timer">00:00</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Difficulty</div>
+                <div class="stat-value" id="difficulty">Easy</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Completed</div>
+                <div class="stat-value" id="progress">0%</div>
+            </div>
+        </div>
+
+        <div id="message" class="message" style="display: none;"></div>
+
+        <div class="sudoku-grid" id="grid"></div>
+
+        <div class="number-pad">
+            <button class="number-btn" id="num-btn-1" onclick="inputNumber(1)">1<span class="number-count" id="count-1">9</span></button>
+            <button class="number-btn" id="num-btn-2" onclick="inputNumber(2)">2<span class="number-count" id="count-2">9</span></button>
+            <button class="number-btn" id="num-btn-3" onclick="inputNumber(3)">3<span class="number-count" id="count-3">9</span></button>
+            <button class="number-btn" id="num-btn-4" onclick="inputNumber(4)">4<span class="number-count" id="count-4">9</span></button>
+            <button class="number-btn" id="num-btn-5" onclick="inputNumber(5)">5<span class="number-count" id="count-5">9</span></button>
+            <button class="number-btn" id="num-btn-6" onclick="inputNumber(6)">6<span class="number-count" id="count-6">9</span></button>
+            <button class="number-btn" id="num-btn-7" onclick="inputNumber(7)">7<span class="number-count" id="count-7">9</span></button>
+            <button class="number-btn" id="num-btn-8" onclick="inputNumber(8)">8<span class="number-count" id="count-8">9</span></button>
+            <button class="number-btn" id="num-btn-9" onclick="inputNumber(9)">9<span class="number-count" id="count-9">9</span></button>
+            <button class="number-btn" id="clear-btn" onclick="handleClearButton()">✖</button>
+        </div>
+    </div>
+
+    <script>
+        // Global functions defined at top level
+        function toggleNumberFirstMode() {
+            if (game) {
+                game.toggleNumberFirstMode();
+                const button = document.getElementById('number-first-btn');
+                if (button) {
+                    button.textContent = game.numberFirstMode ? 'ON' : 'OFF';
+                    button.style.background = game.numberFirstMode ? '#667eea' : '#ccc';
+                    button.style.color = game.numberFirstMode ? 'white' : 'black';
+                }
+            }
+        }
+
+        function toggleCandidates() {
+            if (game) {
+                game.toggleCandidates();
+                const toggle = document.getElementById('candidates-toggle');
+                if (game.showCandidates) {
+                    toggle.classList.add('active');
+                } else {
+                    toggle.classList.remove('active');
+                }
+            }
+        }
+
+        function toggleShowMistakes() {
+            if (game) {
+                game.toggleShowMistakes();
+                const toggle = document.getElementById('mistakes-toggle');
+                if (game.showMistakes) {
+                    toggle.classList.add('active');
+                } else {
+                    toggle.classList.remove('active');
+                }
+            }
+        }
+
+        function handleClearButton() {
+            if (game) {
+                if (game.numberFirstMode) {
+                    game.selectClearMode();
+                } else {
+                    game.clearCell();
+                }
+            }
+        }
+
+        function undo() {
+            if (game) game.undo();
+        }
+
+        function redo() {
+            if (game) game.redo();
+        }
+
+        class SudokuGame {
+            constructor() {
+                this.grid = Array(9).fill().map(() => Array(9).fill(0));
+                this.solution = Array(9).fill().map(() => Array(9).fill(0));
+                this.givens = Array(9).fill().map(() => Array(9).fill(false));
+                this.selectedCell = null;
+                this.timer = 0;
+                this.timerInterval = null;
+                this.difficulty = 'easy';
+                this.showCandidates = true;
+                this.numberFirstMode = false;
+                this.selectedNumber = null;
+                this.clearModeSelected = false;
+                this.showMistakes = true;
+                this.completedRows = new Set();
+                this.completedColumns = new Set();
+                this.completedBoxes = new Set();
+                this.history = [];
+                this.historyIndex = -1;
+                
+                this.initializeGrid();
+                this.generatePuzzle('easy');
+            }
+
+            initializeGrid() {
+                const gridElement = document.getElementById('grid');
+                gridElement.innerHTML = '';
+                
+                for (let i = 0; i < 81; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.index = i;
+                    cell.addEventListener('click', () => this.selectCell(i));
+                    gridElement.appendChild(cell);
+                }
+            }
+
+            generateCompleteSolution() {
+                this.solution = Array(9).fill().map(() => Array(9).fill(0));
+                this.solvePuzzle(this.solution);
+                return this.solution;
+            }
+
+            solvePuzzle(grid) {
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        if (grid[row][col] === 0) {
+                            const numbers = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
+                            
+                            for (let num of numbers) {
+                                if (this.isValidMove(grid, row, col, num)) {
+                                    grid[row][col] = num;
+                                    if (this.solvePuzzle(grid)) return true;
+                                    grid[row][col] = 0;
+                                }
+                            }
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            generatePuzzle(difficulty) {
+                this.difficulty = difficulty;
+                document.getElementById('difficulty').textContent = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+                
+                this.generateCompleteSolution();
+                this.grid = this.solution.map(row => [...row]);
+                
+                const removeCount = difficulty === 'test' ? 5 : {'easy': 35, 'medium': 45, 'hard': 55}[difficulty];
+                this.givens = Array(9).fill().map(() => Array(9).fill(true));
+                
+                const positions = Array.from({length: 81}, (_, i) => i).sort(() => Math.random() - 0.5);
+                
+                for (let i = 0; i < removeCount; i++) {
+                    const pos = positions[i];
+                    const row = Math.floor(pos / 9);
+                    const col = pos % 9;
+                    this.grid[row][col] = 0;
+                    this.givens[row][col] = false;
+                }
+                
+                this.completedRows = new Set();
+                this.completedColumns = new Set();
+                this.completedBoxes = new Set();
+                this.history = [];
+                this.historyIndex = -1;
+                
+                this.updateDisplay();
+                this.startTimer();
+                this.showMessage('New puzzle generated! Good luck!', 'success');
+                this.saveState();
+            }
+
+            isValidMove(grid, row, col, num) {
+                // Check row
+                for (let c = 0; c < 9; c++) {
+                    if (grid[row][c] === num) return false;
+                }
+                // Check column
+                for (let r = 0; r < 9; r++) {
+                    if (grid[r][col] === num) return false;
+                }
+                // Check 3x3 box
+                const boxRow = Math.floor(row / 3) * 3;
+                const boxCol = Math.floor(col / 3) * 3;
+                for (let r = boxRow; r < boxRow + 3; r++) {
+                    for (let c = boxCol; c < boxCol + 3; c++) {
+                        if (grid[r][c] === num) return false;
+                    }
+                }
+                return true;
+            }
+
+            selectCell(index) {
+                const row = Math.floor(index / 9);
+                const col = index % 9;
+                
+                if (this.givens[row][col]) return;
+                
+                if (this.numberFirstMode && (this.selectedNumber !== null || this.clearModeSelected)) {
+                    const oldValue = this.grid[row][col];
+                    const newValue = this.clearModeSelected ? 0 : this.selectedNumber;
+                    
+                    if (oldValue !== newValue) {
+                        this.grid[row][col] = newValue;
+                        this.saveState();
+                        this.updateDisplay();
+                        this.updateProgress();
+                        if (this.isPuzzleComplete()) this.completePuzzle();
+                    }
+                } else {
+                    this.selectedCell = { row, col, index };
+                    this.updateDisplay();
+                }
+            }
+
+            inputNumber(num) {
+                if (this.numberFirstMode) {
+                    this.selectNumberForPlacement(num);
+                } else {
+                    if (!this.selectedCell) {
+                        this.showMessage('Please select a cell first', 'error');
+                        return;
+                    }
+                    const { row, col } = this.selectedCell;
+                    if (this.givens[row][col]) return;
+                    
+                    const oldValue = this.grid[row][col];
+                    if (oldValue !== num) {
+                        this.grid[row][col] = num;
+                        this.saveState();
+                        this.updateDisplay();
+                        this.updateProgress();
+                        if (this.isPuzzleComplete()) this.completePuzzle();
+                    }
+                }
+            }
+
+            selectNumberForPlacement(num) {
+                if (this.selectedNumber === num) {
+                    this.selectedNumber = null;
+                } else {
+                    this.selectedNumber = num;
+                    this.clearModeSelected = false;
+                }
+                this.updateNumberPadSelection();
+                this.updateDisplay();
+            }
+
+            selectClearMode() {
+                this.clearModeSelected = !this.clearModeSelected;
+                if (this.clearModeSelected) this.selectedNumber = null;
+                this.updateNumberPadSelection();
+            }
+
+            clearCell() {
+                if (!this.selectedCell) {
+                    this.showMessage('Please select a cell first', 'error');
+                    return;
+                }
+                const { row, col } = this.selectedCell;
+                if (this.givens[row][col]) return;
+                
+                const oldValue = this.grid[row][col];
+                if (oldValue !== 0) {
+                    this.grid[row][col] = 0;
+                    this.saveState();
+                    this.updateDisplay();
+                    this.updateProgress();
+                }
+            }
+
+            saveState() {
+                if (this.historyIndex < this.history.length - 1) {
+                    this.history = this.history.slice(0, this.historyIndex + 1);
+                }
+                
+                this.history.push({
+                    grid: this.grid.map(row => [...row]),
+                    completedRows: new Set(this.completedRows),
+                    completedColumns: new Set(this.completedColumns),
+                    completedBoxes: new Set(this.completedBoxes)
+                });
+                
+                this.historyIndex = this.history.length - 1;
+                this.updateUndoRedoButtons();
+            }
+
+            undo() {
+                if (this.historyIndex > 0) {
+                    this.historyIndex--;
+                    this.restoreState(this.history[this.historyIndex]);
+                    this.updateDisplay();
+                    this.updateProgress();
+                    this.updateUndoRedoButtons();
+                }
+            }
+
+            redo() {
+                if (this.historyIndex < this.history.length - 1) {
+                    this.historyIndex++;
+                    this.restoreState(this.history[this.historyIndex]);
+                    this.updateDisplay();
+                    this.updateProgress();
+                    this.updateUndoRedoButtons();
+                }
+            }
+
+            restoreState(state) {
+                this.grid = state.grid.map(row => [...row]);
+                this.completedRows = new Set(state.completedRows);
+                this.completedColumns = new Set(state.completedColumns);
+                this.completedBoxes = new Set(state.completedBoxes);
+            }
+
+            updateUndoRedoButtons() {
+                const undoBtn = document.getElementById('undo-btn');
+                const redoBtn = document.getElementById('redo-btn');
+                
+                if (undoBtn) {
+                    undoBtn.disabled = this.historyIndex <= 0;
+                    undoBtn.style.opacity = this.historyIndex <= 0 ? '0.5' : '1';
+                }
+                
+                if (redoBtn) {
+                    redoBtn.disabled = this.historyIndex >= this.history.length - 1;
+                    redoBtn.style.opacity = this.historyIndex >= this.history.length - 1 ? '0.5' : '1';
+                }
+            }
+
+            updateDisplay() {
+                const cells = document.querySelectorAll('.cell');
+                
+                cells.forEach((cell, index) => {
+                    const row = Math.floor(index / 9);
+                    const col = index % 9;
+                    const value = this.grid[row][col];
+                    
+                    cell.innerHTML = '';
+                    cell.className = 'cell';
+                    
+                    if (value === 0) {
+                        if (this.showCandidates) {
+                            const candidates = this.getCandidates(row, col);
+                            if (candidates.length > 0) {
+                                const candidateContainer = document.createElement('div');
+                                candidateContainer.className = 'candidates';
+                                for (let num = 1; num <= 9; num++) {
+                                    const candidateDiv = document.createElement('div');
+                                    candidateDiv.className = 'candidate-number';
+                                    if (candidates.includes(num)) candidateDiv.textContent = num;
+                                    candidateContainer.appendChild(candidateDiv);
+                                }
+                                cell.appendChild(candidateContainer);
+                            }
+                        }
+                    } else {
+                        cell.textContent = value;
+                    }
+                    
+                    if (this.givens[row][col]) cell.classList.add('given');
+                    
+                    if (this.selectedCell) {
+                        const selectedRow = this.selectedCell.row;
+                        const selectedCol = this.selectedCell.col;
+                        const selectedValue = this.grid[selectedRow][selectedCol];
+                        
+                        if (this.selectedCell.index === index) {
+                            cell.classList.add('selected');
+                        } else {
+                            if (row === selectedRow) cell.classList.add('row-highlight');
+                            if (col === selectedCol) cell.classList.add('col-highlight');
+                            if (selectedValue !== 0 && value !== 0 && value === selectedValue) {
+                                cell.classList.add('number-highlight');
+                            }
+                        }
+                    }
+                    
+                    if (this.numberFirstMode && this.selectedNumber !== null && value === this.selectedNumber) {
+                        cell.classList.add('number-highlight');
+                    }
+                });
+                
+                this.checkConflicts();
+                this.updateNumberPad();
+                this.checkCompletions();
+            }
+
+            getCandidates(row, col) {
+                const candidates = [];
+                for (let num = 1; num <= 9; num++) {
+                    if (this.isValidMove(this.grid, row, col, num)) {
+                        candidates.push(num);
+                    }
+                }
+                return candidates;
+            }
+
+            checkConflicts() {
+                const cells = document.querySelectorAll('.cell');
+                cells.forEach(cell => cell.classList.remove('conflict'));
+                
+                if (!this.showMistakes) return;
+                
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        const value = this.grid[row][col];
+                        if (value === 0) continue;
+                        
+                        let hasConflict = false;
+                        
+                        for (let c = 0; c < 9; c++) {
+                            if (c !== col && this.grid[row][c] === value) {
+                                hasConflict = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!hasConflict) {
+                            for (let r = 0; r < 9; r++) {
+                                if (r !== row && this.grid[r][col] === value) {
+                                    hasConflict = true;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (!hasConflict) {
+                            const boxRow = Math.floor(row / 3) * 3;
+                            const boxCol = Math.floor(col / 3) * 3;
+                            for (let r = boxRow; r < boxRow + 3; r++) {
+                                for (let c = boxCol; c < boxCol + 3; c++) {
+                                    if ((r !== row || c !== col) && this.grid[r][c] === value) {
+                                        hasConflict = true;
+                                        break;
+                                    }
+                                }
+                                if (hasConflict) break;
+                            }
+                        }
+                        
+                        if (hasConflict) {
+                            const cellIndex = row * 9 + col;
+                            if (cells[cellIndex]) {
+                                cells[cellIndex].classList.add('conflict');
+                            }
+                        }
+                    }
+                }
+            }
+
+            updateNumberPad() {
+                for (let num = 1; num <= 9; num++) {
+                    const button = document.getElementById(`num-btn-${num}`);
+                    const countSpan = document.getElementById(`count-${num}`);
+                    if (!button) continue;
+                    
+                    let count = 0;
+                    for (let row = 0; row < 9; row++) {
+                        for (let col = 0; col < 9; col++) {
+                            if (this.grid[row][col] === num) count++;
+                        }
+                    }
+                    
+                    const remaining = 9 - count;
+                    
+                    if (countSpan) {
+                        countSpan.textContent = remaining;
+                    }
+                    
+                    if (remaining <= 0) {
+                        button.classList.add('disabled');
+                        button.disabled = true;
+                    } else {
+                        button.classList.remove('disabled');
+                        button.disabled = false;
+                    }
+                }
+            }
+
+            updateNumberPadSelection() {
+                for (let num = 1; num <= 9; num++) {
+                    const button = document.getElementById(`num-btn-${num}`);
+                    if (button) {
+                        if (this.numberFirstMode && this.selectedNumber === num) {
+                            button.style.background = '#FFD700';
+                            button.style.transform = 'scale(1.05)';
+                            button.style.boxShadow = '0 0 15px rgba(255, 215, 0, 0.5)';
+                        } else {
+                            button.style.background = '';
+                            button.style.transform = '';
+                            button.style.boxShadow = '';
+                        }
+                    }
+                }
+                
+                const clearButton = document.getElementById('clear-btn');
+                if (clearButton) {
+                    if (this.numberFirstMode && this.clearModeSelected) {
+                        clearButton.style.background = '#ff6b6b';
+                        clearButton.style.transform = 'scale(1.05)';
+                        clearButton.style.boxShadow = '0 0 15px rgba(255, 107, 107, 0.5)';
+                    } else {
+                        clearButton.style.background = '';
+                        clearButton.style.transform = '';
+                        clearButton.style.boxShadow = '';
+                    }
+                }
+            }
+
+            checkCompletions() {
+                for (let i = 0; i < 9; i++) {
+                    if (this.isRowComplete(i) && !this.completedRows.has(i)) {
+                        this.celebrateCompletion('row', i);
+                        this.completedRows.add(i);
+                    }
+                    if (this.isColumnComplete(i) && !this.completedColumns.has(i)) {
+                        this.celebrateCompletion('column', i);
+                        this.completedColumns.add(i);
+                    }
+                }
+                
+                for (let boxRow = 0; boxRow < 3; boxRow++) {
+                    for (let boxCol = 0; boxCol < 3; boxCol++) {
+                        const boxKey = `${boxRow}-${boxCol}`;
+                        if (this.isBoxComplete(boxRow, boxCol) && !this.completedBoxes.has(boxKey)) {
+                            this.celebrateCompletion('box', boxRow * 3 + boxCol);
+                            this.completedBoxes.add(boxKey);
+                        }
+                    }
+                }
+            }
+
+            isRowComplete(row) {
+                const numbers = new Set();
+                for (let col = 0; col < 9; col++) {
+                    const value = this.grid[row][col];
+                    if (value === 0) return false;
+                    numbers.add(value);
+                }
+                return numbers.size === 9;
+            }
+
+            isColumnComplete(col) {
+                const numbers = new Set();
+                for (let row = 0; row < 9; row++) {
+                    const value = this.grid[row][col];
+                    if (value === 0) return false;
+                    numbers.add(value);
+                }
+                return numbers.size === 9;
+            }
+
+            isBoxComplete(boxRow, boxCol) {
+                const numbers = new Set();
+                for (let r = boxRow * 3; r < (boxRow + 1) * 3; r++) {
+                    for (let c = boxCol * 3; c < (boxCol + 1) * 3; c++) {
+                        const value = this.grid[r][c];
+                        if (value === 0) return false;
+                        numbers.add(value);
+                    }
+                }
+                return numbers.size === 9;
+            }
+
+            celebrateCompletion(type, index) {
+                const cells = document.querySelectorAll('.cell');
+                const cellsToHighlight = [];
+                
+                if (type === 'row') {
+                    for (let col = 0; col < 9; col++) {
+                        cellsToHighlight.push(index * 9 + col);
+                    }
+                } else if (type === 'column') {
+                    for (let row = 0; row < 9; row++) {
+                        cellsToHighlight.push(row * 9 + index);
+                    }
+                } else if (type === 'box') {
+                    const boxRow = Math.floor(index / 3);
+                    const boxCol = index % 3;
+                    for (let r = boxRow * 3; r < (boxRow + 1) * 3; r++) {
+                        for (let c = boxCol * 3; c < (boxCol + 1) * 3; c++) {
+                            cellsToHighlight.push(r * 9 + c);
+                        }
+                    }
+                }
+                
+                cellsToHighlight.forEach(cellIndex => {
+                    if (cells[cellIndex]) {
+                        cells[cellIndex].classList.add('completion-flash');
+                        setTimeout(() => {
+                            cells[cellIndex].classList.remove('completion-flash');
+                        }, 800);
+                    }
+                });
+            }
+
+            toggleCandidates() {
+                this.showCandidates = !this.showCandidates;
+                this.updateDisplay();
+            }
+
+            toggleNumberFirstMode() {
+                this.numberFirstMode = !this.numberFirstMode;
+                if (!this.numberFirstMode) {
+                    this.selectedNumber = null;
+                    this.clearModeSelected = false;
+                }
+                this.updateNumberPadSelection();
+                this.updateDisplay();
+            }
+
+            toggleShowMistakes() {
+                this.showMistakes = !this.showMistakes;
+                this.updateDisplay();
+            }
+
+            updateProgress() {
+                const filledCells = this.grid.flat().filter(cell => cell !== 0).length;
+                const progress = Math.round((filledCells / 81) * 100);
+                document.getElementById('progress').textContent = progress + '%';
+            }
+
+            isPuzzleComplete() {
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        if (this.grid[row][col] === 0) return false;
+                    }
+                }
+                const conflictCells = document.querySelectorAll('.cell.conflict');
+                return conflictCells.length === 0;
+            }
+
+            completePuzzle() {
+                this.stopTimer();
+                const timeStr = document.getElementById('timer').textContent;
+                this.showMessage(`🎉 CONGRATULATIONS! You completed the ${this.difficulty} puzzle in ${timeStr}! 🎉`, 'success');
+            }
+
+            showHint() {
+                const emptyCells = [];
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        if (this.grid[row][col] === 0) {
+                            emptyCells.push({ row, col });
+                        }
+                    }
+                }
+                
+                if (emptyCells.length === 0) {
+                    this.showMessage('No empty cells to hint!', 'error');
+                    return;
+                }
+                
+                const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                const { row, col } = randomCell;
+                const correctNumber = this.solution[row][col];
+                
+                this.grid[row][col] = correctNumber;
+                this.saveState();
+                this.updateDisplay();
+                this.updateProgress();
+                
+                this.showMessage(`Hint: Added ${correctNumber} at row ${row + 1}, column ${col + 1}`, 'success');
+                
+                if (this.isPuzzleComplete()) this.completePuzzle();
+            }
+
+            startTimer() {
+                this.stopTimer();
+                this.timer = 0;
+                
+                this.timerInterval = setInterval(() => {
+                    this.timer++;
+                    const minutes = Math.floor(this.timer / 60);
+                    const seconds = this.timer % 60;
+                    document.getElementById('timer').textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }, 1000);
+            }
+
+            stopTimer() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+            }
+
+            showMessage(text, type = 'success') {
+                const messageEl = document.getElementById('message');
+                messageEl.textContent = text;
+                messageEl.className = `message ${type}`;
+                messageEl.style.display = 'block';
+                
+                setTimeout(() => {
+                    messageEl.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        let game;
+
+        function newGame(difficulty) {
+            game = new SudokuGame();
+            game.generatePuzzle(difficulty);
+        }
+
+        function inputNumber(num) {
+            const button = document.getElementById(`num-btn-${num}`);
+            if (button && button.disabled) return;
+            if (game) game.inputNumber(num);
+        }
+
+        function clearCell() {
+            if (game) game.clearCell();
+        }
+
+        function showHint() {
+            if (game) game.showHint();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            game = new SudokuGame();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '1' && e.key <= '9') {
+                inputNumber(parseInt(e.key));
+            } else if (e.key === 'Backspace' || e.key === 'Delete') {
+                clearCell();
+            }
+        });
+    </script>
+</body>
+</html>
