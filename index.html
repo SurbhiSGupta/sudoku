@@ -186,15 +186,23 @@
         }
 
         .number-pad {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
         gap: 6px;
         margin: 20px auto;
-        max-width: 280px;
-        width: calc(100vw - 40px);
-        padding: 0;
+        max-width: 300px;
+        width: 100%;
+        padding: 0 20px;
         box-sizing: border-box;
-        justify-self: center;
+        }
+    
+        .number-btn {
+        flex: 0 0 calc(20% - 5px);
+        aspect-ratio: 1;
+        font-size: 20px;
+        font-weight: bold;
+        position: relative;
         }
         
         .number-btn {
