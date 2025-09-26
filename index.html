@@ -186,29 +186,19 @@
       }
 
       .number-pad {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 6px;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(50px, 70px));
+        gap: clamp(8px, 4vw, 20px);
         margin: 20px auto;
-        max-width: 300px;
-        width: 100%;
-        padding: 0 20px;
+        justify-content: center;
+        padding: 0 10px;
         box-sizing: border-box;
       }
 
       .number-btn {
-        flex: 0 0 calc(20% - 5px);
         aspect-ratio: 1;
-        font-size: 20px;
-        font-weight: bold;
-        position: relative;
-      }
-
-      .number-btn {
-        aspect-ratio: 1;
-        font-size: 20px;
-        font-weight: bold;
+        font-size: clamp(24px, 4vw, 24px);
+        font-weight: medium;
         position: relative;
       }
 
@@ -221,16 +211,16 @@
 
       .number-count {
         position: absolute;
-        top: 2px;
+        top: 1px;
         right: 2px;
-        background: rgba(255, 255, 255, 0.9);
-        color: #333;
-        font-size: 10px;
-        font-weight: 600;
+        background: rgba(0, 0, 0, 0.1);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 200;
         padding: 1px 4px;
-        border-radius: 8px;
+        border-radius: 2px;
         line-height: 1;
-        min-width: 12px;
+        min-width: 8px;
         text-align: center;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
       }
