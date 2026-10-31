@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sudoku Game</title>
     <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
       body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -25,19 +31,79 @@
         width: 100%;
       }
 
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+
       h1 {
-        text-align: center;
         color: #333;
-        margin-bottom: 30px;
+        margin: 0;
         font-size: 2.5em;
+      }
+
+      .icon-btn {
+        background: #f0f0f5;
+        color: #333;
+        padding: 10px 14px;
+        font-size: 20px;
+        box-shadow: none;
+      }
+
+      .icon-btn[aria-expanded="true"] {
+        background: #667eea;
+      }
+
+      .settings-panel {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px 15px 0;
+        margin-bottom: 15px;
+      }
+
+      .settings-panel[hidden] {
+        display: none;
       }
 
       .controls {
         display: flex;
         justify-content: center;
-        gap: 15px;
+        gap: 10px;
         margin-bottom: 20px;
-        flex-wrap: wrap;
+      }
+
+      .controls select {
+        flex: 1;
+        max-width: 220px;
+        padding: 12px;
+        border-radius: 8px;
+        border: 2px solid #667eea;
+        background: white;
+        color: #333;
+        font-size: 16px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        max-width: 450px;
+        margin: 0 auto;
+      }
+
+      .actions button {
+        padding: 10px 6px;
+        font-size: 15px;
+      }
+
+      .actions button[aria-pressed="true"] {
+        background: #ffd700;
+        color: #333;
       }
 
       .toggle-container {
@@ -45,7 +111,7 @@
         align-items: center;
         gap: 10px;
         margin-bottom: 15px;
-        justify-content: center;
+        justify-content: space-between;
       }
 
       .toggle-switch {
@@ -255,12 +321,21 @@
         color: #333;
       }
 
+      /* Floating toast so messages don't push the grid around */
       .message {
+        position: fixed;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+        width: max-content;
+        max-width: calc(100% - 32px);
         text-align: center;
-        padding: 15px;
-        margin: 15px 0;
+        padding: 12px 18px;
         border-radius: 8px;
         font-weight: 600;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
       }
 
       .message.success {
@@ -277,26 +352,93 @@
 
       .candidates {
         position: absolute;
-        top: 2px;
-        left: 2px;
-        font-size: 8px;
+        inset: 2px;
+        font-size: 9px;
         color: #888;
         line-height: 1;
         pointer-events: none;
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 1px;
-        max-width: 80%;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+      }
+
+      .candidates.user-notes {
+        color: #3949ab;
+        font-weight: 700;
       }
 
       .candidate-number {
-        font-size: 8px;
-        color: #888;
-        width: 8px;
-        height: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
+      }
+
+      @media (max-width: 500px) {
+        body {
+          padding: 8px;
+        }
+
+        .game-container {
+          padding: 12px;
+          border-radius: 12px;
+        }
+
+        .header {
+          margin-bottom: 10px;
+        }
+
+        h1 {
+          font-size: 1.6em;
+        }
+
+        .controls {
+          margin-bottom: 10px;
+        }
+
+        .controls button,
+        .controls select {
+          padding: 10px;
+          font-size: 15px;
+        }
+
+        .stats {
+          margin: 10px 0;
+          padding: 8px 12px;
+        }
+
+        .stat-label {
+          font-size: 12px;
+          margin-bottom: 2px;
+        }
+
+        .stat-value {
+          font-size: 18px;
+        }
+
+        .sudoku-grid {
+          margin: 10px auto;
+        }
+
+        .sudoku-grid .cell {
+          font-size: 20px;
+        }
+
+        .actions button {
+          font-size: 14px;
+        }
+
+        .number-pad {
+          grid-template-columns: repeat(5, 1fr);
+          gap: 8px;
+          margin: 10px auto 0;
+          padding: 0;
+        }
+
+        .number-btn {
+          aspect-ratio: auto;
+          height: 52px;
+          padding: 0;
+        }
       }
 
       @keyframes completionFlash {
@@ -319,58 +461,69 @@
   </head>
   <body>
     <div class="game-container">
-      <h1>🧩 Sudoku</h1>
+      <div class="header">
+        <h1>🧩 Sudoku</h1>
+        <button
+          class="icon-btn"
+          id="settings-btn"
+          onclick="toggleSettings()"
+          aria-label="Settings"
+          aria-expanded="false"
+        >
+          ⚙️
+        </button>
+      </div>
+
+      <div class="settings-panel" id="settings-panel" hidden>
+        <div class="toggle-container">
+          <span class="toggle-label">Show Candidates</span>
+          <div
+            class="toggle-switch"
+            id="candidates-toggle"
+            onclick="toggleCandidates()"
+          >
+            <div class="toggle-slider"></div>
+          </div>
+        </div>
+
+        <div class="toggle-container">
+          <span class="toggle-label">Number First Mode</span>
+          <div
+            class="toggle-switch"
+            id="number-first-toggle"
+            onclick="toggleNumberFirstMode()"
+          >
+            <div class="toggle-slider"></div>
+          </div>
+        </div>
+
+        <div class="toggle-container">
+          <span class="toggle-label">Show Mistakes</span>
+          <div
+            class="toggle-switch active"
+            id="mistakes-toggle"
+            onclick="toggleShowMistakes()"
+          >
+            <div class="toggle-slider"></div>
+          </div>
+        </div>
+      </div>
 
       <div class="controls">
-        <button onclick="newGame('easy')">Easy</button>
-        <button onclick="newGame('medium')">Medium</button>
-        <button onclick="newGame('hard')">Hard</button>
-        <button onclick="newGame('test')" style="background: #ff6b6b">
-          Super Easy (Test)
-        </button>
-        <button onclick="undo()" id="undo-btn">↶ Undo</button>
-        <button onclick="redo()" id="redo-btn">↷ Redo</button>
-        <button onclick="clearCell()">Clear</button>
-        <button onclick="showHint()">Hint</button>
-      </div>
-
-      <div class="toggle-container">
-        <span class="toggle-label">Show Candidates</span>
-        <div
-          class="toggle-switch active"
-          id="candidates-toggle"
-          onclick="toggleCandidates()"
+        <select
+          id="difficulty-select"
+          aria-label="Difficulty"
+          onchange="newGame(this.value)"
         >
-          <div class="toggle-slider"></div>
-        </div>
-      </div>
-
-      <div class="toggle-container">
-        <span class="toggle-label">Number First Mode</span>
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
         <button
-          onclick="toggleNumberFirstMode()"
-          id="number-first-btn"
-          style="
-            padding: 8px 16px;
-            border-radius: 8px;
-            border: none;
-            background: #ccc;
-            cursor: pointer;
-          "
+          onclick="newGame(document.getElementById('difficulty-select').value)"
         >
-          OFF
+          New Game
         </button>
-      </div>
-
-      <div class="toggle-container">
-        <span class="toggle-label">Show Mistakes</span>
-        <div
-          class="toggle-switch active"
-          id="mistakes-toggle"
-          onclick="toggleShowMistakes()"
-        >
-          <div class="toggle-slider"></div>
-        </div>
       </div>
 
       <div class="stats">
@@ -388,9 +541,24 @@
         </div>
       </div>
 
-      <div id="message" class="message" style="display: none"></div>
+      <div
+        id="message"
+        class="message"
+        style="display: none"
+        title="Tap to dismiss"
+        onclick="this.style.display = 'none'"
+      ></div>
 
       <div class="sudoku-grid" id="grid"></div>
+
+      <div class="actions">
+        <button onclick="undo()" id="undo-btn">↶ Undo</button>
+        <button onclick="redo()" id="redo-btn">↷ Redo</button>
+        <button onclick="toggleNotes()" id="notes-btn" aria-pressed="false">
+          ✏️ Notes
+        </button>
+        <button onclick="showHint()">💡 Hint</button>
+      </div>
 
       <div class="number-pad">
         <button class="number-btn" id="num-btn-1" onclick="inputNumber(1)">
@@ -428,40 +596,44 @@
 
     <script>
       // Global functions defined at top level
+      const STORAGE_KEY = "sudoku-game";
+
       function toggleNumberFirstMode() {
-        if (game) {
-          game.toggleNumberFirstMode();
-          const button = document.getElementById("number-first-btn");
-          if (button) {
-            button.textContent = game.numberFirstMode ? "ON" : "OFF";
-            button.style.background = game.numberFirstMode ? "#667eea" : "#ccc";
-            button.style.color = game.numberFirstMode ? "white" : "black";
-          }
-        }
+        if (game) game.toggleNumberFirstMode();
       }
 
       function toggleCandidates() {
-        if (game) {
-          game.toggleCandidates();
-          const toggle = document.getElementById("candidates-toggle");
-          if (game.showCandidates) {
-            toggle.classList.add("active");
-          } else {
-            toggle.classList.remove("active");
-          }
-        }
+        if (game) game.toggleCandidates();
       }
 
       function toggleShowMistakes() {
-        if (game) {
-          game.toggleShowMistakes();
-          const toggle = document.getElementById("mistakes-toggle");
-          if (game.showMistakes) {
-            toggle.classList.add("active");
-          } else {
-            toggle.classList.remove("active");
-          }
-        }
+        if (game) game.toggleShowMistakes();
+      }
+
+      function toggleNotes() {
+        if (game) game.toggleNotesMode();
+      }
+
+      function toggleSettings() {
+        const panel = document.getElementById("settings-panel");
+        panel.hidden = !panel.hidden;
+        document
+          .getElementById("settings-btn")
+          .setAttribute("aria-expanded", String(!panel.hidden));
+      }
+
+      function emptyNotes() {
+        return Array.from({ length: 9 }, () =>
+          Array.from({ length: 9 }, () => [])
+        );
+      }
+
+      function formatTime(totalSeconds) {
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes.toString().padStart(2, "0")}:${seconds
+          .toString()
+          .padStart(2, "0")}`;
       }
 
       function handleClearButton() {
@@ -497,7 +669,9 @@
           this.timer = 0;
           this.timerInterval = null;
           this.difficulty = "easy";
-          this.showCandidates = true;
+          this.notes = emptyNotes();
+          this.notesMode = false;
+          this.showCandidates = false;
           this.numberFirstMode = false;
           this.selectedNumber = null;
           this.clearModeSelected = false;
@@ -509,7 +683,119 @@
           this.historyIndex = -1;
 
           this.initializeGrid();
-          this.generatePuzzle("easy");
+          if (!this.loadGame()) this.generatePuzzle("easy");
+        }
+
+        saveGame() {
+          try {
+            localStorage.setItem(
+              STORAGE_KEY,
+              JSON.stringify({
+                grid: this.grid,
+                solution: this.solution,
+                givens: this.givens,
+                notes: this.notes,
+                difficulty: this.difficulty,
+                timer: this.timer,
+                emptyCellCount: this.emptyCellCount,
+                isSolved: this.isSolved,
+                showCandidates: this.showCandidates,
+                showMistakes: this.showMistakes,
+                numberFirstMode: this.numberFirstMode,
+              })
+            );
+          } catch (e) {
+            // Storage unavailable (e.g. private mode) - play continues unsaved
+          }
+        }
+
+        loadGame() {
+          let saved;
+          try {
+            saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+          } catch (e) {
+            return false;
+          }
+          if (!saved || !Array.isArray(saved.grid) || saved.grid.length !== 9) {
+            return false;
+          }
+
+          Object.assign(this, {
+            grid: saved.grid,
+            solution: saved.solution,
+            givens: saved.givens,
+            notes: saved.notes || emptyNotes(),
+            emptyCellCount: saved.emptyCellCount,
+            isSolved: saved.isSolved,
+            showCandidates: saved.showCandidates,
+            showMistakes: saved.showMistakes,
+            numberFirstMode: saved.numberFirstMode,
+          });
+          this.setDifficulty(saved.difficulty);
+
+          // Mark already-finished rows/columns/boxes so they don't flash on load
+          for (let i = 0; i < 9; i++) {
+            if (this.isRowComplete(i)) this.completedRows.add(i);
+            if (this.isColumnComplete(i)) this.completedColumns.add(i);
+            if (this.isBoxComplete(Math.floor(i / 3), i % 3)) {
+              this.completedBoxes.add(`${Math.floor(i / 3)}-${i % 3}`);
+            }
+          }
+
+          this.saveState();
+          this.syncControls();
+          this.updateDisplay();
+          this.updateProgress();
+          if (this.isSolved) {
+            this.timer = saved.timer;
+            document.getElementById("timer").textContent = formatTime(
+              this.timer
+            );
+            this.completePuzzle();
+          } else {
+            this.startTimer(saved.timer);
+          }
+          return true;
+        }
+
+        hasProgress() {
+          if (this.isSolved) return false;
+          for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+              if (this.givens[row][col]) continue;
+              if (this.grid[row][col] !== 0 || this.notes[row][col].length) {
+                return true;
+              }
+            }
+          }
+          return false;
+        }
+
+        setDifficulty(difficulty) {
+          this.difficulty = difficulty;
+          document.getElementById("difficulty").textContent =
+            difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+          const select = document.getElementById("difficulty-select");
+          if (![...select.options].some((o) => o.value === difficulty)) {
+            // A saved test puzzle loaded without ?debug still needs its option
+            select.add(new Option("Super Easy (Test)", difficulty));
+          }
+          select.value = difficulty;
+        }
+
+        syncControls() {
+          const toggles = {
+            "candidates-toggle": this.showCandidates,
+            "number-first-toggle": this.numberFirstMode,
+            "mistakes-toggle": this.showMistakes,
+          };
+          for (const [id, on] of Object.entries(toggles)) {
+            document.getElementById(id).classList.toggle("active", on);
+          }
+          document
+            .getElementById("notes-btn")
+            .setAttribute("aria-pressed", String(this.notesMode));
+          this.updateNumberPadSelection();
         }
 
         initializeGrid() {
@@ -556,9 +842,7 @@
         }
 
         generatePuzzle(difficulty) {
-          this.difficulty = difficulty;
-          document.getElementById("difficulty").textContent =
-            difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+          this.setDifficulty(difficulty);
 
           this.generateCompleteSolution();
           this.grid = this.solution.map((row) => [...row]);
@@ -575,14 +859,29 @@
             () => Math.random() - 0.5
           );
 
-          for (let i = 0; i < removeCount; i++) {
-            const pos = positions[i];
+          // Only remove a number if the puzzle still has exactly one solution
+          let removed = 0;
+          for (const pos of positions) {
+            if (removed >= removeCount) break;
             const row = Math.floor(pos / 9);
             const col = pos % 9;
+            const value = this.grid[row][col];
             this.grid[row][col] = 0;
-            this.givens[row][col] = false;
+            if (this.countSolutions(this.grid.map((r) => [...r]), 2) === 1) {
+              this.givens[row][col] = false;
+              removed++;
+            } else {
+              this.grid[row][col] = value;
+            }
           }
 
+          this.emptyCellCount = removed;
+          this.notes = emptyNotes();
+          this.isSolved = false;
+          this.selectedCell = null;
+          this.selectedNumber = null;
+          this.clearModeSelected = false;
+          this.updateNumberPadSelection();
           this.completedRows = new Set();
           this.completedColumns = new Set();
           this.completedBoxes = new Set();
@@ -590,9 +889,41 @@
           this.historyIndex = -1;
 
           this.updateDisplay();
+          this.updateProgress();
           this.startTimer();
           this.showMessage("New puzzle generated! Good luck!", "success");
           this.saveState();
+          this.saveGame();
+        }
+
+        // Counts solutions of a grid, stopping once `limit` is reached
+        countSolutions(grid, limit) {
+          let best = null;
+          let bestCandidates = null;
+          for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+              if (grid[row][col] !== 0) continue;
+              const candidates = [];
+              for (let num = 1; num <= 9; num++) {
+                if (this.isValidMove(grid, row, col, num)) candidates.push(num);
+              }
+              if (candidates.length === 0) return 0;
+              if (!bestCandidates || candidates.length < bestCandidates.length) {
+                best = { row, col };
+                bestCandidates = candidates;
+              }
+            }
+          }
+          if (!best) return 1;
+
+          let count = 0;
+          for (const num of bestCandidates) {
+            grid[best.row][best.col] = num;
+            count += this.countSolutions(grid, limit - count);
+            if (count >= limit) break;
+          }
+          grid[best.row][best.col] = 0;
+          return count;
         }
 
         isValidMove(grid, row, col, num) {
@@ -618,53 +949,94 @@
         selectCell(index) {
           const row = Math.floor(index / 9);
           const col = index % 9;
+          const isGiven = this.givens[row][col];
 
-          if (this.givens[row][col]) return;
-
-          if (
-            this.numberFirstMode &&
-            (this.selectedNumber !== null || this.clearModeSelected)
-          ) {
-            const oldValue = this.grid[row][col];
-            const newValue = this.clearModeSelected ? 0 : this.selectedNumber;
-
-            if (oldValue !== newValue) {
-              this.grid[row][col] = newValue;
-              this.saveState();
-              this.updateDisplay();
-              this.updateProgress();
-              if (this.isPuzzleComplete()) this.completePuzzle();
+          if (this.numberFirstMode && !this.isSolved) {
+            // Tapping a starting number picks that number for placement
+            if (isGiven) {
+              this.selectNumberForPlacement(this.grid[row][col], true);
+              return;
             }
-          } else {
-            this.selectedCell = { row, col, index };
-            this.updateDisplay();
+            if (this.clearModeSelected) {
+              this.clearCellAt(row, col);
+              return;
+            }
+            if (this.selectedNumber !== null) {
+              if (this.notesMode) this.toggleNote(row, col, this.selectedNumber);
+              else this.placeNumber(row, col, this.selectedNumber);
+              return;
+            }
           }
+
+          // Starting numbers can be selected (to highlight matches) but not edited
+          this.selectedCell = { row, col, index };
+          this.updateDisplay();
         }
 
         inputNumber(num) {
+          if (this.isSolved) return;
           if (this.numberFirstMode) {
             this.selectNumberForPlacement(num);
-          } else {
-            if (!this.selectedCell) {
-              this.showMessage("Please select a cell first", "error");
-              return;
-            }
-            const { row, col } = this.selectedCell;
-            if (this.givens[row][col]) return;
+            return;
+          }
+          if (!this.selectedCell) {
+            this.showMessage("Please select a cell first", "error");
+            return;
+          }
+          const { row, col } = this.selectedCell;
+          if (this.notesMode) this.toggleNote(row, col, num);
+          else this.placeNumber(row, col, num);
+        }
 
-            const oldValue = this.grid[row][col];
-            if (oldValue !== num) {
-              this.grid[row][col] = num;
-              this.saveState();
-              this.updateDisplay();
-              this.updateProgress();
-              if (this.isPuzzleComplete()) this.completePuzzle();
+        placeNumber(row, col, num) {
+          if (this.isSolved || this.givens[row][col]) return;
+          if (this.grid[row][col] === num) return;
+
+          this.grid[row][col] = num;
+          this.notes[row][col] = [];
+          if (num !== 0) this.removeNoteFromPeers(row, col, num);
+          this.afterMove();
+        }
+
+        toggleNote(row, col, num) {
+          if (this.isSolved || this.givens[row][col]) return;
+          if (this.grid[row][col] !== 0) return;
+
+          const cellNotes = this.notes[row][col];
+          this.notes[row][col] = cellNotes.includes(num)
+            ? cellNotes.filter((n) => n !== num)
+            : [...cellNotes, num].sort();
+          this.afterMove();
+        }
+
+        // Placing a number removes it from notes in the same row, column and box
+        removeNoteFromPeers(row, col, num) {
+          const boxRow = Math.floor(row / 3) * 3;
+          const boxCol = Math.floor(col / 3) * 3;
+          for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+              const isPeer =
+                r === row ||
+                c === col ||
+                (Math.floor(r / 3) * 3 === boxRow &&
+                  Math.floor(c / 3) * 3 === boxCol);
+              if (isPeer) {
+                this.notes[r][c] = this.notes[r][c].filter((n) => n !== num);
+              }
             }
           }
         }
 
-        selectNumberForPlacement(num) {
-          if (this.selectedNumber === num) {
+        afterMove() {
+          this.saveState();
+          this.updateDisplay();
+          this.updateProgress();
+          if (this.isPuzzleComplete()) this.completePuzzle();
+          this.saveGame();
+        }
+
+        selectNumberForPlacement(num, keepSelected = false) {
+          if (this.selectedNumber === num && !keepSelected) {
             this.selectedNumber = null;
           } else {
             this.selectedNumber = num;
@@ -681,20 +1053,27 @@
         }
 
         clearCell() {
+          if (this.isSolved) return;
           if (!this.selectedCell) {
             this.showMessage("Please select a cell first", "error");
             return;
           }
-          const { row, col } = this.selectedCell;
-          if (this.givens[row][col]) return;
+          this.clearCellAt(this.selectedCell.row, this.selectedCell.col);
+        }
 
-          const oldValue = this.grid[row][col];
-          if (oldValue !== 0) {
-            this.grid[row][col] = 0;
-            this.saveState();
-            this.updateDisplay();
-            this.updateProgress();
+        clearCellAt(row, col) {
+          if (this.isSolved || this.givens[row][col]) return;
+          if (this.grid[row][col] !== 0) {
+            this.placeNumber(row, col, 0);
+          } else if (this.notes[row][col].length) {
+            this.notes[row][col] = [];
+            this.afterMove();
           }
+        }
+
+        toggleNotesMode() {
+          this.notesMode = !this.notesMode;
+          this.syncControls();
         }
 
         saveState() {
@@ -704,6 +1083,7 @@
 
           this.history.push({
             grid: this.grid.map((row) => [...row]),
+            notes: this.notes.map((row) => row.map((cell) => [...cell])),
             completedRows: new Set(this.completedRows),
             completedColumns: new Set(this.completedColumns),
             completedBoxes: new Set(this.completedBoxes),
@@ -714,27 +1094,32 @@
         }
 
         undo() {
+          if (this.isSolved) return;
           if (this.historyIndex > 0) {
             this.historyIndex--;
             this.restoreState(this.history[this.historyIndex]);
             this.updateDisplay();
             this.updateProgress();
             this.updateUndoRedoButtons();
+            this.saveGame();
           }
         }
 
         redo() {
+          if (this.isSolved) return;
           if (this.historyIndex < this.history.length - 1) {
             this.historyIndex++;
             this.restoreState(this.history[this.historyIndex]);
             this.updateDisplay();
             this.updateProgress();
             this.updateUndoRedoButtons();
+            this.saveGame();
           }
         }
 
         restoreState(state) {
           this.grid = state.grid.map((row) => [...row]);
+          this.notes = state.notes.map((row) => row.map((cell) => [...cell]));
           this.completedRows = new Set(state.completedRows);
           this.completedColumns = new Set(state.completedColumns);
           this.completedBoxes = new Set(state.completedBoxes);
@@ -768,11 +1153,17 @@
             cell.className = "cell";
 
             if (value === 0) {
-              if (this.showCandidates) {
-                const candidates = this.getCandidates(row, col);
+              // Your own notes take priority over auto candidates
+              const userNotes = this.notes[row][col];
+              if (userNotes.length || this.showCandidates) {
+                const candidates = userNotes.length
+                  ? userNotes
+                  : this.getCandidates(row, col);
                 if (candidates.length > 0) {
                   const candidateContainer = document.createElement("div");
-                  candidateContainer.className = "candidates";
+                  candidateContainer.className = userNotes.length
+                    ? "candidates user-notes"
+                    : "candidates";
                   for (let num = 1; num <= 9; num++) {
                     const candidateDiv = document.createElement("div");
                     candidateDiv.className = "candidate-number";
@@ -833,6 +1224,7 @@
           return candidates;
         }
 
+        // Flags any number you entered that doesn't match the solution
         checkConflicts() {
           const cells = document.querySelectorAll(".cell");
           cells.forEach((cell) => cell.classList.remove("conflict"));
@@ -842,45 +1234,9 @@
           for (let row = 0; row < 9; row++) {
             for (let col = 0; col < 9; col++) {
               const value = this.grid[row][col];
-              if (value === 0) continue;
-
-              let hasConflict = false;
-
-              for (let c = 0; c < 9; c++) {
-                if (c !== col && this.grid[row][c] === value) {
-                  hasConflict = true;
-                  break;
-                }
-              }
-
-              if (!hasConflict) {
-                for (let r = 0; r < 9; r++) {
-                  if (r !== row && this.grid[r][col] === value) {
-                    hasConflict = true;
-                    break;
-                  }
-                }
-              }
-
-              if (!hasConflict) {
-                const boxRow = Math.floor(row / 3) * 3;
-                const boxCol = Math.floor(col / 3) * 3;
-                for (let r = boxRow; r < boxRow + 3; r++) {
-                  for (let c = boxCol; c < boxCol + 3; c++) {
-                    if ((r !== row || c !== col) && this.grid[r][c] === value) {
-                      hasConflict = true;
-                      break;
-                    }
-                  }
-                  if (hasConflict) break;
-                }
-              }
-
-              if (hasConflict) {
-                const cellIndex = row * 9 + col;
-                if (cells[cellIndex]) {
-                  cells[cellIndex].classList.add("conflict");
-                }
+              if (value === 0 || this.givens[row][col]) continue;
+              if (value !== this.solution[row][col]) {
+                cells[row * 9 + col].classList.add("conflict");
               }
             }
           }
@@ -1037,7 +1393,9 @@
 
         toggleCandidates() {
           this.showCandidates = !this.showCandidates;
+          this.syncControls();
           this.updateDisplay();
+          this.saveGame();
         }
 
         toggleNumberFirstMode() {
@@ -1046,86 +1404,102 @@
             this.selectedNumber = null;
             this.clearModeSelected = false;
           }
-          this.updateNumberPadSelection();
+          this.syncControls();
           this.updateDisplay();
+          this.saveGame();
         }
 
         toggleShowMistakes() {
           this.showMistakes = !this.showMistakes;
+          this.syncControls();
           this.updateDisplay();
+          this.saveGame();
         }
 
         updateProgress() {
-          const filledCells = this.grid
-            .flat()
-            .filter((cell) => cell !== 0).length;
-          const progress = Math.round((filledCells / 81) * 100);
+          let filledCells = 0;
+          for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+              if (!this.givens[row][col] && this.grid[row][col] !== 0) {
+                filledCells++;
+              }
+            }
+          }
+          const progress = this.emptyCellCount
+            ? Math.round((filledCells / this.emptyCellCount) * 100)
+            : 100;
           document.getElementById("progress").textContent = progress + "%";
         }
 
         isPuzzleComplete() {
+          // Puzzles have a single solution, so compare against it directly
           for (let row = 0; row < 9; row++) {
             for (let col = 0; col < 9; col++) {
-              if (this.grid[row][col] === 0) return false;
+              if (this.grid[row][col] !== this.solution[row][col]) return false;
             }
           }
-          const conflictCells = document.querySelectorAll(".cell.conflict");
-          return conflictCells.length === 0;
+          return true;
         }
 
         completePuzzle() {
+          this.isSolved = true;
           this.stopTimer();
           const timeStr = document.getElementById("timer").textContent;
           this.showMessage(
             `🎉 CONGRATULATIONS! You completed the ${this.difficulty} puzzle in ${timeStr}! 🎉`,
-            "success"
+            "success",
+            true
           );
         }
 
+        // Fills the selected cell if it's empty or wrong, otherwise a random one
         showHint() {
-          const emptyCells = [];
-          for (let row = 0; row < 9; row++) {
-            for (let col = 0; col < 9; col++) {
-              if (this.grid[row][col] === 0) {
-                emptyCells.push({ row, col });
+          if (this.isSolved) return;
+          const needsAnswer = (row, col) =>
+            !this.givens[row][col] &&
+            this.grid[row][col] !== this.solution[row][col];
+
+          let target = null;
+          if (
+            this.selectedCell &&
+            needsAnswer(this.selectedCell.row, this.selectedCell.col)
+          ) {
+            target = this.selectedCell;
+          } else {
+            const options = [];
+            for (let row = 0; row < 9; row++) {
+              for (let col = 0; col < 9; col++) {
+                if (needsAnswer(row, col)) options.push({ row, col });
               }
             }
+            if (options.length === 0) {
+              this.showMessage("No cells left to hint!", "error");
+              return;
+            }
+            target = options[Math.floor(Math.random() * options.length)];
           }
 
-          if (emptyCells.length === 0) {
-            this.showMessage("No empty cells to hint!", "error");
-            return;
-          }
-
-          const randomCell =
-            emptyCells[Math.floor(Math.random() * emptyCells.length)];
-          const { row, col } = randomCell;
+          const { row, col } = target;
           const correctNumber = this.solution[row][col];
-
-          this.grid[row][col] = correctNumber;
-          this.saveState();
-          this.updateDisplay();
-          this.updateProgress();
-
+          this.selectedCell = { row, col, index: row * 9 + col };
           this.showMessage(
-            `Hint: Added ${correctNumber} at row ${row + 1}, column ${col + 1}`,
+            `Hint: ${correctNumber} goes at row ${row + 1}, column ${col + 1}`,
             "success"
           );
-
-          if (this.isPuzzleComplete()) this.completePuzzle();
+          this.placeNumber(row, col, correctNumber);
         }
 
-        startTimer() {
+        startTimer(from = 0) {
           this.stopTimer();
-          this.timer = 0;
+          this.timer = from;
+          document.getElementById("timer").textContent = formatTime(this.timer);
 
           this.timerInterval = setInterval(() => {
             this.timer++;
-            const minutes = Math.floor(this.timer / 60);
-            const seconds = this.timer % 60;
-            document.getElementById("timer").textContent = `${minutes
-              .toString()
-              .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+            document.getElementById("timer").textContent = formatTime(
+              this.timer
+            );
+            this.saveGame();
           }, 1000);
         }
 
@@ -1136,22 +1510,33 @@
           }
         }
 
-        showMessage(text, type = "success") {
+        showMessage(text, type = "success", persistent = false) {
           const messageEl = document.getElementById("message");
           messageEl.textContent = text;
           messageEl.className = `message ${type}`;
           messageEl.style.display = "block";
 
-          setTimeout(() => {
-            messageEl.style.display = "none";
-          }, 3000);
+          clearTimeout(this.messageTimeout);
+          if (!persistent) {
+            this.messageTimeout = setTimeout(() => {
+              messageEl.style.display = "none";
+            }, 3000);
+          }
         }
       }
 
       let game;
 
       function newGame(difficulty) {
-        game = new SudokuGame();
+        if (!game) return;
+        if (
+          game.hasProgress() &&
+          !confirm("Start a new game? Your current puzzle will be lost.")
+        ) {
+          // Put the dropdown back to the puzzle still being played
+          document.getElementById("difficulty-select").value = game.difficulty;
+          return;
+        }
         game.generatePuzzle(difficulty);
       }
 
@@ -1170,14 +1555,34 @@
       }
 
       document.addEventListener("DOMContentLoaded", () => {
+        // The test difficulty is only offered when the URL has ?debug
+        if (new URLSearchParams(location.search).has("debug")) {
+          const option = document.createElement("option");
+          option.value = "test";
+          option.textContent = "Super Easy (Test)";
+          document.getElementById("difficulty-select").appendChild(option);
+        }
         game = new SudokuGame();
       });
 
       document.addEventListener("keydown", (e) => {
-        console.log("Key pressed:", e.key);
         if (e.key.startsWith("Arrow")) e.preventDefault();
 
-        if (e.key >= "1" && e.key <= "9") {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
+          e.preventDefault();
+          e.shiftKey ? redo() : undo();
+          return;
+        }
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "y") {
+          e.preventDefault();
+          redo();
+          return;
+        }
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+        if (e.key.toLowerCase() === "n") {
+          toggleNotes();
+        } else if (e.key >= "1" && e.key <= "9") {
           inputNumber(parseInt(e.key));
         } else if (e.key === "Backspace" || e.key === "Delete") {
           clearCell();
