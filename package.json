@@ -1,0 +1,22 @@
+{
+  "name": "sudoku",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sudoku puzzle game for the web and Android",
+  "scripts": {
+    "build": "rm -rf www && mkdir www && cp index.html www/",
+    "sync": "npm run build && npx cap sync android",
+    "android": "npm run sync && npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.0"
+  }
+}

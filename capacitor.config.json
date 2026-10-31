@@ -1,0 +1,17 @@
+{
+  "appId": "com.bodaijewels.sudoku",
+  "appName": "Sudoku",
+  "webDir": "www",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 600,
+      "backgroundColor": "#667eea",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "backgroundColor": "#667eea",
+      "style": "DARK",
+      "overlaysWebView": false
+    }
+  }
+}
