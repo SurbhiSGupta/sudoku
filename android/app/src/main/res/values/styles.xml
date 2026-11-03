@@ -13,10 +13,10 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
-        <!-- Purple behind the status and navigation bars, with light icons -->
-        <item name="android:windowBackground">@color/sudokuPurple</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowLightNavigationBar">false</item>
+        <!-- Game background behind the system bars, following the phone's light or dark mode -->
+        <item name="android:windowBackground">@color/sudokuBackground</item>
+        <item name="android:windowLightStatusBar">@bool/sudokuLightBars</item>
+        <item name="android:windowLightNavigationBar">@bool/sudokuLightBars</item>
     </style>
 
 
