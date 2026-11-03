@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Matches the game's #667eea gradient start -->
-    <color name="sudokuPurple">#667eea</color>
+    <!-- Matches the game's --bg color; values-night has the dark one -->
+    <color name="sudokuBackground">#f6f4ec</color>
+    <!-- Dark status and navigation bar icons on the light background -->
+    <bool name="sudokuLightBars">true</bool>
 </resources>

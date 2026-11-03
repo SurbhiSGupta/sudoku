@@ -5,12 +5,12 @@
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 600,
-      "backgroundColor": "#667eea",
+      "backgroundColor": "#f6f4ec",
       "showSpinner": false
     },
     "StatusBar": {
-      "backgroundColor": "#667eea",
-      "style": "DARK",
+      "backgroundColor": "#f6f4ec",
+      "style": "LIGHT",
       "overlaysWebView": false
     }
   }
