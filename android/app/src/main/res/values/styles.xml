@@ -22,5 +22,7 @@
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <!-- Android 12+ launch screen: the icon on the game's background color -->
+        <item name="windowSplashScreenBackground">@color/sudokuBackground</item>
     </style>
 </resources>
