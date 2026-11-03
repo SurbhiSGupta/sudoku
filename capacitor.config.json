@@ -1,6 +1,6 @@
 {
   "appId": "com.bodaijewels.sudoku",
-  "appName": "Sudoku",
+  "appName": "Bodai Sudoku",
   "webDir": "www",
   "plugins": {
     "SplashScreen": {
