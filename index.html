@@ -15,6 +15,10 @@
         if (theme === "light" || theme === "dark") {
           document.documentElement.dataset.theme = theme;
         }
+        // Animations switched off in Settings
+        if (localStorage.getItem("sudoku-motion") === "off") {
+          document.documentElement.classList.add("no-motion");
+        }
       } catch (e) {}
       if (new URLSearchParams(location.search).get("mark") === "swipe") {
         document.documentElement.dataset.mark = "swipe";
@@ -314,6 +318,10 @@
         display: none;
       }
 
+      .toggle-container[hidden] {
+        display: none;
+      }
+
       .toggle-container {
         display: flex;
         align-items: center;
@@ -422,7 +430,7 @@
         cursor: pointer;
       }
 
-      /* ---------- Stick figure and dog ---------- */
+      /* ---------- Stick figure and her dog Frisky ---------- */
       /* Her stage covers the whole header; the title and buttons sit on top */
       .header {
         position: relative;
@@ -680,6 +688,26 @@
 
       .buddy[data-dog="run"] .dog {
         animation: dogHop 0.26s ease-in-out infinite alternate;
+      }
+
+      /* Trick: the dog jumps and does a backflip */
+      .buddy[data-act~="dogflip"] .dog {
+        transform-origin: center;
+        animation: dogFlip 1.1s ease-in-out infinite;
+      }
+
+      @keyframes dogFlip {
+        0%,
+        20% {
+          transform: translateY(0) rotate(0);
+        }
+        55% {
+          transform: translateY(-36px) rotate(-200deg);
+        }
+        85%,
+        100% {
+          transform: translateY(0) rotate(-360deg);
+        }
       }
 
       @keyframes dogHop {
@@ -979,11 +1007,13 @@
         font-variant-numeric: tabular-nums;
       }
 
-      /* Board: rounded tiles on a soft tray, with wider gaps between the 3x3 boxes */
+      /* Board: rounded tiles on a soft tray, with wider gaps between the 3x3 boxes.
+         minmax(0, 1fr) keeps every row the same height. With plain 1fr, a phone set
+         to large text let rows with numbers grow and squashed an empty row to nothing. */
       .sudoku-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr) 3px repeat(3, 1fr) 3px repeat(3, 1fr);
-        grid-template-rows: repeat(3, 1fr) 3px repeat(3, 1fr) 3px repeat(3, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr)) 3px repeat(3, minmax(0, 1fr)) 3px repeat(3, minmax(0, 1fr));
+        grid-template-rows: repeat(3, minmax(0, 1fr)) 3px repeat(3, minmax(0, 1fr)) 3px repeat(3, minmax(0, 1fr));
         --gap: 4px;
         gap: var(--gap);
         padding: 8px;
@@ -1004,9 +1034,12 @@
         justify-content: center;
         font-size: clamp(18px, 5.6vw, 28px);
         font-weight: 700;
+        line-height: 1;
         cursor: pointer;
         position: relative;
         min-width: 0;
+        min-height: 0;
+        overflow: hidden;
         transition: background-color 0.15s ease;
       }
 
@@ -1177,7 +1210,7 @@
 
       .actions {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 8px;
         margin-bottom: 12px;
       }
@@ -1197,38 +1230,111 @@
         fill: currentColor;
       }
 
-      /* Hint cooldown: a ring that drains while the next hint gets ready */
-      .hint-ring {
-        display: none;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background: conic-gradient(var(--muted) calc(var(--left, 0) * 1%), var(--slot) 0);
-        place-items: center;
+      /* Time and Done boxes are buttons: tap Time to pause, Done for a hint */
+      .stat-btn {
+        background: var(--score);
+        box-shadow: 0 3px 0 var(--edge);
+        padding: 8px 6px;
+        font-weight: inherit;
       }
 
-      .hint-ring span {
-        display: grid;
-        place-items: center;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        background: var(--surface);
-        font-size: 11px;
+      .stat-icon {
+        width: 13px;
+        height: 13px;
+        fill: currentColor;
+        margin-left: 3px;
+        vertical-align: -1px;
+      }
+
+      #timer-btn .play-icon,
+      #timer-btn[aria-pressed="true"] .pause-icon {
+        display: none;
+      }
+
+      #timer-btn[aria-pressed="true"] .play-icon {
+        display: inline;
+      }
+
+      #timer-btn[aria-pressed="true"],
+      #hint-btn.nudging {
+        background: var(--accent);
+      }
+
+      #timer-btn[aria-pressed="true"] *,
+      #hint-btn.nudging * {
+        color: var(--accent-ink);
+      }
+
+      /* After a hint the box rests a few seconds, with a bar that drains */
+      #hint-btn.cooling {
+        opacity: 1;
+        background: linear-gradient(
+            to right,
+            var(--muted) calc(var(--left, 0) * 1%),
+            var(--score) 0
+          );
+      }
+
+      /* Step one of a hint: the square to look at pulses */
+      .sudoku-grid .cell.hint-spot {
+        animation: hintPulse 0.9s ease-in-out infinite alternate;
+      }
+
+      @keyframes hintPulse {
+        from {
+          box-shadow: inset 0 0 0 2px var(--green);
+        }
+        to {
+          box-shadow: inset 0 0 0 5px var(--green);
+        }
+      }
+
+      /* Paused: the board is covered so the clock can't be beaten */
+      .board-wrap {
+        position: relative;
+      }
+
+      .pause-cover {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        background: var(--board);
+        border-radius: 16px;
+        box-shadow: none;
+        font-size: 24px;
         font-weight: 800;
       }
 
-      #hint-btn.cooling {
-        opacity: 1;
-        color: var(--muted);
-      }
-
-      #hint-btn.cooling .icon {
+      .pause-cover[hidden] {
         display: none;
       }
 
-      #hint-btn.cooling .hint-ring {
-        display: grid;
+      .pause-cover:active:not(:disabled) {
+        transform: none;
+        box-shadow: none;
+      }
+
+      .pause-cover svg {
+        width: 64px;
+        height: 64px;
+        fill: currentColor;
+      }
+
+      .pause-cover span {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      .paused .actions button,
+      .paused .number-btn {
+        opacity: 0.4;
+        pointer-events: none;
       }
 
       .actions button[aria-pressed="true"] {
@@ -1741,8 +1847,8 @@
           padding: 6px;
           border-radius: 12px;
           margin-bottom: 10px;
-          grid-template-columns: repeat(3, 1fr) 2px repeat(3, 1fr) 2px repeat(3, 1fr);
-          grid-template-rows: repeat(3, 1fr) 2px repeat(3, 1fr) 2px repeat(3, 1fr);
+          grid-template-columns: repeat(3, minmax(0, 1fr)) 2px repeat(3, minmax(0, 1fr)) 2px repeat(3, minmax(0, 1fr));
+          grid-template-rows: repeat(3, minmax(0, 1fr)) 2px repeat(3, minmax(0, 1fr)) 2px repeat(3, minmax(0, 1fr));
         }
 
         .sudoku-grid .cell {
@@ -1774,6 +1880,14 @@
           animation: none !important;
           transition: none !important;
         }
+      }
+
+      /* Same as above, for the Animations switch in Settings */
+      .no-motion *,
+      .no-motion *::before,
+      .no-motion *::after {
+        animation: none !important;
+        transition: none !important;
       }
     </style>
   </head>
@@ -1836,6 +1950,28 @@
           </div>
         </div>
 
+        <div class="toggle-container">
+          <span class="toggle-label">Animations</span>
+          <div
+            class="toggle-switch"
+            id="motion-toggle"
+            onclick="toggleMotion()"
+          >
+            <div class="toggle-slider"></div>
+          </div>
+        </div>
+
+        <div class="toggle-container" id="haptics-row" hidden>
+          <span class="toggle-label">Vibration</span>
+          <div
+            class="toggle-switch"
+            id="haptics-toggle"
+            onclick="toggleHaptics()"
+          >
+            <div class="toggle-slider"></div>
+          </div>
+        </div>
+
         <div class="setting-stack">
           <span class="toggle-label" id="mistakes-label">Mistakes</span>
           <div class="segmented" role="group" aria-labelledby="mistakes-label">
@@ -1868,18 +2004,35 @@
       </div>
 
       <div class="stats">
-        <div class="stat-item">
-          <div class="stat-label">Time</div>
+        <button
+          class="stat-item stat-btn"
+          id="timer-btn"
+          onclick="togglePause()"
+          aria-label="Pause"
+          aria-pressed="false"
+        >
+          <div class="stat-label">
+            Time<svg class="stat-icon pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg
+            ><svg class="stat-icon play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          </div>
           <div class="stat-value" id="timer">00:00</div>
-        </div>
+        </button>
         <div class="stat-item" id="mistakes-box">
           <div class="stat-label">Mistakes</div>
           <div class="stat-value dogs" id="mistakes"></div>
         </div>
-        <div class="stat-item">
-          <div class="stat-label">Done</div>
+        <button
+          class="stat-item stat-btn"
+          id="hint-btn"
+          onclick="showHint()"
+          aria-label="Hint"
+        >
+          <div class="stat-label">
+            <span id="hint-label">Done</span
+            ><svg class="stat-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>
+          </div>
           <div class="stat-value" id="progress">0%</div>
-        </div>
+        </button>
       </div>
 
       <div
@@ -1890,7 +2043,14 @@
         onclick="this.style.display = 'none'"
       ></div>
 
-      <div class="sudoku-grid" id="grid"></div>
+      <div class="board-wrap">
+        <div class="sudoku-grid" id="grid"></div>
+        <button class="pause-cover" id="pause-cover" onclick="togglePause()" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          Paused
+          <span>Tap to keep playing</span>
+        </button>
+      </div>
 
       <div class="actions">
         <button onclick="undo()" id="undo-btn">
@@ -1901,10 +2061,6 @@
         </button>
         <button onclick="toggleNotes()" id="notes-btn" aria-pressed="false">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>Notes
-        </button>
-        <button onclick="showHint()" id="hint-btn">
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6A4.997 4.997 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg><span class="hint-ring" aria-hidden="true"><span id="hint-seconds"></span></span
-          ><span id="hint-label">Hint</span>
         </button>
       </div>
 
@@ -2042,9 +2198,45 @@
       // True when running inside the Android/iOS app rather than a browser
       const isNativeApp = !!window.Capacitor?.isNativePlatform?.();
 
+      // Vibration is on unless turned off in Settings (app only)
+      const HAPTICS_KEY = "sudoku-haptics";
+      let hapticsOn = true;
+      try {
+        hapticsOn = localStorage.getItem(HAPTICS_KEY) !== "off";
+      } catch (e) {}
+
+      function toggleHaptics() {
+        hapticsOn = !hapticsOn;
+        try {
+          localStorage.setItem(HAPTICS_KEY, hapticsOn ? "on" : "off");
+        } catch (e) {}
+        document.getElementById("haptics-toggle").classList.toggle("active", hapticsOn);
+        haptic("tap");
+      }
+
+      // Animations are on unless turned off in Settings or by the phone's
+      // reduce motion setting
+      const MOTION_KEY = "sudoku-motion";
+      let motionOn = !document.documentElement.classList.contains("no-motion");
+
+      function motionOff() {
+        return !motionOn || reduceMotion.matches;
+      }
+
+      function toggleMotion() {
+        motionOn = !motionOn;
+        try {
+          localStorage.setItem(MOTION_KEY, motionOn ? "on" : "off");
+        } catch (e) {}
+        document.documentElement.classList.toggle("no-motion", !motionOn);
+        document.getElementById("motion-toggle").classList.toggle("active", motionOn);
+        // Send her home right away instead of finishing the current scene
+        if (headBuddy) headLoop();
+      }
+
       function haptic(kind) {
         const haptics = window.Capacitor?.Plugins?.Haptics;
-        if (!isNativeApp || !haptics) return;
+        if (!isNativeApp || !haptics || !hapticsOn) return;
         if (kind === "win") haptics.notification({ type: "SUCCESS" });
         else if (kind === "error") haptics.notification({ type: "ERROR" });
         else haptics.impact({ style: "LIGHT" });
@@ -2079,11 +2271,11 @@
       }
 
       function undo() {
-        if (game) game.undo();
+        if (game && !game.isPaused) game.undo();
       }
 
       function redo() {
-        if (game) game.redo();
+        if (game && !game.isPaused) game.redo();
       }
 
       const THEME_KEY = "sudoku-theme";
@@ -2165,7 +2357,7 @@
 
       // Rockets rise and burst across the whole screen for a few seconds
       function launchFireworks(canvas, duration = 6000) {
-        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        if (motionOff()) {
           return () => {};
         }
         const ctx = canvas.getContext("2d");
@@ -2276,7 +2468,7 @@
       const LEVELS = ["easy", "medium", "hard"];
       const HINT_COOLDOWN = 10;
 
-      // The little yellow dog, one per mistake allowed
+      // Frisky, the little yellow dog, one per mistake allowed
       const MINI_DOG =
         '<path class="tail" d="M11 117c-7-3-10-10-7-17"/><path class="legs" d="M16 125v16M23 125v16M31 125v16M38 125v16"/><ellipse class="fur" cx="26" cy="119" rx="17" ry="9"/><circle class="fur" cx="44" cy="108" r="9"/><ellipse class="fur" cx="51.5" cy="112" rx="5.5" ry="3.8"/><path class="ear" d="M37.5 102c-6 0-8.5 7-5.5 12c3.5-1 6-5.5 5.5-12z"/><circle class="eye" cx="56.5" cy="110.6" r="1.8"/><circle class="eye" cx="46" cy="106" r="1.5"/>';
 
@@ -2320,7 +2512,7 @@
         const chart = document.getElementById("win-chart");
         chart.hidden = false;
         renderWeekChart(chart, loadHistory(), { animate: celebrate });
-        winBuddy.play(WIN_SCENE, { loopFrom: 2 });
+        playWinScene();
 
         if (stopFireworks) stopFireworks();
         stopFireworks = celebrate
@@ -2331,7 +2523,7 @@
 
       // Ticks the solve time up from zero so the number lands with the card
       function countUp(el, seconds, animate) {
-        if (!animate || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        if (!animate || motionOff()) {
           el.textContent = formatTime(seconds);
           return;
         }
@@ -2389,7 +2581,7 @@
       }
 
 
-      // ---------- Surbhi's stick figure and her yellow dog ----------
+      // ---------- Surbhi's stick figure and her yellow dog Frisky ----------
       // Drawn in the same pencil style as the portfolio. Poses switch with data
       // attributes; moves are CSS transitions; a small timeline plays scenes.
       const BUDDY_FACES = `<g class="fx fx-def"><path class="bw" d="M44.6 28.7q5.6-2.6 12.1-.7"/><path class="bw" d="M75.4 28.7q-5.6-2.6-12.1-.7"/><circle class="dot" cx="50.3" cy="35.4" r="1.5"/><circle class="dot" cx="69.7" cy="35.4" r="1.5"/><path d="M50.5 46q9.5 6.5 19 0"/></g><g class="fx fx-happy"><path class="bw" d="M44.6 28.2q5.6-2.6 12.1-.7"/><path class="bw" d="M75.4 28.2q-5.6-2.6-12.1-.7"/><circle class="dot" cx="50.3" cy="35.4" r="1.5"/><circle class="dot" cx="69.7" cy="35.4" r="1.5"/><path style="stroke-width:2.2" d="M48.5 45h23q-2.5 9.5-11.5 9.5t-11.5-9.5z"/></g><g class="fx fx-cute"><path class="bw" d="M44.6 28.7q5.6-2.6 12.1-.7"/><path class="bw" d="M75.4 28.7q-5.6-2.6-12.1-.7"/><circle class="dot" cx="50.3" cy="35.4" r="1.5"/><circle class="dot" cx="69.7" cy="35.4" r="1.5"/><path d="M50.5 46q9.5 6.5 19 0"/><circle class="blush" cx="45.5" cy="43" r="3"/><circle class="blush" cx="74.5" cy="43" r="3"/></g><g class="fx fx-cur"><path class="bw" d="M44.6 28.7q5.6-2.6 12.1-.7"/><path class="bw" d="M75.4 27.1q-5.6-2.6-12.1-.7"/><circle class="dot" cx="51.1" cy="35.4" r="1.5"/><circle class="dot" cx="70.5" cy="35.4" r="1.5"/><path d="M51.5 46.2q9 6.2 17.5-.4"/></g><g class="fx fx-joy"><path class="bw" d="M44.6 27.9q5.6-2.6 12.1-.7"/><path class="bw" d="M75.4 27.9q-5.6-2.6-12.1-.7"/><path style="stroke-width:1.7" d="M47.2 35.9q3.1-2.6 6.2 0"/><path style="stroke-width:1.7" d="M66.6 35.9q3.1-2.6 6.2 0"/><path style="stroke-width:2.2" d="M48.5 45h23q-2.5 9.5-11.5 9.5t-11.5-9.5z"/><circle class="blush" cx="45.5" cy="43" r="3"/><circle class="blush" cx="74.5" cy="43" r="3"/></g><g class="fx fx-kiss"><path class="bw" d="M44.6 28.7q5.6-2.6 12.1-.7"/><path class="bw" d="M75.4 28.7q-5.6-2.6-12.1-.7"/><path style="stroke-width:1.7" d="M47.2 35.9q3.1-2.6 6.2 0"/><path style="stroke-width:1.7" d="M66.6 35.9q3.1-2.6 6.2 0"/><path d="M57.5 45.5q3-2 3.5.8q-.5 2.2-2.6 2q2.4.4 2 2.6q-1 2-3.4.4"/><circle class="blush" cx="45.5" cy="43" r="3"/><circle class="blush" cx="74.5" cy="43" r="3"/></g><g class="fx fx-sad"><path class="bw" d="M44.6 29.8q5.6-1.2 12.1-2.6"/><path class="bw" d="M75.4 29.8q-5.6-1.2-12.1-2.6"/><circle class="dot" cx="50.3" cy="36" r="1.5"/><circle class="dot" cx="69.7" cy="36" r="1.5"/><path d="M52 50q8-5 16 0"/></g>`;
@@ -2482,7 +2674,7 @@
         // Plays steps in order; loopFrom repeats from that step until stopped
         async play(steps, { loopFrom = null } = {}) {
           const id = ++this.runId;
-          if (reduceMotion.matches) {
+          if (motionOff()) {
             this.pose({ ...steps[steps.length - 1], move: 0 });
             return;
           }
@@ -2541,8 +2733,9 @@
         think: (g) => [{ ...home(g), arms: "chin", face: "cur", dur: 1600 }],
       };
 
-      // On the win card: skip in with the dog, sit and pet, hug, kisses, clap
-      const WIN_SCENE = [
+      // On the win card a different little show plays each time
+      // Cuddles: skip in with the dog, sit and pet, hug, kisses, clap
+      const CUDDLE_SCENE = [
         { me: { x: -170 }, dog: { x: -90 }, legs: "skip", arms: "leash", face: "kiss", act: "kiss-l", move: 0, dur: 50 },
         { me: { x: 50 }, dog: { x: 130 }, legs: "skip", arms: "leash", face: "joy", act: "kiss-l", dogRun: true, move: 3000, dur: 3100 },
         { me: { x: 50 }, dog: { x: 108 }, body: { sit: 22 }, legs: "sit", arms: "pet", face: "cute", act: "pet", dur: 2600 },
@@ -2550,6 +2743,54 @@
         { me: { x: 50 }, dog: { x: 108 }, body: { sit: 22 }, legs: "sit", arms: "kiss", face: "kiss", act: "kiss-r", dur: 2400 },
         { me: { x: 50 }, dog: { x: 108 }, body: { sit: 22 }, legs: "sit", arms: "clap", face: "joy", dur: 2000 },
       ];
+      // Fetch: she throws the ball, the dog races off and brings it back
+      const FETCH_SCENE = [
+        { me: { x: 20 }, dog: { x: 104, flip: -1, show: 1 }, flower: "", arms: "wave", face: "happy", move: 0, dur: 1000 },
+        { me: { x: 20 }, dog: { x: 300, flip: 1 }, arms: "throw", face: "joy", dogRun: true, move: 1400, dur: 2400 },
+        { me: { x: 20 }, dog: { x: 104, flip: -1 }, arms: "up", face: "joy", act: "hop", dogRun: true, move: 1400, dur: 1500 },
+        { me: { x: 20 }, dog: { x: 104, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "pet", face: "cute", act: "pet", dur: 2400 },
+        { me: { x: 20 }, dog: { x: 84, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "hug", face: "joy", act: "love", dur: 2000 },
+      ];
+      // Zoomies: the dog tears back and forth while she cheers and spins round
+      const ZOOMIES_SCENE = [
+        { me: { x: 70 }, dog: { x: -90, flip: 1, show: 1 }, flower: "", arms: "up", face: "joy", move: 0, dur: 100 },
+        { me: { x: 70 }, dog: { x: 260, flip: 1 }, arms: "up", face: "joy", act: "hop", dogRun: true, move: 1500, dur: 1500 },
+        { me: { x: 70, flip: -1 }, dog: { x: -90, flip: -1 }, arms: "clap", face: "joy", dogRun: true, move: 1500, dur: 1500 },
+        { me: { x: 70 }, dog: { x: 160, flip: 1 }, arms: "wave", face: "happy", dogRun: true, move: 1300, dur: 1300 },
+        { me: { x: 70 }, dog: { x: 160, flip: -1 }, arms: "kiss", face: "kiss", act: "kiss-r", move: 400, dur: 2400 },
+      ];
+      // Trick show: the dog does backflips, she claps and twirls
+      const TRICK_SCENE = [
+        { me: { x: 20 }, dog: { x: 130, flip: -1, show: 1 }, flower: "", arms: "wave", face: "happy", move: 0, dur: 1000 },
+        { me: { x: 20 }, dog: { x: 130, flip: -1 }, arms: "chin", face: "cur", act: "dogflip", dur: 2200 },
+        { me: { x: 20 }, dog: { x: 130, flip: -1 }, arms: "clap", face: "joy", act: "hop", dur: 1600 },
+        { me: { x: 20, flip: -1 }, dog: { x: 130, flip: -1 }, arms: "up", face: "joy", move: 350, dur: 350 },
+        { me: { x: 20 }, dog: { x: 130, flip: -1 }, arms: "up", face: "joy", move: 350, dur: 350 },
+        { me: { x: 20 }, dog: { x: 130, flip: -1 }, arms: "up", face: "joy", act: "hop dogflip", dur: 2200 },
+      ];
+      const WIN_SCENES = [
+        { steps: CUDDLE_SCENE, loopFrom: 2 },
+        { steps: FETCH_SCENE, loopFrom: 1 },
+        { steps: ZOOMIES_SCENE, loopFrom: 1 },
+        { steps: TRICK_SCENE, loopFrom: 1 },
+      ];
+      const WIN_SCENE_KEY = "sudoku-win-scene";
+
+      // Picks a show other than the last one played
+      function playWinScene() {
+        let last = -1;
+        try {
+          last = Number(localStorage.getItem(WIN_SCENE_KEY) ?? -1);
+        } catch (e) {}
+        const choices = WIN_SCENES.map((_, i) => i).filter((i) => i !== last);
+        const pick = choices[Math.floor(Math.random() * choices.length)];
+        try {
+          localStorage.setItem(WIN_SCENE_KEY, String(pick));
+        } catch (e) {}
+        const { steps, loopFrom } = WIN_SCENES[pick];
+        winBuddy.play(steps, { loopFrom });
+      }
+
       const SAD_SCENE = [
         { me: { x: 50 }, dog: { x: 108 }, body: { sit: 22 }, legs: "sit", arms: "down", face: "sad", move: 0, dur: 1600 },
         { me: { x: 50 }, dog: { x: 108 }, body: { sit: 22 }, legs: "sit", arms: "pet", face: "cute", act: "pet", dur: 2600 },
@@ -2588,6 +2829,8 @@
           headBuddy.pose(home(headGeo()));
           await sleep(3500 + Math.random() * 3000);
           if (id !== headLoopId) return;
+          // With animations off she just stands at home
+          if (motionOff()) continue;
           const choices = names.filter((n) => n !== last);
           last = choices[Math.floor(Math.random() * choices.length)];
           await headBuddy.play(HEAD_SCENES[last](headGeo()));
@@ -2596,7 +2839,7 @@
 
       // A quick reaction to something on the board, then back to the usual loop
       async function buddyReact(kind) {
-        if (!headBuddy || reduceMotion.matches) return;
+        if (!headBuddy || motionOff()) return;
         headLoopId++;
         const id = headLoopId;
         await headBuddy.play(REACTIONS[kind](headGeo()));
@@ -2800,6 +3043,8 @@
           this.mistakes = 0;
           this.isOver = false;
           this.hintTimer = null;
+          this.hintSpot = null;
+          this.isPaused = false;
           this.completedRows = new Set();
           this.completedColumns = new Set();
           this.completedBoxes = new Set();
@@ -2830,6 +3075,7 @@
                 showCandidates: this.showCandidates,
                 showMistakes: this.showMistakes,
                 numberFirstMode: this.numberFirstMode,
+                isPaused: this.isPaused,
               })
             );
           } catch (e) {
@@ -2861,6 +3107,7 @@
             showCandidates: saved.showCandidates,
             showMistakes: saved.showMistakes,
             numberFirstMode: saved.numberFirstMode,
+            isPaused: !!saved.isPaused,
           });
           this.setDifficulty(saved.difficulty);
 
@@ -2885,9 +3132,14 @@
             );
             if (this.isSolved) this.completePuzzle();
             else this.endGame();
+          } else if (this.isPaused) {
+            // Paused stays paused until they tap to keep playing
+            this.timer = saved.timer;
+            document.getElementById("timer").textContent = formatTime(this.timer);
           } else {
             this.startTimer(saved.timer);
           }
+          this.updatePause();
           return true;
         }
 
@@ -3088,6 +3340,9 @@
           this.history = [];
           this.historyIndex = -1;
           this.endHintCooldown();
+          this.clearHintSpot();
+          this.isPaused = false;
+          this.updatePause();
           clearTimeout(this.winTimeout);
           document.getElementById("grid").classList.remove("solve-blink");
 
@@ -3274,7 +3529,7 @@
         }
 
         inputNumber(num) {
-          if (this.isFinished) return;
+          if (this.isFinished || this.isPaused) return;
           if (this.numberFirstMode) {
             this.selectNumberForPlacement(num);
             return;
@@ -3364,6 +3619,8 @@
         }
 
         afterMove() {
+          const spot = this.hintSpot;
+          if (spot && !this.needsAnswer(spot.row, spot.col)) this.clearHintSpot();
           this.saveState();
           this.updateDisplay();
           this.updateProgress();
@@ -3498,6 +3755,10 @@
 
             cell.innerHTML = "";
             cell.className = "cell";
+            const spot = this.hintSpot;
+            if (spot && spot.row === row && spot.col === col) {
+              cell.classList.add("hint-spot");
+            }
 
             if (value === 0) {
               // Your own notes take priority over auto candidates
@@ -3845,34 +4106,46 @@
           }, 1700);
         }
 
-        // Fills the selected cell if it's empty or wrong, otherwise a random one
-        showHint() {
-          if (this.isFinished || this.hintTimer) return;
-          const needsAnswer = (row, col) =>
+        needsAnswer(row, col) {
+          return (
             !this.givens[row][col] &&
-            this.grid[row][col] !== this.solution[row][col];
+            this.grid[row][col] !== this.solution[row][col]
+          );
+        }
 
-          let target = null;
-          if (
-            this.selectedCell &&
-            needsAnswer(this.selectedCell.row, this.selectedCell.col)
-          ) {
-            target = this.selectedCell;
-          } else {
-            const options = [];
-            for (let row = 0; row < 9; row++) {
-              for (let col = 0; col < 9; col++) {
-                if (needsAnswer(row, col)) options.push({ row, col });
-              }
-            }
-            if (options.length === 0) {
-              this.showMessage("No cells left to hint!", "error");
-              return;
-            }
-            target = options[Math.floor(Math.random() * options.length)];
+        // Hints come in two taps on the Done box: the first points at a square,
+        // the second shows its number
+        showHint() {
+          if (this.isFinished || this.isPaused || this.hintTimer) return;
+          const spot = this.hintSpot;
+          if (spot && this.needsAnswer(spot.row, spot.col)) this.revealHint(spot);
+          else this.nudgeHint();
+        }
+
+        nudgeHint() {
+          const target = this.pickHintCell();
+          if (!target) {
+            this.showMessage("No cells left to hint!", "error");
+            return;
           }
+          const { row, col, fits } = target;
+          this.hintSpot = { row, col };
+          this.selectedCell = { row, col, index: row * 9 + col };
+          this.updateDisplay();
+          const button = document.getElementById("hint-btn");
+          button.classList.add("nudging");
+          button.setAttribute("aria-label", "Reveal the number");
+          document.getElementById("hint-label").textContent = "Reveal";
+          const why = this.grid[row][col]
+            ? "This square needs another look."
+            : fits === 1
+            ? "Only one number fits this square."
+            : "Try this square next.";
+          this.showMessage(`💡 ${why} Tap 💡 again to see the number.`, "success");
+          buddyReact("think");
+        }
 
-          const { row, col } = target;
+        revealHint({ row, col }) {
           const correctNumber = this.solution[row][col];
           this.selectedCell = { row, col, index: row * 9 + col };
           this.showMessage(
@@ -3880,8 +4153,69 @@
             "success"
           );
           this.placeNumber(row, col, correctNumber);
+          this.clearHintSpot();
           if (!this.isFinished) this.startHintCooldown();
-          buddyReact("think");
+        }
+
+        // The square with the fewest numbers that could fit (the selected one
+        // wins a tie). Wrong entries are left out so the count is honest.
+        pickHintCell() {
+          const clean = this.grid.map((line, r) =>
+            line.map((v, c) => (v === this.solution[r][c] ? v : 0))
+          );
+          let best = [];
+          let fewest = 10;
+          for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+              if (!this.needsAnswer(row, col)) continue;
+              let fits = 0;
+              for (let num = 1; num <= 9; num++) {
+                if (this.isValidMove(clean, row, col, num)) fits++;
+              }
+              if (fits < fewest) {
+                fewest = fits;
+                best = [];
+              }
+              if (fits === fewest) best.push({ row, col, fits });
+            }
+          }
+          if (!best.length) return null;
+          const sel = this.selectedCell;
+          return (
+            best.find((b) => sel && b.row === sel.row && b.col === sel.col) ||
+            best[Math.floor(Math.random() * best.length)]
+          );
+        }
+
+        clearHintSpot() {
+          if (!this.hintSpot) return;
+          this.hintSpot = null;
+          const button = document.getElementById("hint-btn");
+          button.classList.remove("nudging");
+          button.setAttribute("aria-label", "Hint");
+          document.getElementById("hint-label").textContent = "Done";
+          document
+            .querySelectorAll(".hint-spot")
+            .forEach((cell) => cell.classList.remove("hint-spot"));
+        }
+
+        // Tapping the clock pauses it and covers the board
+        togglePause() {
+          if (this.isFinished) return;
+          this.isPaused = !this.isPaused;
+          if (this.isPaused) this.stopTimer();
+          else this.startTimer(this.timer);
+          this.updatePause();
+          this.saveGame();
+        }
+
+        updatePause() {
+          const paused = this.isPaused && !this.isFinished;
+          document.querySelector(".game-container").classList.toggle("paused", paused);
+          document.getElementById("pause-cover").hidden = !paused;
+          const button = document.getElementById("timer-btn");
+          button.setAttribute("aria-pressed", String(paused));
+          button.setAttribute("aria-label", paused ? "Keep playing" : "Pause");
         }
 
         // After a hint, the button rests for a few seconds with a draining ring
@@ -3895,13 +4229,12 @@
               "--left",
               (msLeft / (HINT_COOLDOWN * 10)).toFixed(1)
             );
-            document.getElementById("hint-seconds").textContent = Math.ceil(
+            document.getElementById("hint-label").textContent = `Wait ${Math.ceil(
               msLeft / 1000
-            );
+            )}`;
           };
           button.disabled = true;
           button.classList.add("cooling");
-          document.getElementById("hint-label").textContent = "Wait";
           tick();
           this.hintTimer = setInterval(tick, 100);
         }
@@ -3912,7 +4245,8 @@
           const button = document.getElementById("hint-btn");
           button.disabled = false;
           button.classList.remove("cooling");
-          document.getElementById("hint-label").textContent = "Hint";
+          button.style.removeProperty("--left");
+          if (!this.hintSpot) document.getElementById("hint-label").textContent = "Done";
         }
 
         startTimer(from = 0) {
@@ -3978,6 +4312,10 @@
         if (game) game.showHint();
       }
 
+      function togglePause() {
+        if (game) game.togglePause();
+      }
+
       document.addEventListener("DOMContentLoaded", () => {
         // The test difficulty is only offered when the URL has ?debug
         if (new URLSearchParams(location.search).has("debug")) {
@@ -3987,6 +4325,10 @@
           document.getElementById("difficulty-select").appendChild(option);
         }
         applyTheme(getThemeChoice());
+        // Phones in the app can vibrate; the website has nothing to switch off
+        document.getElementById("haptics-row").hidden = !isNativeApp;
+        document.getElementById("haptics-toggle").classList.toggle("active", hapticsOn);
+        document.getElementById("motion-toggle").classList.toggle("active", motionOn);
         startBuddies();
         game = new SudokuGame();
       });
@@ -4024,6 +4366,8 @@
           if (e.key === "Escape") hideWinScreen();
           return;
         }
+        if (e.key.toLowerCase() === "p") return togglePause();
+        if (game && game.isPaused) return;
 
         if (e.key.toLowerCase() === "n") {
           toggleNotes();

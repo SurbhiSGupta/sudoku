@@ -12,7 +12,7 @@ Calm Sudoku with notes, hints, dark mode and stats. No sign-up, works offline.
 
 ## Full description (max 4000 characters)
 
-A calm, friendly Sudoku made for your phone, with a little stick figure and her yellow dog keeping you company.
+A calm, friendly Sudoku made for your phone, with a little stick figure and her yellow dog, Frisky, keeping you company.
 
 Every puzzle has exactly one solution, so you can always solve it with logic, never guesswork. Pick Easy, Medium or Hard and play at your own pace.
 
@@ -69,7 +69,7 @@ All in `play-store/graphics/`:
 
 - App icon: `icon-512.png` (512 × 512)
 - Feature graphic: `feature-graphic.png` (1024 × 500)
-- Phone screenshots: `screenshot-1.png` to `screenshot-5.png` (1080 × 2160)
+- Phone screenshots: `screenshot-1.png` to `screenshot-5.png` (1080 × 1920, 9:16)
   1. A game in progress, with the selected number highlighted
   2. Number First mode with candidates
   3. Dark mode
