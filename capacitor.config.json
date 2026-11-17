@@ -12,6 +12,10 @@
       "backgroundColor": "#f6f4ec",
       "style": "LIGHT",
       "overlaysWebView": false
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_bodai",
+      "iconColor": "#7d8c2c"
     }
   }
 }

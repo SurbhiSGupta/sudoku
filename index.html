@@ -73,9 +73,11 @@
         --track: #b3c1bd;
         --cand: #fbfde4;
         --scrim: rgba(246, 244, 236, 0.72);
+        --lv-puppy: #56622a;
         --lv-easy: #7d8c2c;
         --lv-medium: #b9cc3a;
         --lv-hard: #eeff41;
+        --lv-zoomies: #ffffff;
       }
 
       @media (prefers-color-scheme: dark) {
@@ -333,6 +335,17 @@
       .toggle-label {
         font-size: 15px;
         font-weight: 600;
+      }
+
+      .toggle-container input[type="time"] {
+        margin-left: auto;
+        font: inherit;
+        font-weight: 600;
+        color: var(--ink);
+        background: var(--slot);
+        border: none;
+        border-radius: 8px;
+        padding: 4px 8px;
       }
 
       .toggle-switch {
@@ -1502,6 +1515,341 @@
         color: var(--bg);
       }
 
+      /* ---------- Home screen: today's puzzle first, then your own games ---------- */
+      .home {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: var(--bg);
+        overflow-y: auto;
+        display: flex;
+        justify-content: center;
+        padding: max(20px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+        animation: fadeIn 0.35s ease-out both;
+      }
+
+      .home[hidden] {
+        display: none;
+      }
+
+      .home-inner {
+        width: 100%;
+        max-width: 480px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .home-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .home-buddy {
+        height: 130px;
+        margin: -4px -8px -6px;
+      }
+
+      .today-card {
+        background: var(--score);
+        color: var(--score-ink);
+        border-radius: 20px;
+        padding: 18px 18px 16px;
+        box-shadow: 0 4px 0 var(--edge);
+      }
+
+      .today-kicker {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--flash);
+      }
+
+      .today-card h2 {
+        margin: 4px 0 2px;
+        font-size: 26px;
+        font-weight: 800;
+      }
+
+      .today-meta {
+        margin: 0;
+        color: var(--score-label);
+        font-weight: 600;
+      }
+
+      .today-card .btn-primary {
+        width: 100%;
+        margin-top: 14px;
+        font-size: 18px;
+        padding: 14px;
+      }
+
+      .home-wide {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .home-wide[hidden] {
+        display: none;
+      }
+
+      .home-wide small {
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 14px;
+      }
+
+      .home-new {
+        display: flex;
+        gap: 8px;
+      }
+
+      .home-links {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .home-links button {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 12px 4px;
+        font-size: 14px;
+      }
+
+      .home-links span {
+        font-size: 22px;
+      }
+
+      .dots {
+        letter-spacing: 1px;
+        font-size: 0.85em;
+      }
+
+      /* "New here?" card, until it's dismissed */
+      .guide-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 12px 12px 12px 16px;
+        box-shadow: 0 3px 0 var(--edge);
+        font-weight: 600;
+      }
+
+      .guide-card[hidden] {
+        display: none;
+      }
+
+      .guide-card p {
+        flex: 1;
+        margin: 0;
+      }
+
+      .guide-card button {
+        padding: 8px 12px;
+        font-size: 14px;
+        box-shadow: none;
+        background: var(--slot);
+      }
+
+      /* In a daily game, the level dropdown gives way to a "today" chip */
+      .daily-chip {
+        flex: 1;
+        display: none;
+        align-items: center;
+        padding: 0 16px;
+        border-radius: 12px;
+        background: var(--score);
+        color: var(--score-ink);
+        font-weight: 700;
+      }
+
+      .daily-mode .daily-chip {
+        display: flex;
+      }
+
+      .daily-mode .controls .select-wrap {
+        display: none;
+      }
+
+      /* Your best time, small under the clock */
+      .stat-best {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--score-label);
+        margin-top: -2px;
+      }
+
+      .stat-best[hidden] {
+        display: none;
+      }
+
+      .link-btn {
+        background: none;
+        box-shadow: none;
+        color: var(--muted);
+        margin-top: 8px;
+        font-size: 15px;
+      }
+
+      /* Calendar of daily puzzles; the battery shows how close you came to your best */
+      .cal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 14px 0 8px;
+        font-weight: 800;
+        font-size: 18px;
+      }
+
+      .cal-head button {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 50%;
+        background: var(--slot);
+        box-shadow: none;
+      }
+
+      .cal-summary {
+        text-align: center;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+      }
+
+      .cal-dow {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .cal-day {
+        aspect-ratio: 1 / 1.15;
+        padding: 5px 2px 6px;
+        border-radius: 10px;
+        background: var(--slot);
+        box-shadow: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .cal-day.today {
+        box-shadow: inset 0 0 0 2px var(--ink);
+      }
+
+      .cal-day[aria-pressed="true"] {
+        background: var(--accent);
+        color: var(--accent-ink);
+      }
+
+      .cal-day:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+
+      .cal-day.blank {
+        visibility: hidden;
+      }
+
+      .batt {
+        position: relative;
+        width: 68%;
+        max-width: 26px;
+        height: 10px;
+        border: 1.5px solid currentColor;
+        border-radius: 3px;
+      }
+
+      .batt::after {
+        content: "";
+        position: absolute;
+        right: -4px;
+        top: 2px;
+        width: 2px;
+        height: 3px;
+        border-radius: 0 1px 1px 0;
+        background: currentColor;
+      }
+
+      .batt i {
+        position: absolute;
+        left: 1px;
+        top: 1px;
+        bottom: 1px;
+        width: calc((100% - 2px) * var(--fill, 0));
+        border-radius: 1px;
+        background: var(--green);
+      }
+
+      .cal-day.missed .batt {
+        opacity: 0.35;
+      }
+
+      .cal-detail {
+        min-height: 4.5em;
+        margin-top: 12px;
+        font-weight: 600;
+      }
+
+      .cal-detail .btn-primary {
+        margin-top: 10px;
+      }
+
+      .cal-note {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 4px 0 0;
+      }
+
+      /* Help: how to play, the buttons, the levels */
+      .help-card h3 {
+        margin: 18px 0 6px;
+        font-size: 17px;
+      }
+
+      .help-card ol,
+      .help-card ul {
+        margin: 0;
+        padding-left: 22px;
+        line-height: 1.45;
+      }
+
+      .help-card li {
+        margin-bottom: 6px;
+      }
+
+      .help-levels {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 4px 12px;
+        font-weight: 600;
+      }
+
+      .help-card .settings-links {
+        margin-top: 18px;
+      }
+
       /* Win or game-over card over the finished board */
       .win-screen {
         position: fixed;
@@ -1664,7 +2012,7 @@
 
       .level-tiles {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
         gap: 8px;
         margin: 16px 0 20px;
         text-align: center;
@@ -1723,7 +2071,8 @@
 
       .legend {
         display: flex;
-        gap: 14px;
+        flex-wrap: wrap;
+        gap: 4px 14px;
         font-size: 13px;
         font-weight: 600;
         color: var(--score-label);
@@ -1898,6 +2247,7 @@
       }
 
       #retry-btn[hidden],
+      #daily-btn[hidden],
       .win-stats[hidden] {
         display: none;
       }
@@ -2055,13 +2405,55 @@
         <feDisplacementMap in="SourceGraphic" in2="n" scale="3" />
       </filter>
     </svg>
+    <div class="home" id="home-screen" hidden>
+      <div class="home-inner">
+        <div class="home-head">
+          <h1><span class="mark">Bodai Sudoku</span></h1>
+          <button class="icon-btn" onclick="showHelp()" aria-label="Help">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/></svg>
+          </button>
+        </div>
+        <div class="home-buddy" id="buddy-home"></div>
+
+        <div class="guide-card" id="guide-card" hidden>
+          <p>New to Sudoku? Take the one-minute tour.</p>
+          <button onclick="dismissGuide(); showHelp()">Show me</button>
+          <button onclick="dismissGuide()" aria-label="I know how to play">✕</button>
+        </div>
+
+        <section class="today-card" aria-labelledby="today-date">
+          <p class="today-kicker">☀ Today's puzzle</p>
+          <h2 id="today-date"></h2>
+          <p class="today-meta" id="today-meta"></p>
+          <button class="btn-primary" id="today-btn" onclick="playDaily()">Play</button>
+        </section>
+
+        <button class="home-wide" id="continue-btn" onclick="continueGame()" hidden>
+          <span>▶ Continue</span><small id="continue-info"></small>
+        </button>
+
+        <div class="home-new">
+          <div class="select-wrap">
+            <select id="home-level" aria-label="Level for a new game"></select>
+          </div>
+          <button class="btn-primary" onclick="startFromHome()">New game</button>
+        </div>
+
+        <div class="home-links">
+          <button onclick="showCalendar()"><span aria-hidden="true">📅</span>Calendar</button>
+          <button onclick="showStats()"><span aria-hidden="true">📊</span>Stats</button>
+          <button onclick="showHelp()"><span aria-hidden="true">❓</span>Help</button>
+        </div>
+      </div>
+    </div>
+
     <div class="game-container">
       <div class="header">
         <h1><span class="mark">Sudoku</span></h1>
         <div class="buddy-head" id="buddy-head"></div>
         <div class="header-actions">
-          <button class="icon-btn" onclick="showStats()" aria-label="Your stats">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
+          <button class="icon-btn" onclick="showHome()" aria-label="Home">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.5 11.2l1.3 1.5L5 11.7V20h5.5v-5.5h3V20H19v-8.3l1.2 1 1.3-1.5z"/></svg>
           </button>
           <button
             class="icon-btn"
@@ -2129,6 +2521,35 @@
           </div>
         </div>
 
+        <div class="toggle-container">
+          <span class="toggle-label">Sound</span>
+          <div
+            class="toggle-switch"
+            id="sound-toggle"
+            onclick="toggleSound()"
+          >
+            <div class="toggle-slider"></div>
+          </div>
+        </div>
+
+        <div class="toggle-container" id="reminder-row" hidden>
+          <span class="toggle-label">Daily reminder</span>
+          <input
+            type="time"
+            id="reminder-time"
+            value="08:00"
+            aria-label="Reminder time"
+            onchange="setReminderTime(this.value)"
+          />
+          <div
+            class="toggle-switch"
+            id="reminder-toggle"
+            onclick="toggleReminder()"
+          >
+            <div class="toggle-slider"></div>
+          </div>
+        </div>
+
         <div class="toggle-container" id="haptics-row" hidden>
           <span class="toggle-label">Vibration</span>
           <div
@@ -2168,11 +2589,9 @@
             aria-label="Difficulty"
             onchange="newGame(this.value)"
           >
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
           </select>
         </div>
+        <div class="daily-chip" id="daily-chip">☀ Today's puzzle</div>
         <button
           class="btn-primary"
           onclick="newGame(document.getElementById('difficulty-select').value)"
@@ -2194,6 +2613,7 @@
             ><svg class="stat-icon play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
           </div>
           <div class="stat-value" id="timer">00:00</div>
+          <div class="stat-best" id="timer-best" hidden></div>
         </button>
         <div class="stat-item" id="mistakes-box">
           <div class="stat-label">Mistakes</div>
@@ -2309,17 +2729,85 @@
         <button class="btn-primary" id="retry-btn" onclick="retryPuzzle()" hidden>
           Try this puzzle again
         </button>
+        <button class="btn-primary" id="daily-btn" onclick="playDaily()" hidden>
+          ☀ Play today's puzzle
+        </button>
         <div class="next-row">
           <div class="select-wrap">
             <select id="next-level" aria-label="Level for the next puzzle">
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
             </select>
           </div>
           <button class="btn-primary" id="next-btn" onclick="playNext()">
             Next puzzle ▶
           </button>
+        </div>
+        <button class="link-btn" onclick="showHome()">🏠 Home</button>
+      </div>
+    </div>
+
+    <div class="win-screen" id="calendar-screen" role="dialog" aria-labelledby="calendar-title" hidden>
+      <div class="win-card stats-card">
+        <button class="close-btn" onclick="hideCalendar()" aria-label="Close calendar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+        <h2><span class="mark" id="calendar-title">Daily puzzles</span></h2>
+        <p class="cal-summary" id="cal-summary"></p>
+        <div class="cal-head">
+          <button onclick="moveCalendar(-1)" aria-label="Previous month">‹</button>
+          <span id="cal-month"></span>
+          <button onclick="moveCalendar(1)" aria-label="Next month">›</button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-detail" id="cal-detail" aria-live="polite"></div>
+        <p class="cal-note">
+          🔋 The battery shows how close you came to your best time for that level.
+          A full battery means you matched or beat it.
+        </p>
+      </div>
+    </div>
+
+    <div class="win-screen" id="help-screen" role="dialog" aria-labelledby="help-title" hidden>
+      <div class="win-card stats-card help-card">
+        <button class="close-btn" onclick="hideHelp()" aria-label="Close help">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+        <h2><span class="mark" id="help-title">Help</span></h2>
+
+        <h3>Get started</h3>
+        <ol>
+          <li>Fill the board so every row, every column and every 3×3 box has the numbers 1 to 9, each just once.</li>
+          <li>Tap a square, then tap a number below the board.</li>
+          <li>Not sure yet? Turn on <b>Notes</b> and pencil in the numbers that could fit.</li>
+          <li>Each wrong number uses up one of Frisky's dogs. You can change the limit, or hide mistakes, in Settings.</li>
+          <li>Every puzzle has exactly one answer, so you can always solve it with logic. No guessing needed.</li>
+        </ol>
+
+        <h3>Handy buttons</h3>
+        <ul>
+          <li><b>Time</b>: tap it to pause. The board hides so the clock is fair.</li>
+          <li><b>Done</b>: tap it for a hint. The first tap points at a square; tap again to see its number.</li>
+          <li><b>Undo</b> and <b>Redo</b>: step back and forward through your moves.</li>
+          <li><b>Number First</b> (Settings): pick a number, then tap or drag across every square it goes in.</li>
+          <li><b>Focus Mode</b> (Settings): hides everything but the board and the number pad.</li>
+        </ul>
+
+        <h3>Today's puzzle</h3>
+        <p>
+          A new puzzle every day, the same one for everyone. Solve it on the day to keep
+          your streak going. Missed one? Play it from the calendar any time.
+        </p>
+
+        <h3>Levels</h3>
+        <div class="help-levels" id="help-levels"></div>
+
+        <div class="settings-links">
+          <button onclick="hideHelp(); reportBug()">🐞 Report a bug</button>
+          <a
+            href="https://play.google.com/store/apps/details?id=com.bodaijewels.sudoku"
+            target="_blank"
+            rel="noopener"
+            >⭐ Rate Bodai</a
+          >
         </div>
       </div>
     </div>
@@ -2465,7 +2953,7 @@
         document.querySelectorAll(".toggle-switch").forEach((el) => {
           el.setAttribute("role", "switch");
           el.tabIndex = 0;
-          const label = el.previousElementSibling?.textContent.trim();
+          const label = el.closest(".toggle-container")?.querySelector(".toggle-label")?.textContent.trim();
           if (label) el.setAttribute("aria-label", label);
           const sync = () => el.setAttribute("aria-checked", String(el.classList.contains("active")));
           sync();
@@ -2522,7 +3010,183 @@
         }
       }
 
+      // ---------- Sounds ----------
+      // Made on the fly with Web Audio, so they work offline and weigh nothing
+      const SOUND_KEY = "sudoku-sound";
+      let soundOn = true;
+      try {
+        soundOn = localStorage.getItem(SOUND_KEY) !== "off";
+      } catch (e) {}
+      let audio = null;
+
+      function toggleSound() {
+        soundOn = !soundOn;
+        try {
+          localStorage.setItem(SOUND_KEY, soundOn ? "on" : "off");
+        } catch (e) {}
+        document.getElementById("sound-toggle").classList.toggle("active", soundOn);
+        playSound("tap");
+      }
+
+      // One soft note that fades out
+      function tone(freq, at, length, { type = "sine", volume = 0.07 } = {}) {
+        const osc = audio.createOscillator();
+        const gain = audio.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, at);
+        gain.gain.exponentialRampToValueAtTime(volume, at + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
+        osc.connect(gain).connect(audio.destination);
+        osc.start(at);
+        osc.stop(at + length + 0.05);
+      }
+
+      function playSound(kind) {
+        if (!soundOn) return;
+        try {
+          audio ||= new (window.AudioContext || window.webkitAudioContext)();
+          if (audio.state === "suspended") audio.resume();
+        } catch (e) {
+          return;
+        }
+        const t = audio.currentTime;
+        if (kind === "tap") {
+          tone(880, t, 0.07, { type: "triangle", volume: 0.035 });
+        } else if (kind === "error") {
+          tone(240, t, 0.2, { volume: 0.06 });
+          tone(190, t + 0.11, 0.24, { volume: 0.05 });
+        } else if (kind === "line") {
+          tone(784, t, 0.16);
+          tone(1047, t + 0.1, 0.26);
+        } else if (kind === "win") {
+          [523, 659, 784, 1047, 1319].forEach((f, i) =>
+            tone(f, t + i * 0.11, 0.45, { volume: 0.06 })
+          );
+        }
+      }
+
+      // ---------- Daily reminder (app only) ----------
+      // Reminders are booked for the next two weeks and skip days already solved,
+      // so solving today's puzzle quietly cancels today's nudge.
+      const REMINDER_KEY = "sudoku-reminder";
+      const REMINDER_LINES = [
+        "Frisky is waiting with today's puzzle 🐾",
+        "A fresh puzzle is ready. Keep your streak going!",
+        "Your daily Sudoku is here ☀",
+      ];
+      const notifier = () => (isNativeApp ? window.Capacitor?.Plugins?.LocalNotifications : null);
+
+      function loadReminder() {
+        try {
+          return { on: false, time: "08:00", ...JSON.parse(localStorage.getItem(REMINDER_KEY)) };
+        } catch (e) {
+          return { on: false, time: "08:00" };
+        }
+      }
+
+      function saveReminder(reminder) {
+        try {
+          localStorage.setItem(REMINDER_KEY, JSON.stringify(reminder));
+        } catch (e) {}
+        document.getElementById("reminder-toggle").classList.toggle("active", reminder.on);
+        document.getElementById("reminder-time").value = reminder.time;
+      }
+
+      async function toggleReminder() {
+        const notes = notifier();
+        if (!notes) return;
+        const reminder = loadReminder();
+        if (!reminder.on) {
+          // Android asks for permission only now, when you turn it on
+          const answer = await notes.requestPermissions().catch(() => ({}));
+          if (answer.display !== "granted") {
+            game?.showMessage("Notifications are off for Bodai in your phone's settings.", "error", 5000);
+            return;
+          }
+        }
+        reminder.on = !reminder.on;
+        saveReminder(reminder);
+        scheduleReminders();
+        if (reminder.on) game?.showMessage(`We'll remind you at ${reminder.time} ☀`, "success");
+      }
+
+      function setReminderTime(time) {
+        if (!time) return;
+        saveReminder({ ...loadReminder(), time });
+        scheduleReminders();
+      }
+
+      async function scheduleReminders() {
+        const notes = notifier();
+        if (!notes) return;
+        try {
+          const pending = await notes.getPending();
+          if (pending.notifications.length) {
+            await notes.cancel({ notifications: pending.notifications.map((n) => ({ id: n.id })) });
+          }
+          const reminder = loadReminder();
+          if (!reminder.on) return;
+          const [hour, minute] = reminder.time.split(":").map(Number);
+          const results = loadDaily();
+          const now = new Date();
+          const list = [];
+          for (let i = 0; i < 14; i++) {
+            const at = new Date();
+            at.setDate(at.getDate() + i);
+            at.setHours(hour, minute, 0, 0);
+            const key = dayKey(at);
+            if (at <= now || results[key]) continue;
+            list.push({
+              id: Number(key.replaceAll("-", "").slice(2)),
+              title: `☀ Today's puzzle: ${levelName(dailyLevel(key))}`,
+              body: REMINDER_LINES[at.getDate() % REMINDER_LINES.length],
+              schedule: { at, allowWhileIdle: true },
+              extra: { daily: key },
+            });
+          }
+          if (list.length) await notes.schedule({ notifications: list });
+        } catch (e) {}
+      }
+
+      // ---------- Backup ----------
+      // A copy of your stats and settings in the app's preferences, which Android
+      // backs up with your phone. A new phone restores it on first open.
+      const BACKUP_KEY = "bodai-backup";
+      const prefsStore = () => (isNativeApp ? window.Capacitor?.Plugins?.Preferences : null);
+
+      function saveBackup() {
+        const store = prefsStore();
+        if (!store) return;
+        try {
+          const data = {};
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith("sudoku-")) data[key] = localStorage.getItem(key);
+          }
+          store.set({ key: BACKUP_KEY, value: JSON.stringify(data) });
+        } catch (e) {}
+      }
+
+      // Only when this phone has nothing of its own yet
+      async function restoreBackup() {
+        const store = prefsStore();
+        if (!store) return false;
+        try {
+          if (Object.keys(localStorage).some((key) => key.startsWith("sudoku-"))) return false;
+          const { value } = await store.get({ key: BACKUP_KEY });
+          if (!value) return false;
+          for (const [key, item] of Object.entries(JSON.parse(value))) {
+            localStorage.setItem(key, item);
+          }
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
       function haptic(kind) {
+        playSound(kind);
         const haptics = window.Capacitor?.Plugins?.Haptics;
         if (!isNativeApp || !haptics || !hapticsOn) return;
         if (kind === "win") haptics.notification({ type: "SUCCESS" });
@@ -2538,6 +3202,32 @@
             "content",
             "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
           );
+      }
+
+      // A repeatable random sequence from some text, so everyone gets the same
+      // daily puzzle (mulberry32, seeded from a hash of the text)
+      function seededRandom(text) {
+        let h = 1779033703 ^ text.length;
+        for (let i = 0; i < text.length; i++) {
+          h = Math.imul(h ^ text.charCodeAt(i), 3432918353);
+          h = (h << 13) | (h >>> 19);
+        }
+        let a = h >>> 0;
+        return () => {
+          a = (a + 0x6d2b79f5) | 0;
+          let t = Math.imul(a ^ (a >>> 15), 1 | a);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+
+      // Fisher-Yates, so a seeded shuffle comes out the same on every phone
+      function shuffle(list, rng = Math.random) {
+        for (let i = list.length - 1; i > 0; i--) {
+          const j = Math.floor(rng() * (i + 1));
+          [list[i], list[j]] = [list[j], list[i]];
+        }
+        return list;
       }
 
       function formatTime(totalSeconds) {
@@ -2753,7 +3443,35 @@
         };
       }
 
-      const LEVELS = ["easy", "medium", "hard"];
+      // Five levels, named for Frisky getting more and more excited. The middle
+      // three keep their old ids (easy, medium, hard) so past stats carry over.
+      const LEVELS = ["puppy", "easy", "medium", "hard", "zoomies"];
+      const LEVEL_NAMES = {
+        puppy: "Puppy",
+        easy: "Stroll",
+        medium: "Fetch",
+        hard: "Sprint",
+        zoomies: "Zoomies",
+      };
+      // How many numbers each level tries to take away (fewer givens = harder)
+      const LEVEL_BLANKS = { puppy: 28, easy: 35, medium: 45, hard: 55, zoomies: 64 };
+
+      // ●●●○○ for a level, as text (for dropdowns) or labelled HTML
+      function levelDotsText(level) {
+        const n = LEVELS.indexOf(level) + 1;
+        return "●".repeat(n) + "○".repeat(LEVELS.length - n);
+      }
+
+      function levelDots(level) {
+        const n = LEVELS.indexOf(level) + 1;
+        return `<span class="dots" role="img" aria-label="level ${n} of ${LEVELS.length}">${levelDotsText(level)}</span>`;
+      }
+
+      function fillLevelSelect(select) {
+        select.innerHTML = LEVELS.map(
+          (l) => `<option value="${l}">${LEVEL_NAMES[l]}  ${levelDotsText(l)}</option>`
+        ).join("");
+      }
       const HINT_COOLDOWN = 10;
 
       // Frisky, the little yellow dog, one per mistake allowed
@@ -2779,12 +3497,19 @@
         document.getElementById(focusId).focus();
       }
 
-      function showWinScreen({ seconds, difficulty, isNewBest, celebrate, mistakes }) {
-        const level = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+      function showWinScreen({ seconds, difficulty, isNewBest, celebrate, mistakes, daily = null }) {
+        const level = levelName(difficulty);
         const best = loadBestTimes()[difficulty];
-        document.getElementById("win-title").textContent = "You did it!";
-        document.getElementById("win-sub").textContent =
-          `${level} puzzle solved`;
+        const today = dayKey();
+        const streak = dailyStreak();
+        document.getElementById("win-title").textContent =
+          daily === today ? "Today's done!" : "You did it!";
+        document.getElementById("win-sub").textContent = daily
+          ? `${level} · ${prettyDay(daily, { weekday: "short", month: "short", day: "numeric" })}` +
+            (daily === today && streak ? ` · 🔥 ${streak}-day streak` : "")
+          : `${level} puzzle solved`;
+        // Offer today's puzzle if it's still waiting
+        document.getElementById("daily-btn").hidden = !!loadDaily()[today];
         document.getElementById("win-stats").hidden = false;
         countUp(document.getElementById("win-time"), seconds, celebrate);
         document.getElementById("win-best").textContent = formatTime(
@@ -2795,7 +3520,8 @@
         document.getElementById("retry-btn").hidden = true;
         document.getElementById("next-btn").textContent = "Next puzzle ▶";
         document.getElementById("next-btn").className = "btn-primary";
-        setNextLevel(difficulty);
+        // After a daily, the next regular game starts on your usual level
+        setNextLevel(daily ? readSlot(STORAGE_KEY)?.difficulty : difficulty);
 
         const chart = document.getElementById("win-chart");
         chart.hidden = false;
@@ -2825,7 +3551,7 @@
       }
 
       function showGameOverScreen({ difficulty, limit }) {
-        const level = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+        const level = levelName(difficulty);
         document.getElementById("win-title").textContent = "Out of mistakes";
         document.getElementById("win-sub").textContent =
           `You made ${limit} mistakes on this ${level} puzzle. Want another go?`;
@@ -2836,16 +3562,18 @@
         document.getElementById("retry-btn").hidden = false;
         document.getElementById("next-btn").textContent = "New puzzle";
         document.getElementById("next-btn").className = "";
+        document.getElementById("daily-btn").hidden = true;
         setNextLevel(difficulty);
         openEndScreen("retry-btn");
       }
 
       // The next-puzzle dropdown starts on the level just played
       function setNextLevel(difficulty) {
-        document.getElementById("next-level").value = LEVELS.includes(
-          difficulty
-        )
+        const regular = readSlot(STORAGE_KEY)?.difficulty;
+        document.getElementById("next-level").value = LEVELS.includes(difficulty)
           ? difficulty
+          : LEVELS.includes(regular)
+          ? regular
           : "easy";
       }
 
@@ -3137,9 +3865,319 @@
       function startBuddies() {
         headBuddy = new Buddy(document.getElementById("buddy-head"), "0 -34 240 176", true);
         winBuddy = new Buddy(document.getElementById("buddy-win"), "-20 -40 280 186");
+        homeBuddy = new Buddy(document.getElementById("buddy-home"), "-20 -40 280 186");
         headBuddy.pose({ ...home(headGeo()), move: 0 });
         window.addEventListener("resize", () => headBuddy.pose({ ...home(headGeo()), move: 0 }));
         headLoop("wave");
+      }
+
+      // ---------- Daily puzzle ----------
+      // One puzzle a day, the same for everyone: the date seeds the puzzle maker.
+      // It's played in its own save slot, so it never touches your regular game.
+      const DAILY_KEY = "sudoku-daily";
+      const DAILY_GAME_KEY = "sudoku-daily-game";
+      // Gentle early in the week, a Zoomies challenge on Sunday
+      const DAILY_LEVELS = ["zoomies", "easy", "medium", "medium", "hard", "medium", "hard"];
+
+      function dayKey(date = new Date()) {
+        const pad = (n) => String(n).padStart(2, "0");
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+      }
+
+      function dateFromKey(key) {
+        const [y, m, d] = key.split("-").map(Number);
+        return new Date(y, m - 1, d);
+      }
+
+      function dailyLevel(key) {
+        return DAILY_LEVELS[dateFromKey(key).getDay()];
+      }
+
+      function prettyDay(key, opts = { weekday: "long", month: "short", day: "numeric" }) {
+        return dateFromKey(key).toLocaleDateString(undefined, opts);
+      }
+
+      function loadDaily() {
+        try {
+          return JSON.parse(localStorage.getItem(DAILY_KEY)) || {};
+        } catch (e) {
+          return {};
+        }
+      }
+
+      // The first solve of each day's puzzle is the one that counts
+      function saveDailyResult(date, seconds, mistakes, level) {
+        const results = loadDaily();
+        if (results[date]) return;
+        results[date] = { seconds, mistakes, level, onDay: date === dayKey() };
+        try {
+          localStorage.setItem(DAILY_KEY, JSON.stringify(results));
+        } catch (e) {}
+      }
+
+      // Days in a row solved on the day. Today not done yet doesn't break it.
+      function dailyStreak(results = loadDaily()) {
+        const day = new Date();
+        if (!results[dayKey(day)]?.onDay) day.setDate(day.getDate() - 1);
+        let streak = 0;
+        while (results[dayKey(day)]?.onDay) {
+          streak++;
+          day.setDate(day.getDate() - 1);
+        }
+        return streak;
+      }
+
+      function playDaily(date = dayKey()) {
+        if (!game) return;
+        hideWinScreen();
+        hideCalendar();
+        hideHome();
+        game.openDaily(date);
+      }
+
+      // ---------- Home ----------
+      let homeBuddy;
+
+      function showHome() {
+        hideWinScreen();
+        if (game) game.suspend();
+        renderHome();
+        document.getElementById("home-screen").hidden = false;
+        document.getElementById("home-screen").scrollTop = 0;
+        if (homeBuddy) {
+          const scene = WIN_SCENES[Math.floor(Math.random() * WIN_SCENES.length)];
+          homeBuddy.play(scene.steps, { loopFrom: scene.loopFrom });
+        }
+        if (focusOn) window.Capacitor?.Plugins?.Bodai?.setFocus({ on: false });
+      }
+
+      function hideHome() {
+        const home = document.getElementById("home-screen");
+        if (home.hidden) return;
+        home.hidden = true;
+        if (homeBuddy) homeBuddy.stop();
+        if (focusOn) window.Capacitor?.Plugins?.Bodai?.setFocus({ on: true });
+      }
+
+      const homeOpen = () => !document.getElementById("home-screen").hidden;
+
+      function renderHome() {
+        const today = dayKey();
+        const results = loadDaily();
+        const done = results[today];
+        const level = dailyLevel(today);
+        const streak = dailyStreak(results);
+        document.getElementById("today-date").textContent = prettyDay(today);
+        document.getElementById("today-meta").innerHTML =
+          `${levelName(level)} ${levelDots(level)}` +
+          (streak ? ` · 🔥 ${streak}-day streak` : "");
+        const button = document.getElementById("today-btn");
+        const inProgress = readSlot(DAILY_GAME_KEY);
+        if (done) {
+          button.textContent = `✓ Solved in ${formatTime(done.seconds)} · See calendar`;
+          button.onclick = showCalendar;
+        } else {
+          button.textContent =
+            inProgress?.dailyDate === today && inProgress.timer > 0
+              ? `Continue · ${formatTime(inProgress.timer)}`
+              : "Play";
+          button.onclick = () => playDaily(today);
+        }
+
+        // Continue your regular game, if one is going
+        const regular = game?.mode === "regular" ? game.snapshot() : readSlot(STORAGE_KEY);
+        const unfinished =
+          regular && regular.grid && !regular.isSolved && !regular.isOver && regular.timer > 0;
+        document.getElementById("continue-btn").hidden = !unfinished;
+        if (unfinished) {
+          document.getElementById("continue-info").textContent =
+            `${levelName(regular.difficulty)} · ${formatTime(regular.timer || 0)}`;
+        }
+        document.getElementById("home-level").value =
+          regular && LEVELS.includes(regular.difficulty) ? regular.difficulty : "easy";
+        document.getElementById("guide-card").hidden = guideDismissed();
+      }
+
+      function readSlot(key) {
+        try {
+          return JSON.parse(localStorage.getItem(key));
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function continueGame() {
+        hideHome();
+        if (game) game.openRegular();
+      }
+
+      function startFromHome() {
+        const level = document.getElementById("home-level").value;
+        hideHome();
+        if (!game) return;
+        const regular = game.mode === "regular" ? game.snapshot() : readSlot(STORAGE_KEY);
+        const busy = regular && !regular.isSolved && !regular.isOver && regular.timer > 0;
+        if (busy && !confirm("Start a new game? Your current puzzle will be lost.")) {
+          game.openRegular();
+          return;
+        }
+        game.generatePuzzle(level);
+      }
+
+      // ---------- "New here?" guide and one-time tips ----------
+      const GUIDE_KEY = "sudoku-guide-done";
+      const TIPS_KEY = "sudoku-tips-seen";
+      const TIPS = [
+        "Tip: tap the Time box to pause the clock.",
+        "Tip: stuck? Tap the Done box for a hint.",
+        "Tip: turn on Notes to pencil in numbers that could fit.",
+        "Tip: Focus Mode in Settings hides everything but the board.",
+      ];
+
+      function guideDismissed() {
+        try {
+          return localStorage.getItem(GUIDE_KEY) === "1";
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function dismissGuide() {
+        try {
+          localStorage.setItem(GUIDE_KEY, "1");
+        } catch (e) {}
+        document.getElementById("guide-card").hidden = true;
+      }
+
+      // Shows the next tip at the start of each of the first few games
+      function nextTip() {
+        let seen = 0;
+        try {
+          seen = Number(localStorage.getItem(TIPS_KEY)) || 0;
+          if (seen >= TIPS.length) return null;
+          localStorage.setItem(TIPS_KEY, String(seen + 1));
+        } catch (e) {
+          return null;
+        }
+        return TIPS[seen];
+      }
+
+      // ---------- Help ----------
+      function showHelp() {
+        document.getElementById("help-levels").innerHTML = LEVELS.map(
+          (l) => `<span>${levelDots(l)}</span><span>${levelName(l)}</span>`
+        ).join("");
+        document.getElementById("help-screen").hidden = false;
+        document.querySelector("#help-screen .close-btn").focus();
+      }
+
+      function hideHelp() {
+        document.getElementById("help-screen").hidden = true;
+      }
+
+      // ---------- Calendar ----------
+      let calendarMonth = null; // first day of the month on show
+      let calendarPick = null;
+
+      function showCalendar() {
+        const now = new Date();
+        calendarMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        calendarPick = dayKey();
+        renderCalendar();
+        document.getElementById("calendar-screen").hidden = false;
+        document.querySelector("#calendar-screen .close-btn").focus();
+      }
+
+      function hideCalendar() {
+        document.getElementById("calendar-screen").hidden = true;
+      }
+
+      function moveCalendar(step) {
+        calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + step, 1);
+        calendarPick = null;
+        renderCalendar();
+      }
+
+      // How full the battery is: your best time for the level over this time
+      function charge(result) {
+        const best = loadBestTimes()[result.level];
+        if (!best || !result.seconds) return 1;
+        return Math.min(1, best / result.seconds);
+      }
+
+      function renderCalendar() {
+        const results = loadDaily();
+        const today = dayKey();
+        const year = calendarMonth.getFullYear();
+        const month = calendarMonth.getMonth();
+        const days = new Date(year, month + 1, 0).getDate();
+        const lead = calendarMonth.getDay();
+
+        document.getElementById("cal-month").textContent = calendarMonth.toLocaleDateString(
+          undefined,
+          { month: "long", year: "numeric" }
+        );
+        const solvedThisMonth = Object.keys(results).filter((k) =>
+          k.startsWith(dayKey(calendarMonth).slice(0, 7))
+        ).length;
+        const streak = dailyStreak(results);
+        document.getElementById("cal-summary").textContent =
+          `🔥 ${streak}-day streak · ${solvedThisMonth} solved this month`;
+
+        const dows = [...Array(7)].map((_, i) =>
+          new Date(2026, 1, i + 1).toLocaleDateString(undefined, { weekday: "narrow" })
+        );
+        let html = dows.map((d) => `<span class="cal-dow" aria-hidden="true">${d}</span>`).join("");
+        html += `<span class="cal-day blank"></span>`.repeat(lead);
+        for (let d = 1; d <= days; d++) {
+          const key = dayKey(new Date(year, month, d));
+          const result = results[key];
+          const future = key > today;
+          const classes = ["cal-day"];
+          if (key === today) classes.push("today");
+          if (!result && !future) classes.push("missed");
+          const battery = future
+            ? ""
+            : `<span class="batt"><i style="--fill: ${result ? charge(result).toFixed(2) : 0}"></i></span>`;
+          const label = `${prettyDay(key)}${result ? `, solved in ${formatTime(result.seconds)}` : future ? "" : ", not solved"}`;
+          html += `<button class="${classes.join(" ")}" data-day="${key}" aria-label="${label}" aria-pressed="${key === calendarPick}" ${future ? "disabled" : ""}>${d}${battery}</button>`;
+        }
+        const grid = document.getElementById("cal-grid");
+        grid.innerHTML = html;
+        grid.querySelectorAll(".cal-day[data-day]").forEach((button) =>
+          button.addEventListener("click", () => {
+            calendarPick = button.dataset.day;
+            grid
+              .querySelectorAll(".cal-day")
+              .forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
+            showCalendarDay(calendarPick);
+          })
+        );
+        showCalendarDay(calendarPick);
+      }
+
+      function showCalendarDay(key) {
+        const detail = document.getElementById("cal-detail");
+        if (!key || !key.startsWith(dayKey(calendarMonth).slice(0, 7))) {
+          detail.textContent = "Tap a day to see how it went.";
+          return;
+        }
+        const result = loadDaily()[key];
+        const level = dailyLevel(key);
+        const head = `<b>${prettyDay(key)}</b> · ${levelName(level)} ${levelDots(level)}<br>`;
+        if (result) {
+          const best = loadBestTimes()[result.level];
+          detail.innerHTML =
+            head +
+            `Solved in ${formatTime(result.seconds)}` +
+            (best ? ` · your best ${formatTime(best)}` : "") +
+            ` · 🔋 ${Math.round(charge(result) * 100)}%` +
+            (result.onDay ? "" : " · played later");
+        } else {
+          detail.innerHTML =
+            head +
+            `Not solved yet.<button class="btn-primary" onclick="playDaily('${key}')">Play this puzzle</button>`;
+        }
       }
 
       const HISTORY_KEY = "sudoku-history";
@@ -3162,7 +4200,8 @@
         } catch (e) {}
       }
 
-      const levelName = (level) => level.charAt(0).toUpperCase() + level.slice(1);
+      const levelName = (level) =>
+        LEVEL_NAMES[level] || level.charAt(0).toUpperCase() + level.slice(1);
 
       function formatMinutes(seconds) {
         const minutes = seconds / 60;
@@ -3333,6 +4372,10 @@
           this.hintTimer = null;
           this.hintSpot = null;
           this.isPaused = false;
+          // "regular" or "daily"; each is saved in its own slot
+          this.mode = "regular";
+          this.dailyDate = null;
+          this.rng = Math.random;
           this.completedRows = new Set();
           this.completedColumns = new Set();
           this.completedBoxes = new Set();
@@ -3344,10 +4387,37 @@
           if (!this.loadGame()) this.generatePuzzle("easy");
         }
 
+        get slotKey() {
+          return this.mode === "daily" ? DAILY_GAME_KEY : STORAGE_KEY;
+        }
+
+        // What gets saved, also read by the home screen
+        snapshot() {
+          return {
+            grid: this.grid,
+            solution: this.solution,
+            givens: this.givens,
+            notes: this.notes,
+            difficulty: this.difficulty,
+            timer: this.timer,
+            emptyCellCount: this.emptyCellCount,
+            isSolved: this.isSolved,
+            isOver: this.isOver,
+            mistakes: this.mistakes,
+            mistakeLimit: this.mistakeLimit,
+            showCandidates: this.showCandidates,
+            showMistakes: this.showMistakes,
+            numberFirstMode: this.numberFirstMode,
+            isPaused: this.isPaused,
+            mode: this.mode,
+            dailyDate: this.dailyDate,
+          };
+        }
+
         saveGame() {
           try {
             localStorage.setItem(
-              STORAGE_KEY,
+              this.slotKey,
               JSON.stringify({
                 grid: this.grid,
                 solution: this.solution,
@@ -3364,6 +4434,8 @@
                 showMistakes: this.showMistakes,
                 numberFirstMode: this.numberFirstMode,
                 isPaused: this.isPaused,
+                mode: this.mode,
+                dailyDate: this.dailyDate,
               })
             );
           } catch (e) {
@@ -3371,16 +4443,19 @@
           }
         }
 
-        loadGame() {
+        loadGame(key = STORAGE_KEY, accept = () => true) {
           let saved;
           try {
-            saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            saved = JSON.parse(localStorage.getItem(key));
           } catch (e) {
             return false;
           }
           if (!saved || !Array.isArray(saved.grid) || saved.grid.length !== 9) {
             return false;
           }
+          if (!accept(saved)) return false;
+          this.mode = saved.mode === "daily" ? "daily" : "regular";
+          this.dailyDate = saved.dailyDate || null;
 
           Object.assign(this, {
             grid: saved.grid,
@@ -3455,6 +4530,9 @@
 
         setDifficulty(difficulty) {
           this.difficulty = difficulty;
+          this.updateModeBits();
+          // A daily puzzle leaves the dropdown on your regular level
+          if (this.mode === "daily") return;
           const select = document.getElementById("difficulty-select");
           if (![...select.options].some((o) => o.value === difficulty)) {
             // A saved test puzzle loaded without ?debug still needs its option
@@ -3548,9 +4626,7 @@
           for (let row = 0; row < 9; row++) {
             for (let col = 0; col < 9; col++) {
               if (grid[row][col] === 0) {
-                const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9].sort(
-                  () => Math.random() - 0.5
-                );
+                const numbers = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9], this.rng);
 
                 for (let num of numbers) {
                   if (this.isValidMove(grid, row, col, num)) {
@@ -3566,44 +4642,148 @@
           return true;
         }
 
-        generatePuzzle(difficulty) {
+        // With a date, makes that day's daily puzzle (the same on every phone)
+        generatePuzzle(difficulty, { date = null } = {}) {
           hideWinScreen();
+          // Leaving the daily for a regular game: it stays saved in its slot
+          if (this.mode === "daily" && !date) this.saveGame();
+          this.mode = date ? "daily" : "regular";
+          this.dailyDate = date;
+          this.rng = date ? seededRandom(`bodai-daily-${date}`) : Math.random;
           this.setDifficulty(difficulty);
 
           this.generateCompleteSolution();
           this.grid = this.solution.map((row) => [...row]);
 
-          const removeCount =
-            difficulty === "test"
-              ? 5
-              : { easy: 35, medium: 45, hard: 55 }[difficulty];
-          this.givens = Array(9)
+          const removeCount = difficulty === "test" ? 5 : LEVEL_BLANKS[difficulty] ?? 35;
+          // Zoomies tries several orders and keeps the one with the fewest numbers
+          // left, so it's clearly a step past Sprint
+          const tries = difficulty === "zoomies" ? 8 : 1;
+          let best = null;
+          for (let i = 0; i < tries; i++) {
+            const attempt = this.removeNumbers(removeCount);
+            if (!best || attempt.removed > best.removed) best = attempt;
+          }
+          this.grid = best.grid;
+          this.givens = best.givens;
+          const removed = best.removed;
+
+          this.emptyCellCount = removed;
+          this.rng = Math.random;
+          this.startFresh();
+          const tip = homeOpen() ? null : nextTip();
+          this.showMessage(
+            tip || (date ? "☀ Today's puzzle. Good luck!" : "New puzzle generated! Good luck!"),
+            "success",
+            tip ? 6000 : 3000
+          );
+        }
+
+        // Moves to another save slot (regular or daily). Returns false if
+        // that slot is empty or not the one wanted.
+        openSlot(key, accept) {
+          this.stopTimer();
+          this.saveGame();
+          const prefs = {
+            showCandidates: this.showCandidates,
+            showMistakes: this.showMistakes,
+            mistakeLimit: this.mistakeLimit,
+            numberFirstMode: this.numberFirstMode,
+          };
+          this.endHintCooldown();
+          this.clearHintSpot();
+          clearTimeout(this.winTimeout);
+          document.getElementById("grid").classList.remove("solve-blink");
+          this.completedRows = new Set();
+          this.completedColumns = new Set();
+          this.completedBoxes = new Set();
+          this.completedNumbers = new Set();
+          this.history = [];
+          this.historyIndex = -1;
+          this.selectedCell = null;
+          this.selectedNumber = null;
+          if (!this.loadGame(key, accept)) return false;
+          // Settings belong to you, not to the puzzle
+          Object.assign(this, prefs);
+          this.syncControls();
+          this.updateDisplay();
+          return true;
+        }
+
+        openDaily(date) {
+          if (this.mode === "daily" && this.dailyDate === date) {
+            this.resume();
+            return;
+          }
+          if (!this.openSlot(DAILY_GAME_KEY, (saved) => saved.dailyDate === date)) {
+            this.generatePuzzle(dailyLevel(date), { date });
+          }
+        }
+
+        openRegular() {
+          if (this.mode === "regular") {
+            this.resume();
+            return;
+          }
+          if (!this.openSlot(STORAGE_KEY, (saved) => saved.mode !== "daily")) {
+            this.generatePuzzle("easy");
+          }
+        }
+
+        // The home screen sits over the game, so the clock stops meanwhile
+        suspend() {
+          this.stopTimer();
+          this.saveGame();
+        }
+
+        resume() {
+          if (!this.isFinished && !this.isPaused && !this.timerInterval) {
+            this.startTimer(this.timer);
+          }
+        }
+
+        // The "today" chip and the best time under the clock
+        updateModeBits() {
+          const daily = this.mode === "daily";
+          document.querySelector(".game-container").classList.toggle("daily-mode", daily);
+          if (daily) {
+            document.getElementById("daily-chip").textContent =
+              this.dailyDate === dayKey()
+                ? `☀ Today · ${levelName(this.difficulty)}`
+                : `☀ ${prettyDay(this.dailyDate, { month: "short", day: "numeric" })} · ${levelName(this.difficulty)}`;
+          }
+          const best = loadBestTimes()[this.difficulty];
+          const line = document.getElementById("timer-best");
+          line.hidden = best === undefined;
+          if (best !== undefined) line.textContent = `Best ${formatTime(best)}`;
+        }
+
+        // Takes numbers out of the solution one at a time, keeping each removal
+        // only if the puzzle still has exactly one answer
+        removeNumbers(removeCount) {
+          const grid = this.solution.map((row) => [...row]);
+          const givens = Array(9)
             .fill()
             .map(() => Array(9).fill(true));
-
-          const positions = Array.from({ length: 81 }, (_, i) => i).sort(
-            () => Math.random() - 0.5
+          const positions = shuffle(
+            Array.from({ length: 81 }, (_, i) => i),
+            this.rng
           );
-
-          // Only remove a number if the puzzle still has exactly one solution
           let removed = 0;
           for (const pos of positions) {
             if (removed >= removeCount) break;
             const row = Math.floor(pos / 9);
             const col = pos % 9;
-            const value = this.grid[row][col];
-            this.grid[row][col] = 0;
-            if (this.countSolutions(this.grid.map((r) => [...r]), 2) === 1) {
-              this.givens[row][col] = false;
+            const value = grid[row][col];
+            grid[row][col] = 0;
+            if (this.countSolutions(grid.map((r) => [...r]), 2) === 1) {
+              givens[row][col] = false;
               removed++;
             } else {
-              this.grid[row][col] = value;
+              grid[row][col] = value;
             }
           }
-
-          this.emptyCellCount = removed;
-          this.startFresh();
-          this.showMessage("New puzzle generated! Good luck!", "success");
+          return { grid, givens, removed };
         }
 
         // Puts the current puzzle back to its starting numbers
@@ -4319,6 +5499,7 @@
           }
 
           buddyReact("cheer");
+          playSound("line");
           cellsToHighlight.forEach((cellIndex) => {
             if (cells[cellIndex]) {
               cells[cellIndex].classList.add("completion-flash");
@@ -4384,6 +5565,12 @@
             haptic("win");
             isNewBest = recordBestTime(this.difficulty, this.timer);
             recordSolve(this.difficulty, this.timer, this.mistakes);
+            if (this.mode === "daily") {
+              saveDailyResult(this.dailyDate, this.timer, this.mistakes, this.difficulty);
+              scheduleReminders();
+            }
+            this.updateModeBits();
+            saveBackup();
           }
           const show = () =>
             showWinScreen({
@@ -4392,6 +5579,7 @@
               isNewBest,
               celebrate: justWon,
               mistakes: this.mistakes,
+              daily: this.mode === "daily" ? this.dailyDate : null,
             });
           if (!justWon) return show();
 
@@ -4578,7 +5766,7 @@
           }
         }
 
-        showMessage(text, type = "success") {
+        showMessage(text, type = "success", duration = 3000) {
           const messageEl = document.getElementById("message");
           messageEl.textContent = text;
           messageEl.className = `message ${type}`;
@@ -4587,7 +5775,7 @@
           clearTimeout(this.messageTimeout);
           this.messageTimeout = setTimeout(() => {
             messageEl.style.display = "none";
-          }, 3000);
+          }, duration);
         }
       }
 
@@ -4596,6 +5784,7 @@
       function newGame(difficulty) {
         if (!game) return;
         if (
+          game.mode === "regular" &&
           game.hasProgress() &&
           !confirm("Start a new game? Your current puzzle will be lost.")
         ) {
@@ -4624,7 +5813,15 @@
         if (game) game.togglePause();
       }
 
-      document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener("DOMContentLoaded", async () => {
+        // A new phone: bring back stats and settings from the backup, then start over
+        if (await restoreBackup()) {
+          location.reload();
+          return;
+        }
+        ["difficulty-select", "next-level", "home-level"].forEach((id) =>
+          fillLevelSelect(document.getElementById(id))
+        );
         // The test difficulty is only offered when the URL has ?debug
         if (new URLSearchParams(location.search).has("debug")) {
           const option = document.createElement("option");
@@ -4645,8 +5842,41 @@
           clearTimeout(resizeWait);
           resizeWait = setTimeout(fitShortWindow, 200);
         });
+        document.getElementById("sound-toggle").classList.toggle("active", soundOn);
+        document.getElementById("reminder-row").hidden = !isNativeApp;
+        saveReminder(loadReminder());
         startBuddies();
+        // Every visit starts on the home screen, with today's puzzle up top
+        document.getElementById("home-screen").hidden = false;
         game = new SudokuGame();
+        showHome();
+        scheduleReminders();
+        saveBackup();
+
+        const App = window.Capacitor?.Plugins?.App;
+        // Android's Back: close what's open, then go home, then leave
+        App?.addListener("backButton", () => {
+          const dialog = ["help-screen", "calendar-screen", "stats-screen"].find(
+            (id) => !document.getElementById(id).hidden
+          );
+          if (dialog) document.getElementById(dialog).hidden = true;
+          else if (!document.getElementById("settings-panel").hidden) toggleSettings();
+          else if (!homeOpen()) showHome();
+          else App.minimizeApp();
+        });
+        // Tapping the reminder opens that day's puzzle
+        notifier()?.addListener("localNotificationActionPerformed", (action) =>
+          playDaily(action.notification?.extra?.daily || dayKey())
+        );
+        // Coming back on a new day: refresh the home card and the reminders
+        document.addEventListener("visibilitychange", () => {
+          if (document.hidden) {
+            saveBackup();
+            return;
+          }
+          if (homeOpen()) renderHome();
+          scheduleReminders();
+        });
       });
 
       document.addEventListener(
@@ -4661,6 +5891,7 @@
       );
 
       document.addEventListener("keydown", (e) => {
+        if (homeOpen()) return;
         if (e.key.startsWith("Arrow")) e.preventDefault();
 
         if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
