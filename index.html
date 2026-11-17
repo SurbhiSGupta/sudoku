@@ -366,6 +366,46 @@
         transform: translateX(22px);
       }
 
+      /* Help & feedback buttons at the bottom of Settings */
+      .settings-links {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .settings-links button,
+      .settings-links a {
+        flex: 1;
+        padding: 10px 8px;
+        font-size: 14px;
+        text-align: center;
+        text-decoration: none;
+        background: var(--slot);
+        color: var(--ink);
+        border-radius: 10px;
+        box-shadow: none;
+        font-weight: 700;
+      }
+
+      /* Focus mode: only the board, its buttons and the number pad stay.
+         A tap on empty space brings the rest back faintly; tapping one of
+         them makes it solid again, and the next move hides it all once more. */
+      .header,
+      .settings-panel,
+      .controls,
+      .stats {
+        transition: opacity 0.4s ease;
+      }
+
+      .focus-hide:not(.paused):not(.finished) > :is(.header, .settings-panel, .controls, .stats) {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .focus-peek:not(.paused):not(.finished) > :is(.header, .settings-panel, .controls, .stats) {
+        opacity: 0.3;
+      }
+
       .segmented {
         display: flex;
         background: var(--slot);
@@ -1107,6 +1147,18 @@
         color: var(--bad-ink);
       }
 
+      /* A wrong number is also underlined, so it doesn't rely on color alone */
+      .sudoku-grid .cell.conflict::after {
+        content: "";
+        position: absolute;
+        left: 28%;
+        right: 28%;
+        bottom: 12%;
+        height: 3px;
+        border-radius: 2px;
+        background: currentColor;
+      }
+
       .sudoku-grid .cell.selected {
         background: var(--sel);
         color: var(--sel-ink);
@@ -1289,9 +1341,19 @@
         }
       }
 
-      /* Paused: the board is covered so the clock can't be beaten */
+      /* Paused: the board blurs away behind a cover so the clock can't be beaten.
+         Both ease in and out instead of snapping. */
       .board-wrap {
         position: relative;
+      }
+
+      .board-wrap .sudoku-grid {
+        transition: filter 0.35s ease, transform 0.35s ease, opacity 0.6s ease;
+      }
+
+      .paused .board-wrap .sudoku-grid {
+        filter: blur(10px);
+        transform: scale(0.97);
       }
 
       .pause-cover {
@@ -1303,15 +1365,29 @@
         align-items: center;
         justify-content: center;
         gap: 4px;
-        background: var(--board);
+        background: color-mix(in srgb, var(--board) 70%, transparent);
         border-radius: 16px;
         box-shadow: none;
         font-size: 24px;
         font-weight: 800;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.35s ease, visibility 0s 0.35s;
       }
 
-      .pause-cover[hidden] {
-        display: none;
+      .paused .pause-cover {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.35s ease;
+      }
+
+      .pause-cover > * {
+        transform: scale(0.9);
+        transition: transform 0.35s ease;
+      }
+
+      .paused .pause-cover > * {
+        transform: none;
       }
 
       .pause-cover:active:not(:disabled) {
@@ -1329,6 +1405,11 @@
         font-size: 15px;
         font-weight: 600;
         color: var(--muted);
+      }
+
+      .actions button,
+      .number-btn {
+        transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.35s ease;
       }
 
       .paused .actions button,
@@ -1873,6 +1954,82 @@
         }
       }
 
+      /* Short windows (split screen, phones on their side): keep the board,
+         its buttons and the number pad on screen together */
+      @media (max-height: 640px) and (max-aspect-ratio: 1/1) {
+        .actions {
+          margin-bottom: 8px;
+        }
+
+        .actions button {
+          flex-direction: row;
+          justify-content: center;
+          gap: 6px;
+          padding: 8px 4px;
+        }
+
+        .number-pad {
+          gap: 6px;
+        }
+
+        .number-btn {
+          height: 44px;
+          font-size: 22px;
+        }
+
+        /* What's left of the height after the buttons below the board */
+        .board-wrap .sudoku-grid {
+          width: min(100%, max(240px, calc(100dvh - 180px)));
+        }
+      }
+
+      /* Wide and short: board on the left, everything else beside it */
+      @media (max-height: 640px) and (min-aspect-ratio: 1/1) {
+        body {
+          padding-top: max(12px, env(safe-area-inset-top));
+          padding-bottom: max(12px, env(safe-area-inset-bottom));
+        }
+
+        .game-container {
+          max-width: 980px;
+          display: grid;
+          grid-template-columns: auto minmax(280px, 1fr);
+          grid-template-rows: repeat(8, auto) 1fr;
+          column-gap: 20px;
+          align-items: start;
+        }
+
+        .game-container > * {
+          grid-column: 2;
+        }
+
+        .game-container > .board-wrap {
+          grid-column: 1;
+          grid-row: 1 / -1;
+        }
+
+        .board-wrap .sudoku-grid {
+          width: max(260px, calc(100dvh - 24px));
+          margin: 0;
+        }
+
+        .header,
+        .controls,
+        .stats,
+        .actions {
+          margin-bottom: 8px;
+        }
+
+        .header {
+          min-height: 64px;
+        }
+
+        .number-btn {
+          height: 46px;
+          font-size: 22px;
+        }
+      }
+
       @media (prefers-reduced-motion: reduce) {
         *,
         *::before,
@@ -1961,6 +2118,17 @@
           </div>
         </div>
 
+        <div class="toggle-container">
+          <span class="toggle-label">Focus Mode</span>
+          <div
+            class="toggle-switch"
+            id="focus-toggle"
+            onclick="toggleFocus()"
+          >
+            <div class="toggle-slider"></div>
+          </div>
+        </div>
+
         <div class="toggle-container" id="haptics-row" hidden>
           <span class="toggle-label">Vibration</span>
           <div
@@ -1980,6 +2148,16 @@
             <button data-mode="5" onclick="setMistakeMode('5')">5 max</button>
             <button data-mode="0" onclick="setMistakeMode('0')">No limit</button>
           </div>
+        </div>
+
+        <div class="settings-links">
+          <button onclick="reportBug()">🐞 Report a bug</button>
+          <a
+            href="https://play.google.com/store/apps/details?id=com.bodaijewels.sudoku"
+            target="_blank"
+            rel="noopener"
+            >⭐ Rate Bodai</a
+          >
         </div>
       </div>
 
@@ -2045,9 +2223,9 @@
 
       <div class="board-wrap">
         <div class="sudoku-grid" id="grid"></div>
-        <button class="pause-cover" id="pause-cover" onclick="togglePause()" hidden>
+        <button class="pause-cover" id="pause-cover" onclick="togglePause()">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-          Paused
+          <b>Paused</b>
           <span>Tap to keep playing</span>
         </button>
       </div>
@@ -2232,6 +2410,116 @@
         document.getElementById("motion-toggle").classList.toggle("active", motionOn);
         // Send her home right away instead of finishing the current scene
         if (headBuddy) headLoop();
+      }
+
+      // Focus mode: hides everything but the board and number pad while playing,
+      // and the phone's status and navigation bars too (app only)
+      const FOCUS_KEY = "sudoku-focus";
+      let focusOn = false;
+      try {
+        focusOn = localStorage.getItem(FOCUS_KEY) === "on";
+      } catch (e) {}
+
+      function toggleFocus() {
+        focusOn = !focusOn;
+        try {
+          localStorage.setItem(FOCUS_KEY, focusOn ? "on" : "off");
+        } catch (e) {}
+        // Turning it on from Settings: leave Settings showing until the next move
+        applyFocus(focusOn ? "shown" : null);
+      }
+
+      // state: "hide" (gone), "peek" (faint, tappable), "shown" (solid), null (off)
+      function applyFocus(state) {
+        const container = document.querySelector(".game-container");
+        container.classList.toggle("focus-hide", state === "hide");
+        container.classList.toggle("focus-peek", state === "peek");
+        container.dataset.focus = state || "";
+        document.getElementById("focus-toggle").classList.toggle("active", focusOn);
+        window.Capacitor?.Plugins?.Bodai?.setFocus({ on: focusOn });
+      }
+
+      // Taps on the board, its buttons or the number pad hide the extras again;
+      // a tap anywhere else lets them peek through
+      document.addEventListener(
+        "pointerdown",
+        (e) => {
+          if (!focusOn) return;
+          const container = document.querySelector(".game-container");
+          const state = container.dataset.focus;
+          if (e.target.closest(".board-wrap, .actions, .number-pad")) {
+            if (state !== "hide") applyFocus("hide");
+          } else if (e.target.closest(".header, .settings-panel, .controls, .stats")) {
+            if (state === "peek") applyFocus("shown");
+          } else if (e.target.closest(".game-container") || e.target === document.body) {
+            if (state === "hide") applyFocus("peek");
+            else if (state === "peek") applyFocus("hide");
+          }
+        },
+        true
+      );
+
+      // The on/off switches are divs; this makes them proper switches for
+      // screen readers and keyboards, and keeps aria-checked in step
+      function setUpSwitches() {
+        document.querySelectorAll(".toggle-switch").forEach((el) => {
+          el.setAttribute("role", "switch");
+          el.tabIndex = 0;
+          const label = el.previousElementSibling?.textContent.trim();
+          if (label) el.setAttribute("aria-label", label);
+          const sync = () => el.setAttribute("aria-checked", String(el.classList.contains("active")));
+          sync();
+          new MutationObserver(sync).observe(el, { attributes: true, attributeFilter: ["class"] });
+          el.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              e.stopPropagation();
+              el.click();
+            }
+          });
+        });
+      }
+
+      // In a short, narrow window (split screen on a phone) scroll so the board
+      // and number pad fill it; the menus are just a scroll up
+      function fitShortWindow() {
+        if (innerHeight <= 640 && innerWidth <= innerHeight) {
+          document.querySelector(".board-wrap").scrollIntoView({ block: "start" });
+        }
+      }
+
+      // Bug reports go by email, with a screenshot in the app
+      const BUG_EMAIL = "surbhi.s.gupta@gmail.com";
+
+      async function reportBug() {
+        const panel = document.getElementById("settings-panel");
+        if (!panel.hidden) toggleSettings();
+        const bodai = window.Capacitor?.Plugins?.Bodai;
+        const info = isNativeApp && bodai ? await bodai.deviceInfo().catch(() => ({})) : {};
+        const lines = [
+          "What happened? What did you expect instead?",
+          "",
+          "",
+          "",
+          "--- Details for Bodai (please keep) ---",
+          `App: ${info.appVersion || "web"}`,
+          info.model ? `Phone: ${info.model}, Android ${info.android}` : `Browser: ${navigator.userAgent}`,
+          info.fontScale ? `Text size: ${info.fontScale}x` : "",
+          `Screen: ${innerWidth}x${innerHeight}, scale ${devicePixelRatio}`,
+          `Theme: ${document.documentElement.dataset.theme || "auto"}`,
+          ...(game ? game.bugDetails() : []),
+        ].filter((line, i) => line !== "" || i < 4);
+        const subject = "Bodai Sudoku bug";
+        const body = lines.join("\n");
+        if (isNativeApp && bodai) {
+          // Let Settings slide away so the screenshot shows the board
+          await new Promise((r) => setTimeout(r, 400));
+          bodai.reportBug({ to: BUG_EMAIL, subject, body }).catch(() => {
+            location.href = `mailto:${BUG_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+          });
+        } else {
+          location.href = `mailto:${BUG_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        }
       }
 
       function haptic(kind) {
@@ -3220,6 +3508,7 @@
           for (let i = 0; i < 81; i++) {
             const cell = document.createElement("div");
             cell.className = "cell";
+            cell.setAttribute("role", "button");
             cell.dataset.index = i;
             // Diagonal position, so the solve wave travels corner to corner
             cell.style.setProperty("--wave", Math.floor(i / 9) + (i % 9));
@@ -3788,6 +4077,13 @@
             } else {
               cell.textContent = value;
             }
+            // What a screen reader says for this square
+            cell.setAttribute(
+              "aria-label",
+              `Row ${row + 1}, column ${col + 1}, ${
+                value ? (this.givens[row][col] ? `${value}, given` : value) : "empty"
+              }`
+            );
 
             if ((Math.floor(row / 3) + Math.floor(col / 3)) % 2 === 1) {
               cell.classList.add("alt-box");
@@ -3853,7 +4149,9 @@
               const value = this.grid[row][col];
               if (value === 0 || this.givens[row][col]) continue;
               if (value !== this.solution[row][col]) {
-                cells[row * 9 + col].classList.add("conflict");
+                const cell = cells[row * 9 + col];
+                cell.classList.add("conflict");
+                cell.setAttribute("aria-label", `${cell.getAttribute("aria-label")}, wrong`);
               }
             }
           }
@@ -4199,6 +4497,17 @@
             .forEach((cell) => cell.classList.remove("hint-spot"));
         }
 
+        // The game as text for bug reports, so the puzzle can be loaded again
+        bugDetails() {
+          const flat = (fn) => this.grid.map((line, r) => line.map((v, c) => fn(v, r, c)).join("")).join("");
+          return [
+            `Level: ${this.difficulty}, time ${formatTime(this.timer)}, mistakes ${this.mistakes}`,
+            `State: ${this.isPaused ? "paused" : this.isFinished ? "finished" : "playing"}${this.notesMode ? ", notes on" : ""}${this.numberFirstMode ? ", number first" : ""}`,
+            `Puzzle: ${flat((v, r, c) => (this.givens[r][c] ? this.solution[r][c] : 0))}`,
+            `Board: ${flat((v) => v)}`,
+          ];
+        }
+
         // Tapping the clock pauses it and covers the board
         togglePause() {
           if (this.isFinished) return;
@@ -4212,7 +4521,6 @@
         updatePause() {
           const paused = this.isPaused && !this.isFinished;
           document.querySelector(".game-container").classList.toggle("paused", paused);
-          document.getElementById("pause-cover").hidden = !paused;
           const button = document.getElementById("timer-btn");
           button.setAttribute("aria-pressed", String(paused));
           button.setAttribute("aria-label", paused ? "Keep playing" : "Pause");
@@ -4329,6 +4637,14 @@
         document.getElementById("haptics-row").hidden = !isNativeApp;
         document.getElementById("haptics-toggle").classList.toggle("active", hapticsOn);
         document.getElementById("motion-toggle").classList.toggle("active", motionOn);
+        applyFocus(focusOn ? "hide" : null);
+        setUpSwitches();
+        fitShortWindow();
+        let resizeWait;
+        addEventListener("resize", () => {
+          clearTimeout(resizeWait);
+          resizeWait = setTimeout(fitShortWindow, 200);
+        });
         startBuddies();
         game = new SudokuGame();
       });
