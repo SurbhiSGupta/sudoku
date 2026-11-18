@@ -615,75 +615,78 @@
         stroke: #8ea2ff;
       }
 
-      /* Which pose is showing */
-      .buddy .arms,
-      .buddy .legs,
-      .buddy .fx,
-      .buddy .hearts-l,
-      .buddy .hearts-r,
-      .buddy .hearts-up {
-        display: none;
+      /* Which pose is showing. Arms and legs are single lines bent by the
+         rig in JS; faces cross-fade instead of popping. */
+      .buddy .fx {
+        opacity: 0;
+        transition: opacity 0.22s ease;
       }
 
-      .buddy[data-arms="down"] .a-down,
-      .buddy[data-arms="wave"] .a-wave,
-      .buddy[data-arms="up"] .a-up,
-      .buddy[data-arms="throw"] .a-throw,
-      .buddy[data-arms="reach"] .a-reach,
-      .buddy[data-arms="hold"] .a-hold,
-      .buddy[data-arms="leash"] .a-leash,
-      .buddy[data-arms="pet"] .a-pet,
-      .buddy[data-arms="hug"] .a-hug,
-      .buddy[data-arms="kiss"] .a-kiss,
-      .buddy[data-arms="clap"] .a-clap,
-      .buddy[data-arms="knees"] .a-knees,
-      .buddy[data-arms="chin"] .a-chin,
-      .buddy[data-legs="sit"] .l-sit,
-      .buddy[data-legs="squat"] .l-squat,
-      .buddy:not([data-legs="sit"]):not([data-legs="squat"]) .l-stand,
       .buddy[data-face="def"] .fx-def,
       .buddy[data-face="happy"] .fx-happy,
       .buddy[data-face="cute"] .fx-cute,
       .buddy[data-face="cur"] .fx-cur,
       .buddy[data-face="joy"] .fx-joy,
       .buddy[data-face="kiss"] .fx-kiss,
-      .buddy[data-face="sad"] .fx-sad,
+      .buddy[data-face="sad"] .fx-sad {
+        opacity: 1;
+      }
+
+      .buddy .ball,
+      .buddy .leash,
+      .buddy .hearts-l,
+      .buddy .hearts-r,
+      .buddy .hearts-up {
+        display: none;
+      }
+
+      .buddy[data-arms="throw"] .ball,
+      .buddy[data-arms="leash"] .leash,
       .buddy[data-act~="kiss-l"] .hearts-l,
       .buddy[data-act~="kiss-r"] .hearts-r,
       .buddy[data-act~="love"] .hearts-up {
         display: inline;
       }
 
+      /* The waving hand only shows while waving */
+      .buddy .wave-hand {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+
+      .buddy[data-arms="wave"] .wave-hand {
+        opacity: 1;
+      }
+
+      /* Arm gestures swing the whole arm from the shoulder */
+      .buddy .arm-l-g,
+      .buddy .arm-r-g {
+        transform-box: view-box;
+        transform-origin: 60px 74px;
+      }
+
       /* Moving parts swing from their joints */
-      .buddy .swing,
       .buddy .leg1,
       .buddy .leg2,
       .buddy .dl,
       .buddy .tail,
-      .buddy .kiss-l,
-      .buddy .kiss-r,
-      .buddy .pet-arm,
-      .buddy .clap-l,
-      .buddy .clap-r,
       .buddy .ball,
-      .buddy .throw-arm,
       .buddy .dog,
       .buddy .eye,
       .buddy .hrt {
         transform-box: fill-box;
       }
 
-      .buddy .swing {
-        transform-origin: left bottom;
-        animation: bWave 0.45s ease-in-out infinite alternate;
+      .buddy[data-arms="wave"] .arm-r-g {
+        animation: bWave 0.5s ease-in-out infinite alternate;
       }
 
       @keyframes bWave {
         from {
-          transform: rotate(-18deg);
+          transform: rotate(-9deg);
         }
         to {
-          transform: rotate(14deg);
+          transform: rotate(7deg);
         }
       }
 
@@ -823,8 +826,7 @@
         }
       }
 
-      .buddy .throw-arm {
-        transform-origin: left bottom;
+      .buddy[data-arms="throw"] .arm-r-g {
         animation: throwArm 1.2s ease-in-out infinite;
       }
 
@@ -859,8 +861,7 @@
         }
       }
 
-      .buddy .kiss-l {
-        transform-origin: right bottom;
+      .buddy[data-arms="leash"] .arm-l-g {
         animation: kissL 1.35s ease-in-out infinite;
       }
 
@@ -871,12 +872,11 @@
           transform: rotate(0);
         }
         70% {
-          transform: rotate(-60deg);
+          transform: rotate(-30deg);
         }
       }
 
-      .buddy .kiss-r {
-        transform-origin: left bottom;
+      .buddy[data-arms="kiss"] .arm-r-g {
         animation: kissR 1.35s ease-in-out infinite;
       }
 
@@ -887,7 +887,7 @@
           transform: rotate(0);
         }
         70% {
-          transform: rotate(60deg);
+          transform: rotate(30deg);
         }
       }
 
@@ -910,8 +910,7 @@
         }
       }
 
-      .buddy .pet-arm {
-        transform-origin: left top;
+      .buddy[data-arms="pet"] .arm-r-g {
         animation: pet 0.6s ease-in-out infinite alternate;
       }
 
@@ -924,19 +923,21 @@
         }
       }
 
+      .buddy .eye {
+        transition: transform 0.2s ease;
+      }
+
       .buddy[data-act~="pet"] .eye {
         transform-origin: center;
         transform: scaleY(0.25);
       }
 
-      .buddy .clap-l {
-        transform-origin: left bottom;
-        animation: clapL 0.22s ease-in-out infinite alternate;
+      .buddy[data-arms="clap"] .arm-l-g {
+        animation: clapL 0.24s ease-in-out infinite alternate;
       }
 
-      .buddy .clap-r {
-        transform-origin: left top;
-        animation: clapR 0.22s ease-in-out infinite alternate;
+      .buddy[data-arms="clap"] .arm-r-g {
+        animation: clapR 0.24s ease-in-out infinite alternate;
       }
 
       @keyframes clapL {
@@ -1582,7 +1583,7 @@
         fill: var(--bg);
       }
 
-      /* Props share the stick figure's pencil look */
+      /* Props share the stick figure's clean line look */
       .buddy .leafy {
         fill: var(--leaf);
       }
@@ -1673,18 +1674,19 @@
       }
 
       /* Sitting on the bench, swinging her legs */
-      .buddy[data-act~="swing"] .l-sit path {
+      .buddy[data-act~="swing"][data-legs="sit"] .leg-l,
+      .buddy[data-act~="swing"][data-legs="sit"] .leg-r {
         transform-box: view-box;
-        animation: legSwing 0.5s ease-in-out infinite alternate;
+        animation: legSwing 0.6s ease-in-out infinite alternate;
       }
 
-      .buddy[data-act~="swing"] .l-sit path:first-child {
+      .buddy[data-act~="swing"][data-legs="sit"] .leg-l {
         transform-origin: 53px 108px;
       }
 
-      .buddy[data-act~="swing"] .l-sit path:last-child {
+      .buddy[data-act~="swing"][data-legs="sit"] .leg-r {
         transform-origin: 67px 108px;
-        animation-delay: -0.25s;
+        animation-delay: -0.3s;
       }
 
       @keyframes legSwing {
@@ -2612,12 +2614,6 @@
     </style>
   </head>
   <body>
-    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
-      <filter id="pencil" x="-10%" y="-10%" width="120%" height="120%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="4" result="n" />
-        <feDisplacementMap in="SourceGraphic" in2="n" scale="3" />
-      </filter>
-    </svg>
     <div class="story" id="story" hidden onclick="closeStory()" role="dialog" aria-labelledby="story-caption">
       <div class="story-stage">
         <svg class="buddy story-back" id="story-back" aria-hidden="true"></svg>
@@ -3893,8 +3889,9 @@
 
 
       // ---------- Surbhi's stick figure and her yellow dog Frisky ----------
-      // Drawn in the same pencil style as the portfolio. Poses switch with data
-      // attributes; moves are CSS transitions; a small timeline plays scenes.
+      // Clean line art. Poses are data attributes: arms and legs bend smoothly
+      // through the rig below, faces cross-fade, moves are CSS transitions, and
+      // a small timeline plays scenes.
       const BUDDY_FACES = `<g class="fx fx-def"><path class="bw" d="M44.6 28.7q5.6-2.6 12.1-.7"/><path class="bw" d="M75.4 28.7q-5.6-2.6-12.1-.7"/><circle class="dot" cx="50.3" cy="35.4" r="1.5"/><circle class="dot" cx="69.7" cy="35.4" r="1.5"/><path d="M50.5 46q9.5 6.5 19 0"/></g><g class="fx fx-happy"><path class="bw" d="M44.6 28.2q5.6-2.6 12.1-.7"/><path class="bw" d="M75.4 28.2q-5.6-2.6-12.1-.7"/><circle class="dot" cx="50.3" cy="35.4" r="1.5"/><circle class="dot" cx="69.7" cy="35.4" r="1.5"/><path style="stroke-width:2.2" d="M48.5 45h23q-2.5 9.5-11.5 9.5t-11.5-9.5z"/></g><g class="fx fx-cute"><path class="bw" d="M44.6 28.7q5.6-2.6 12.1-.7"/><path class="bw" d="M75.4 28.7q-5.6-2.6-12.1-.7"/><circle class="dot" cx="50.3" cy="35.4" r="1.5"/><circle class="dot" cx="69.7" cy="35.4" r="1.5"/><path d="M50.5 46q9.5 6.5 19 0"/><circle class="blush" cx="45.5" cy="43" r="3"/><circle class="blush" cx="74.5" cy="43" r="3"/></g><g class="fx fx-cur"><path class="bw" d="M44.6 28.7q5.6-2.6 12.1-.7"/><path class="bw" d="M75.4 27.1q-5.6-2.6-12.1-.7"/><circle class="dot" cx="51.1" cy="35.4" r="1.5"/><circle class="dot" cx="70.5" cy="35.4" r="1.5"/><path d="M51.5 46.2q9 6.2 17.5-.4"/></g><g class="fx fx-joy"><path class="bw" d="M44.6 27.9q5.6-2.6 12.1-.7"/><path class="bw" d="M75.4 27.9q-5.6-2.6-12.1-.7"/><path style="stroke-width:1.7" d="M47.2 35.9q3.1-2.6 6.2 0"/><path style="stroke-width:1.7" d="M66.6 35.9q3.1-2.6 6.2 0"/><path style="stroke-width:2.2" d="M48.5 45h23q-2.5 9.5-11.5 9.5t-11.5-9.5z"/><circle class="blush" cx="45.5" cy="43" r="3"/><circle class="blush" cx="74.5" cy="43" r="3"/></g><g class="fx fx-kiss"><path class="bw" d="M44.6 28.7q5.6-2.6 12.1-.7"/><path class="bw" d="M75.4 28.7q-5.6-2.6-12.1-.7"/><path style="stroke-width:1.7" d="M47.2 35.9q3.1-2.6 6.2 0"/><path style="stroke-width:1.7" d="M66.6 35.9q3.1-2.6 6.2 0"/><path d="M57.5 45.5q3-2 3.5.8q-.5 2.2-2.6 2q2.4.4 2 2.6q-1 2-3.4.4"/><circle class="blush" cx="45.5" cy="43" r="3"/><circle class="blush" cx="74.5" cy="43" r="3"/></g><g class="fx fx-sad"><path class="bw" d="M44.6 29.8q5.6-1.2 12.1-2.6"/><path class="bw" d="M75.4 29.8q-5.6-1.2-12.1-2.6"/><circle class="dot" cx="50.3" cy="36" r="1.5"/><circle class="dot" cx="69.7" cy="36" r="1.5"/><path d="M52 50q8-5 16 0"/></g>`;
       const HEART_PATH = "M0 0c-2.4-3.6-8-1.6-6 3l6 5.6l6-5.6c2-4.6-3.6-6.6-6-3z";
 
@@ -3904,7 +3901,7 @@
             .map(([x, y, dx, d]) => `<g transform="translate(${x} ${y}) scale(1.8)"><path class="hrt" style="--hx:${dx}px;animation-delay:${d}s" d="${HEART_PATH}"/></g>`)
             .join("")}</g>`;
         return `<svg class="buddy" viewBox="${viewBox}" aria-hidden="true" data-arms="down" data-legs="stand" data-face="def" data-act="">
-          <g class="dog-move"><g class="dog pen" filter="url(#pencil)">
+          <g class="dog-move"><g class="dog pen">
             <path class="tail" d="M11 117c-7-3-10-10-7-17"/>
             <path class="dl dl1" d="M16 125v16"/><path class="dl dl2" d="M23 125v16"/><path class="dl dl2" d="M31 125v16"/><path class="dl dl1" d="M38 125v16"/>
             <ellipse class="fur" cx="26" cy="119" rx="17" ry="9"/>
@@ -3916,28 +3913,18 @@
             <path class="tongue" d="M50.5 115.5q1.2 4.5 3.2 0"/>
             <path class="collar" d="M37 113.5q3 2.5 7 1.5"/>
           </g></g>
-          <g class="me-move">${withFlower ? `<g class="flower"><g class="pen" filter="url(#pencil)"><path class="stem" d="M100 142V124"/><path class="leaf" d="M100 136c-6-1-8-5-7-8c4 0 7 4 7 8z"/><circle class="petal" cx="100" cy="117" r="3.6"/><circle class="petal" cx="106.5" cy="121.5" r="3.6"/><circle class="petal" cx="104" cy="128" r="3.6"/><circle class="petal" cx="96" cy="128" r="3.6"/><circle class="petal" cx="93.5" cy="121.5" r="3.6"/><circle class="bud-c" cx="100" cy="123" r="3"/></g></g>` : ""}<g class="me-body"><g class="me-bob"><g class="pen" filter="url(#pencil)">
+          <g class="me-move">${withFlower ? `<g class="flower"><g class="pen"><path class="stem" d="M100 142V124"/><path class="leaf" d="M100 136c-6-1-8-5-7-8c4 0 7 4 7 8z"/><circle class="petal" cx="100" cy="117" r="3.6"/><circle class="petal" cx="106.5" cy="121.5" r="3.6"/><circle class="petal" cx="104" cy="128" r="3.6"/><circle class="petal" cx="96" cy="128" r="3.6"/><circle class="petal" cx="93.5" cy="121.5" r="3.6"/><circle class="bud-c" cx="100" cy="123" r="3"/></g></g>` : ""}<g class="me-body"><g class="me-bob"><g class="pen">
             <path class="head" d="M60 14c13-1 23 9 22 22c0 13-10 22-23 21c-12 0-21-10-20-22c1-12 9-21 21-21"/>
             <g class="navy" style="stroke-width:1.7"><path d="M43.6 31h13.2q1 0 1 1v3.4q0 4-4 4h-6.4q-3.6 0-4.1-3.6l-.6-3.8q-.1-1 .9-1z"/><path d="M76.4 31h-13.2q-1 0-1 1v3.4q0 4 4 4h6.4q3.6 0 4.1-3.6l.6-3.8q.1-1-.9-1z"/><path d="M57.8 33.4q2.2-1.3 4.4 0"/><path d="M42.8 32.4l-4.3-1.2M77.2 32.4l4.3-1.2"/></g>
             ${BUDDY_FACES}
             <path d="M37 38c-3-18 8-28 23-28s26 10 23 28"/><path d="M60 11c-8 2-15 7-19 17"/><path d="M60 11c8 2 15 7 19 17"/><path d="M37 38c-3 7 1 11-2 17s2 9-3 15"/><path d="M83 38c3 7-1 11 2 17s-2 9 3 15"/><path style="stroke-width:1.6" d="M40 46c-2 5 1 8-1 13"/><path style="stroke-width:1.6" d="M80 46c2 5-1 8 1 13"/>
             <path d="M60 57V66M60 66L45 108H75Z"/>
-            <g class="arms a-down"><path d="M60 74L43 94"/><path d="M60 74L77 94"/></g>
-            <g class="arms a-wave"><path d="M60 74L43 94"/><path d="M60 74L80 66"/><g class="swing"><path d="M80 66L88 46"/><circle cx="89" cy="42" r="3.5"/></g></g>
-            <g class="arms a-up"><path d="M60 74L41 50"/><path d="M60 74L79 50"/></g>
-            <g class="arms a-throw"><path d="M60 74L43 94"/><g class="throw-arm"><path d="M60 74L80 64L84 46"/></g><circle class="ball" cx="85" cy="38" r="6.5"/></g>
-            <g class="arms a-reach"><path d="M60 74L46 92L43 110"/><path d="M60 74L84 92L97 106"/></g>
-            <g class="arms a-knees"><path d="M60 74L46 92L43 110"/><path d="M60 74L74 92L77 110"/></g>
-            <g class="arms a-chin"><path d="M60 74L43 94"/><path d="M60 74L78 70L69 54"/></g>
-            <g class="arms a-hold"><path d="M60 74L43 94"/><path d="M60 74L80 74L74 58"/></g>
-            <g class="arms a-leash"><g class="kiss-l"><path d="M60 74L46 70L52 52"/></g><path d="M60 74L84 84"/><path class="leash" d="M84 84Q102 104 117 112"/></g>
-            <g class="arms a-pet"><path d="M60 74L43 94"/><g class="pet-arm"><path d="M60 74L82 84L94 90"/></g></g>
-            <g class="arms a-hug"><path d="M60 74L84 82L92 92"/><path d="M60 74L80 90L94 98"/></g>
-            <g class="arms a-kiss"><path d="M60 74L43 94"/><g class="kiss-r"><path d="M60 74L74 72L66 52"/></g></g>
-            <g class="arms a-clap"><g class="clap-l"><path d="M60 74L77 66"/></g><g class="clap-r"><path d="M60 74L77 82"/></g></g>
-            <g class="legs l-stand"><path class="leg1" d="M53 108L50 142"/><path class="leg2" d="M67 108L70 142"/></g>
-            <g class="legs l-sit"><path d="M53 108L76 106L78 120"/><path d="M67 108L88 106L90 120"/></g>
-            <g class="legs l-squat"><path d="M53 108L42 118L48 128"/><path d="M67 108L78 118L72 128"/></g>
+            <g class="arm-l-g"><path class="limb arm-l" d="M60 74Q49.5 84 43 94"/></g>
+            <g class="arm-r-g"><path class="limb arm-r" d="M60 74Q70.5 84 77 94"/><circle class="wave-hand" cx="80" cy="97" r="3.5"/></g>
+            <circle class="ball" cx="85" cy="38" r="6.5"/>
+            <path class="leash" d="M84 84Q102 104 117 112"/>
+            <path class="limb leg-l leg1" d="M53 108Q51.5 125 50 142"/>
+            <path class="limb leg-r leg2" d="M67 108Q68.5 125 70 142"/>
           </g>
           ${hearts("hearts-l", [[44, 40, -26, 0], [44, 40, -36, 0.45], [44, 40, -18, 0.9]])}
           ${hearts("hearts-r", [[76, 40, 26, 0], [76, 40, 36, 0.45], [76, 40, 18, 0.9]])}
@@ -3945,6 +3932,63 @@
           </g></g></g>
         </svg>`;
       }
+
+      // Her arms and legs: each pose gives shoulder/hip, elbow/knee and hand/foot.
+      // The rig turns these into joint angles and eases between poses, so a limb
+      // bends smoothly and keeps its length instead of snapping to a new drawing.
+      const ARM_DOWN_L = [60, 74, 50, 84, 43, 94];
+      const ARM_POSES = {
+        down: [ARM_DOWN_L, [60, 74, 70, 84, 77, 94]],
+        wave: [ARM_DOWN_L, [60, 74, 80, 66, 88, 46]],
+        up: [[60, 74, 38, 60, 30, 30], [60, 74, 82, 60, 90, 30]],
+        throw: [ARM_DOWN_L, [60, 74, 80, 64, 84, 46]],
+        reach: [[60, 74, 46, 92, 43, 110], [60, 74, 84, 92, 97, 106]],
+        knees: [[60, 74, 46, 92, 43, 110], [60, 74, 74, 92, 77, 110]],
+        chin: [ARM_DOWN_L, [60, 74, 78, 70, 69, 54]],
+        hold: [ARM_DOWN_L, [60, 74, 80, 74, 74, 58]],
+        leash: [[60, 74, 46, 70, 52, 52], [60, 74, 72, 79, 84, 84]],
+        pet: [ARM_DOWN_L, [60, 74, 82, 84, 94, 90]],
+        hug: [[60, 74, 84, 82, 92, 92], [60, 74, 80, 90, 94, 98]],
+        kiss: [ARM_DOWN_L, [60, 74, 74, 72, 66, 52]],
+        clap: [[60, 74, 69, 69, 77, 66], [60, 74, 69, 79, 77, 82]],
+      };
+      const LEG_POSES = {
+        stand: [[53, 108, 51.5, 125, 50, 142], [67, 108, 68.5, 125, 70, 142]],
+        sit: [[53, 108, 76, 106, 78, 120], [67, 108, 88, 106, 90, 120]],
+        squat: [[53, 108, 42, 118, 48, 128], [67, 108, 78, 118, 72, 128]],
+      };
+
+      // [root x, root y, upper angle, upper length, lower angle, lower length]
+      function toJoints([x0, y0, x1, y1, x2, y2]) {
+        return [
+          x0,
+          y0,
+          Math.atan2(y1 - y0, x1 - x0),
+          Math.hypot(x1 - x0, y1 - y0),
+          Math.atan2(y2 - y1, x2 - x1),
+          Math.hypot(x2 - x1, y2 - y1),
+        ];
+      }
+
+      // A soft arc pulled toward the elbow or knee: no hard corner, no loops
+      function limbPath([x0, y0, a1, l1, a2, l2]) {
+        const x1 = x0 + Math.cos(a1) * l1;
+        const y1 = y0 + Math.sin(a1) * l1;
+        const x2 = x1 + Math.cos(a2) * l2;
+        const y2 = y1 + Math.sin(a2) * l2;
+        const f = (n) => n.toFixed(2);
+        return { d: `M${f(x0)} ${f(y0)}Q${f(x1)} ${f(y1)} ${f(x2)} ${f(y2)}`, end: [x2, y2], angle: a2 };
+      }
+
+      // Turns the short way round, so an arm never spins through its body
+      function lerpAngle(a, b, t) {
+        let d = b - a;
+        while (d > Math.PI) d -= 2 * Math.PI;
+        while (d < -Math.PI) d += 2 * Math.PI;
+        return a + d * t;
+      }
+
+      const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -3957,6 +4001,56 @@
           this.body = this.svg.querySelector(".me-body");
           this.dog = this.svg.querySelector(".dog-move");
           this.runId = 0;
+          this.limbEls = ["arm-l", "arm-r", "leg-l", "leg-r"].map((c) => this.svg.querySelector(`.${c}`));
+          this.waveHand = this.svg.querySelector(".wave-hand");
+          this.limbs = null;
+          this.setLimbs("down", "stand", 0);
+        }
+
+        // Eases every limb from where it is to the new pose
+        setLimbs(arms, legs, ms) {
+          const target = [
+            ...(ARM_POSES[arms] || ARM_POSES.down),
+            ...(LEG_POSES[legs] || LEG_POSES.stand),
+          ].map(toJoints);
+          if (!this.limbs || ms <= 0 || motionOff()) {
+            this.limbs = target;
+            this.drawLimbs();
+            return;
+          }
+          const from = this.limbs.map((j) => [...j]);
+          const start = performance.now();
+          const id = (this.limbAnim = (this.limbAnim || 0) + 1);
+          const tick = (now) => {
+            if (id !== this.limbAnim) return;
+            const t = easeInOut(Math.min(1, (now - start) / ms));
+            this.limbs = from.map((j, i) => {
+              const to = target[i];
+              return [
+                to[0],
+                to[1],
+                lerpAngle(j[2], to[2], t),
+                j[3] + (to[3] - j[3]) * t,
+                lerpAngle(j[4], to[4], t),
+                j[5] + (to[5] - j[5]) * t,
+              ];
+            });
+            this.drawLimbs();
+            if (t < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        }
+
+        drawLimbs() {
+          this.limbs.forEach((joints, i) => {
+            const { d, end, angle } = limbPath(joints);
+            this.limbEls[i].setAttribute("d", d);
+            // The waving hand sits just past the right hand
+            if (i === 1) {
+              this.waveHand.setAttribute("cx", (end[0] + Math.cos(angle) * 4).toFixed(2));
+              this.waveHand.setAttribute("cy", (end[1] + Math.sin(angle) * 4).toFixed(2));
+            }
+          });
         }
 
         // x/y move, flip turns around (-1), show fades in or out
@@ -3970,6 +4064,8 @@
           const { dataset } = this.svg;
           dataset.arms = step.arms || "down";
           dataset.legs = step.legs || "stand";
+          // Limbs bend into place a bit quicker than the body moves, but never snap
+          this.setLimbs(dataset.arms, dataset.legs, Math.max(260, Math.min(step.move ?? 500, 520)));
           dataset.face = step.face || "def";
           dataset.act = step.act || "";
           dataset.dog = step.dogRun ? "run" : "";
@@ -4239,14 +4335,14 @@
       // a big stage where she and Frisky act out a little story. They take turns.
       const STORY_VIEW = "-20 -125 220 290";
       const STORY_KEY = "sudoku-story";
-      const PEN = 'class="pen" filter="url(#pencil)"';
-      // A gentle wave: a dead-flat line has no height, and the pencil filter hides it
+      const PEN = 'class="pen"';
+      // The ground has a gentle wave, like hand-drawn line art
       const GROUND = `<path ${PEN} d="M-30 142q65-3 130 0t130 0"/>`;
       const SUN = `<circle class="sun" cx="6" cy="-96" r="12" stroke="none"/>`;
 
       // Held things live inside her body group, at the hand for each pose
       const HELD_PROPS = `<g ${PEN}>
-        <g class="held held-mango-up"><path d="M40 37v-5"/><ellipse class="mango" cx="40" cy="44" rx="5" ry="7"/></g>
+        <g class="held held-mango-up"><path d="M30 21v-5"/><ellipse class="mango" cx="30" cy="28" rx="5" ry="7"/></g>
         <g class="held held-mango"><ellipse class="mango" cx="72" cy="52" rx="5" ry="7"/></g>
         <g class="held held-icecream"><path class="cone" d="M68.5 56h11L74 71z"/><circle class="scoop" cx="74" cy="51.5" r="6"/><circle class="scoop drip" cx="69.5" cy="57" r="1.6" stroke="none"/></g>
         <g class="held held-icecream-share"><path class="cone" d="M91 88h11l-5.5 15z"/><circle class="scoop" cx="96.5" cy="83.5" r="6"/></g>
@@ -4259,12 +4355,12 @@
           caption: "🥭 Mango time!",
           back: `${SUN}
             <path class="wood" ${PEN} d="M144 142Q148 60 146-14L160-14Q158 60 166 142Z"/>
-            <path ${PEN} d="M147 8Q132-2 119-10"/>
+            <path ${PEN} d="M147 6Q126-8 108-24"/>
             <g class="leafy" ${PEN}>
               <circle cx="152" cy="-56" r="40"/><circle cx="118" cy="-44" r="26"/>
               <circle cx="184" cy="-42" r="24"/><circle cx="150" cy="-92" r="28"/>
             </g>
-            <g class="tree-mango" ${PEN}><path d="M119-10v12"/><ellipse class="mango" cx="119" cy="9" rx="5" ry="7"/></g>
+            <g class="tree-mango" ${PEN}><path d="M108-24v10"/><ellipse class="mango" cx="108" cy="-7" rx="5" ry="7"/></g>
             ${GROUND}`,
           front: "",
           steps: [
