@@ -1527,6 +1527,13 @@
         display: none;
       }
 
+      .buddy[data-held="frisbee"] .held-frisbee,
+      .buddy[data-held="bowl"] .held-bowl,
+      .buddy[data-held="tray"] .held-tray,
+      .buddy[data-held="muffin"] .held-muffin,
+      .buddy[data-held="board"] .held-board,
+      .buddy[data-held="bike"] .held-bike,
+      .buddy[data-held="brush"] .held-brush,
       .buddy[data-held="mango-up"] .held-mango-up,
       .buddy[data-held="mango"] .held-mango,
       .buddy[data-held="icecream"] .held-icecream,
@@ -1537,7 +1544,8 @@
       }
 
       /* Eating: the mango gets smaller bite by bite */
-      .buddy[data-act~="munch"] .held-mango {
+      .buddy[data-act~="munch"] .held-mango,
+      .buddy[data-act~="munch"] .held-muffin {
         transform-box: fill-box;
         transform-origin: center;
         animation: munch 2.2s steps(4) forwards;
@@ -1666,6 +1674,160 @@
           transform: translate(var(--dx), var(--dy));
           opacity: 0;
         }
+      }
+
+      .buddy .frisbee {
+        fill: #e5484d;
+      }
+
+      .buddy .bowl {
+        fill: #f3e4c8;
+      }
+
+      .buddy .cup {
+        fill: #ff9fb8;
+      }
+
+      .buddy .muffin-top {
+        fill: #b5794b;
+      }
+
+      .buddy .deck {
+        fill: #7ab8ff;
+      }
+
+      .buddy .brush-tip {
+        fill: #ff7a7a;
+      }
+
+      .buddy .wheel circle,
+      .buddy .bike-frame {
+        fill: none;
+      }
+
+      .buddy .bike-frame {
+        stroke: #e5484d;
+      }
+
+      .buddy .tail-line {
+        fill: none;
+        stroke: #ff7aa2;
+        stroke-width: 1.8;
+      }
+
+      .buddy .tail-bit {
+        fill: var(--flash);
+        stroke-width: 1.2;
+      }
+
+      /* The paper tail flutters behind the bike; wheels spin while riding */
+      .buddy .paper-tail {
+        transform-box: fill-box;
+        transform-origin: right center;
+        animation: flutter 0.26s ease-in-out infinite alternate;
+      }
+
+      @keyframes flutter {
+        from {
+          transform: skewY(-7deg);
+        }
+        to {
+          transform: skewY(6deg);
+        }
+      }
+
+      .buddy[data-act~="ride"] .spokes {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: spin 0.45s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .buddy .dog-frisbee {
+        display: none;
+      }
+
+      .story[data-beat~="caught"] .dog-frisbee {
+        display: inline;
+      }
+
+      /* The thrown frisbee: up in an arc, then down to Frisky's mouth */
+      .story .fly-disc {
+        display: none;
+      }
+
+      .story[data-beat~="throw"]:not([data-beat~="caught"]) .fly-disc {
+        display: inline;
+        animation: discFly 0.85s linear forwards;
+      }
+
+      @keyframes discFly {
+        0% {
+          transform: translate(80px, 48px) rotate(-10deg);
+          animation-timing-function: ease-out;
+        }
+        50% {
+          transform: translate(126px, 10px) rotate(8deg);
+          animation-timing-function: ease-in;
+        }
+        100% {
+          transform: translate(170px, 92px) rotate(18deg);
+        }
+      }
+
+      /* Swing ropes pivot on the top bar (moved by the swing engine) */
+      .story .swing-ropes {
+        transform-box: view-box;
+        transform-origin: 110px -42px;
+      }
+
+      .story .rope {
+        fill: none;
+        stroke: var(--ink);
+        stroke-width: 1.6;
+      }
+
+      .story .frame {
+        fill: none;
+        stroke: var(--wood);
+        stroke-width: 5;
+        stroke-linecap: round;
+      }
+
+      .story .chute {
+        fill: none;
+        stroke: #ff9f6b;
+        stroke-width: 8;
+        stroke-linecap: round;
+      }
+
+      /* Painting, baking and clay: each beat shows the next stage */
+      .story .stage {
+        opacity: 0;
+        transition: opacity 0.7s ease;
+      }
+
+      .story[data-beat~="paint1"] .paint-1,
+      .story[data-beat~="paint2"] .paint-2,
+      .story[data-beat~="paint3"] .paint-3,
+      .story[data-beat~="bake"]:not([data-beat~="done"]) .oven-glow,
+      .story[data-beat~="clay1"]:not([data-beat~="clay2"]) .clay-1,
+      .story[data-beat~="clay2"]:not([data-beat~="clay3"]) .clay-2,
+      .story[data-beat~="clay3"] .clay-3 {
+        opacity: 1;
+      }
+
+      .story .clay {
+        fill: #b9774f;
+      }
+
+      .story .oven-glow {
+        fill: #ffb24d;
       }
 
       /* Frisky shakes off the water */
@@ -4007,11 +4169,19 @@
         hug: [[60, 74, 84, 82, 92, 92], [60, 74, 80, 90, 94, 98]],
         kiss: [ARM_DOWN_L, [60, 74, 74, 72, 66, 52]],
         clap: [[60, 74, 69, 69, 77, 66], [60, 74, 69, 79, 77, 82]],
+        // Story poses: holding swing ropes, handlebars, arms out on a board,
+        // painting at an easel, shaping clay on the ground
+        ropes: [[60, 74, 46, 72, 37, 64], [60, 74, 74, 72, 83, 64]],
+        handlebar: [[60, 74, 74, 86, 86, 94], [60, 74, 76, 82, 90, 92]],
+        balance: [[60, 74, 46, 74, 34, 80], [60, 74, 74, 74, 86, 80]],
+        paint: [ARM_DOWN_L, [60, 74, 80, 72, 98, 74]],
+        mold: [[60, 74, 72, 96, 84, 116], [60, 74, 80, 92, 90, 112]],
       };
       const LEG_POSES = {
         stand: [[53, 108, 51.5, 125, 50, 142], [67, 108, 68.5, 125, 70, 142]],
         sit: [[53, 108, 76, 106, 78, 120], [67, 108, 88, 106, 90, 120]],
         squat: [[53, 108, 42, 118, 48, 128], [67, 108, 78, 118, 72, 128]],
+        board: [[53, 108, 46, 126, 42, 142], [67, 108, 76, 126, 80, 142]],
       };
 
       // [root x, root y, upper angle, upper length, lower angle, lower length]
@@ -4095,7 +4265,7 @@
         startMotion() {
           if (this.moving || motionOff()) return;
           this.moving = true;
-          this.amp ||= { walk: 0, wave: 0, clap: 0, pet: 0, kiss: 0, blow: 0, swing: 0, hop: 0 };
+          this.amp ||= { walk: 0, wave: 0, clap: 0, pet: 0, kiss: 0, blow: 0, swing: 0, hop: 0, paint: 0, mold: 0 };
           let last = performance.now();
           const frame = (now) => {
             if (motionOff()) {
@@ -4140,6 +4310,8 @@
             blow: arms === "leash",
             swing: legs === "sit" && acts.includes("swing"),
             hop: acts.includes("hop"),
+            paint: arms === "paint",
+            mold: arms === "mold",
           };
           // Each motion fades in and out over about a fifth of a second
           for (const key in this.amp) {
@@ -4174,12 +4346,14 @@
           if (a.hop > 0.001) bob -= 6 * Math.abs(wave(0.9)) * a.hop;
 
           // Gestures swing the whole arm from the shoulder, in degrees
-          const rotL = 14 * ease(0.55) * a.clap - 26 * ease(1.6) * a.blow;
+          const rotL = 14 * ease(0.55) * a.clap - 26 * ease(1.6) * a.blow + 5 * wave(0.5) * a.mold;
           const rotR =
             9 * wave(0.9) * a.wave -
             14 * ease(0.55) * a.clap +
             6 * wave(1.2) * a.pet +
-            26 * ease(1.6) * a.kiss;
+            26 * ease(1.6) * a.kiss +
+            9 * wave(0.6) * a.paint +
+            5 * wave(0.5, 1.2) * a.mold;
 
           this.drawLimbs(off);
           this.armL.style.transform = `rotate(${rotL.toFixed(2)}deg)`;
@@ -4225,7 +4399,7 @@
           if ("held" in step) dataset.held = step.held;
           const ms = step.move ?? 500;
           if (step.me) this.place(this.me, step.me, ms, 60, MOVE_EASE[step.ease] || MOVE_EASE.glide);
-          if (step.dog) this.place(this.dog, step.dog, ms, 28);
+          if (step.dog) this.place(this.dog, step.dog, ms, 28, MOVE_EASE[step.dogEase] || MOVE_EASE.glide);
           const { rot = 0, sit = 0 } = step.body || {};
           this.body.style.transition = `transform ${Math.min(ms, 600)}ms ease-in-out`;
           this.body.style.transform = `translate(0, ${sit}px) translate(60px, 142px) rotate(${rot}deg) translate(-60px, -142px)`;
@@ -4500,7 +4674,31 @@
         <g class="held held-icecream-share"><path class="cone" d="M91 88h11l-5.5 15z"/><circle class="scoop" cx="96.5" cy="83.5" r="6"/></g>
         <g class="held held-boat"><path class="paper" d="M64 58h20l-3 6H67z"/><path class="paper" d="M74 58V45l7 12z"/></g>
         <g class="held held-boat-reach"><path class="paper" d="M88 104h20l-3 6H91z"/><path class="paper" d="M98 104V91l7 12z"/></g>
+        <g class="held held-frisbee"><ellipse class="frisbee" cx="77" cy="58" rx="9" ry="3.2"/></g>
+        <g class="held held-bowl"><path d="M96 82l-4 10"/><path class="bowl" d="M83 89h22a11 8 0 0 1-22 0z"/></g>
+        <g class="held held-tray"><path class="wood" d="M62 59h24v3H62z"/><path class="cup" d="M66 59l1-5h6l1 5zM76 59l1-5h6l1 5z"/></g>
+        <g class="held held-muffin"><path class="cup" d="M68 64l-2-9h16l-2 9z"/><path class="muffin-top" d="M65 55q9-12 18 0z"/></g>
+        <g class="held held-board"><rect class="deck" x="26" y="137" width="68" height="4.5" rx="2.2"/><circle class="dot" cx="38" cy="145" r="3.2"/><circle class="dot" cx="82" cy="145" r="3.2"/></g>
+        <g class="held held-bike">
+          <g class="paper-tail"><path class="tail-line" d="M50 111q-12-7-24-2t-24-2t-22-5"/><path class="tail-bit" d="M28 108l-4 7 7-2zM6 106l-4 7 7-2zM-14 103l-4 7 7-2z"/></g>
+          <g class="wheel"><circle cx="32" cy="120" r="12"/><path class="spokes" d="M32 109v22M21 120h22"/></g>
+          <g class="wheel"><circle cx="94" cy="120" r="12"/><path class="spokes" d="M94 109v22M83 120h22"/></g>
+          <path class="bike-frame" d="M32 120L58 110L64 122L94 120L88 92M58 110L88 96M84 90l8-2M54 108h10"/>
+        </g>
       </g>`;
+      // In her right arm, so it moves with the brush hand
+      const HELD_BRUSH = `<g class="pen held held-brush"><path d="M97 75l9-13"/><circle class="brush-tip" cx="107" cy="60" r="2.6" stroke="none"/></g>`;
+      // In Frisky's mouth once he's caught it
+      const DOG_FRISBEE = `<ellipse class="frisbee dog-frisbee pen" cx="62" cy="112" rx="9" ry="3.2"/>`;
+
+      // The story stage's figure, with everything she and Frisky can hold
+      function makeStoryBuddy() {
+        const buddy = new Buddy(document.getElementById("story-buddy"), STORY_VIEW);
+        buddy.svg.querySelector(".me-bob").insertAdjacentHTML("beforeend", HELD_PROPS);
+        buddy.svg.querySelector(".arm-r-g").insertAdjacentHTML("beforeend", HELD_BRUSH);
+        buddy.svg.querySelector(".dog").insertAdjacentHTML("beforeend", DOG_FRISBEE);
+        return buddy;
+      }
 
       const STORIES = [
         {
@@ -4631,9 +4829,226 @@
               do: (still) => { storyBeat("clear"); still || playSample("xylophone", 0.3); } },
           ],
         },
+        {
+          id: "frisbee",
+          caption: "🥏 Frisbee with Frisky",
+          back: `${SUN}
+            <g class="leafy"><circle cx="180" cy="128" r="16"/><circle cx="196" cy="134" r="12"/></g>
+            ${GROUND}`,
+          front: `<ellipse class="frisbee pen fly-disc" cx="0" cy="0" rx="9" ry="3.2"/>`,
+          steps: [
+            { me: { x: -10 }, dog: { x: -36, show: 1 }, held: "frisbee", arms: "hold", face: "happy", move: 0, dur: 900 },
+            // Wind up, lean back, and let it fly
+            { body: { rot: -8 }, held: "frisbee", arms: "chin", face: "cur", move: 300, dur: 420 },
+            { body: { rot: 5 }, held: "", arms: "wave", face: "joy", dog: { x: 100 }, dogRun: true, move: 600, dur: 600,
+              do: () => storyBeat("throw") },
+            // Frisky leaps and catches it in mid-air
+            { body: { rot: 0 }, arms: "up", face: "joy", dog: { x: 112, y: -20 }, dogEase: "up", move: 250, dur: 260 },
+            { arms: "up", face: "joy", dog: { x: 120, y: 0 }, dogEase: "down", move: 280, dur: 420,
+              do: (still) => { storyBeat("caught"); still || playSample("frisky-bark"); } },
+            { arms: "clap", face: "joy", dog: { x: 72, flip: -1 }, dogRun: true, move: 1000, dur: 1000 },
+            { arms: "pet", face: "joy", act: "pet love", dog: { x: 72, flip: -1 }, dur: 1800,
+              do: (still) => still || playSample("laugh-boy", 0.2) },
+          ],
+        },
+        {
+          id: "swing",
+          caption: "🌳 Higher, higher, jump!",
+          back: `${SUN}
+            <path class="frame" d="M30 142L50-42L70 142M150 142L170-42L190 142"/>
+            <rect class="wood" x="40" y="-48" width="140" height="8" rx="3"/>
+            ${GROUND}`,
+          front: `<g class="swing-ropes"><path class="rope" d="M87-40V110M133-40V110"/><rect class="wood" x="82" y="108" width="56" height="5" rx="2"/></g>`,
+          steps: [
+            { me: { x: -60 }, dog: { x: -110, show: 1 }, held: "", legs: "skip", face: "happy", move: 0, dur: 50 },
+            { me: { x: 50 }, dog: { x: -16 }, legs: "skip", face: "happy", dogRun: true, move: 1400, dur: 1400 },
+            { me: { x: 50, y: -22 }, body: { sit: 22 }, legs: "sit", arms: "ropes", face: "happy", move: 400, dur: 450 },
+            // Swing higher and higher (the swing engine rocks her and the ropes)
+            { body: { sit: 22 }, legs: "sit", arms: "ropes", face: "joy", act: "swing", dur: 3000,
+              do: (still) => startSwing(still) },
+            // Let go at the front of the swing and fly off
+            { me: { x: 88, y: -70 }, legs: "stand", arms: "up", face: "joy", move: 380, ease: "up", dur: 400,
+              do: (still) => { letGoOfSwing(); still || playSample("laugh-child"); } },
+            { me: { x: 104, y: 0 }, arms: "up", face: "joy", move: 380, ease: "down", dur: 400 },
+            { me: { x: 104 }, body: { sit: 14 }, legs: "squat", arms: "up", face: "joy", move: 160, dur: 260 },
+            { me: { x: 104 }, arms: "up", face: "joy", act: "love", dog: { x: 52 }, dogRun: true, move: 700, dur: 1600,
+              do: (still) => still || playSample("frisky-bark", 0.3) },
+          ],
+        },
+        {
+          id: "slide",
+          caption: "🛝 Down the slide",
+          back: `${SUN}
+            <path class="frame" d="M150 142L154 30M168 142L170 30M152 120h17M152 98h17M153 76h17M153 54h17"/>
+            <path class="frame" d="M134 142L134 32"/>
+            <rect class="wood" x="126" y="25" width="48" height="7" rx="2"/>
+            <path class="chute" d="M130 32L14 130L-14 134"/>
+            ${GROUND}`,
+          front: "",
+          steps: [
+            { me: { x: 20 }, dog: { x: 48, show: 1 }, held: "", arms: "chin", face: "cur", move: 0, dur: 900 },
+            { me: { x: 98 }, legs: "skip", arms: "down", face: "happy", move: 900, dur: 900 },
+            // Up the ladder
+            { me: { x: 98, y: -112 }, legs: "skip", arms: "up", face: "cur", move: 1700, dur: 1700,
+              do: (still) => still || playSample("frisky-bark", 0.8) },
+            { me: { x: 72, y: -104, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "up", face: "happy", move: 500, dur: 650 },
+            // Wheee!
+            { me: { x: -46, y: -6, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "up", face: "joy", move: 1000, ease: "down", dur: 1100,
+              do: (still) => still || playSample("laugh-girl") },
+            { me: { x: -30, y: 0, flip: 1 }, legs: "stand", arms: "up", face: "joy", act: "love", dog: { x: 58, flip: -1 }, dogRun: true, move: 600, dur: 1700 },
+          ],
+        },
+        {
+          id: "bike",
+          caption: "🚲 A bike with a paper tail",
+          back: `${SUN}
+            <g class="leafy"><circle cx="20" cy="130" r="14"/><circle cx="160" cy="128" r="16"/><circle cx="176" cy="134" r="11"/></g>
+            ${GROUND}`,
+          front: "",
+          steps: [
+            { me: { x: -170 }, dog: { x: -220, show: 1 }, body: { sit: 10 }, legs: "sit", arms: "handlebar", held: "bike", act: "ride swing", face: "happy", move: 0, dur: 50 },
+            { me: { x: 30 }, dog: { x: -30 }, body: { sit: 10 }, legs: "sit", arms: "handlebar", held: "bike", act: "ride swing", face: "happy", dogRun: true, move: 1900, dur: 1900 },
+            // One hand off to wave
+            { me: { x: 70 }, dog: { x: 10 }, body: { sit: 10 }, legs: "sit", arms: "wave", held: "bike", act: "ride swing", face: "joy", dogRun: true, move: 1000, dur: 1000,
+              do: (still) => still || playSample("frisky-bark") },
+            { me: { x: 240 }, dog: { x: 190 }, body: { sit: 10 }, legs: "sit", arms: "handlebar", held: "bike", act: "ride swing", face: "joy", dogRun: true, move: 1500, dur: 1500 },
+            // And back the other way
+            { me: { x: 30, flip: -1 }, dog: { x: 110, flip: -1 }, body: { sit: 10 }, legs: "sit", arms: "handlebar", held: "bike", act: "ride swing", face: "happy", dogRun: true, move: 1900, dur: 1900 },
+            { me: { x: 30, flip: -1 }, dog: { x: 110, flip: -1 }, body: { sit: 10 }, legs: "sit", arms: "handlebar", held: "bike", act: "love", face: "joy", dur: 1400,
+              do: (still) => still || playSample("laugh-child") },
+          ],
+        },
+        {
+          id: "skate",
+          caption: "🛹 Skateboard day",
+          back: `${SUN}
+            <g class="leafy"><circle cx="186" cy="130" r="14"/></g>
+            ${GROUND}`,
+          front: "",
+          steps: [
+            { me: { x: -170, y: -8 }, dog: { x: -220, show: 1 }, legs: "board", arms: "balance", held: "board", face: "happy", move: 0, dur: 50 },
+            { me: { x: 0, y: -8 }, dog: { x: -32 }, legs: "board", arms: "balance", held: "board", face: "happy", dogRun: true, move: 1500, dur: 1500 },
+            // A little jump with the board
+            { me: { x: 50, y: -46 }, legs: "board", arms: "up", held: "board", face: "joy", move: 340, ease: "up", dur: 360 },
+            { me: { x: 100, y: -8 }, legs: "board", arms: "balance", held: "board", face: "joy", move: 340, ease: "down", dur: 380,
+              do: (still) => still || playSample("laugh-girl") },
+            { me: { x: 240, y: -8 }, dog: { x: 190 }, legs: "board", arms: "balance", held: "board", face: "happy", dogRun: true, move: 1100, dur: 1100 },
+            { me: { x: 40, y: -8, flip: -1 }, dog: { x: 110, flip: -1 }, legs: "board", arms: "balance", held: "board", face: "happy", dogRun: true, move: 1700, dur: 1700 },
+            { me: { x: 40, y: -8, flip: -1 }, dog: { x: 110, flip: -1 }, legs: "board", arms: "up", held: "board", act: "love", face: "joy", dur: 1400,
+              do: (still) => still || playSample("frisky-bark") },
+          ],
+        },
+        {
+          id: "paint",
+          caption: "🎨 Painting Frisky",
+          back: `${SUN}
+            <path class="frame" d="M120 142L132 92M160 142L150 92M140 142L141 96"/>
+            <rect class="paper pen" x="104" y="48" width="62" height="48" rx="2"/>
+            <g class="stage paint-1"><rect x="106" y="50" width="58" height="22" fill="#bfe3ff"/><circle cx="154" cy="59" r="5" fill="#eeff41"/></g>
+            <g class="stage paint-2"><rect x="106" y="80" width="58" height="14" fill="#9ad46f"/></g>
+            <g class="stage paint-3 pen"><ellipse cx="128" cy="80" rx="9" ry="5" fill="#eeff41"/><circle cx="138" cy="75" r="4.5" fill="#eeff41"/><path d="M122 84v6M126 85v6M131 85v6M135 84v6M119 79q-4-3-3-7"/></g>
+            ${GROUND}`,
+          front: "",
+          steps: [
+            { me: { x: 4 }, dog: { x: -32, show: 1 }, held: "", arms: "chin", face: "cur", move: 0, dur: 900 },
+            { me: { x: 4 }, arms: "paint", held: "brush", face: "cute", dur: 1300, do: () => storyBeat("paint1") },
+            { me: { x: 4 }, arms: "paint", held: "brush", face: "happy", dur: 1300, do: () => storyBeat("paint2") },
+            { me: { x: 4 }, arms: "paint", held: "brush", face: "joy", dur: 1300, do: () => storyBeat("paint3") },
+            // Step back to look, and Frisky comes to see himself
+            { me: { x: -24 }, arms: "clap", held: "", face: "joy", move: 500, dur: 900 },
+            { me: { x: -24 }, arms: "up", face: "joy", act: "love", dog: { x: 64 }, dogRun: true, move: 900, dur: 1900,
+              do: (still) => { still || playSample("frisky-bark", 0.9); still || playSample("laugh-child", 1.3); } },
+          ],
+        },
+        {
+          id: "muffin",
+          caption: "🧁 Baking a muffin",
+          back: `${SUN}
+            <rect class="paper pen" x="128" y="82" width="56" height="60" rx="4"/>
+            <rect x="138" y="96" width="36" height="24" rx="3" fill="#3a4b55"/>
+            <rect class="stage oven-glow" x="138" y="96" width="36" height="24" rx="3"/>
+            <g class="pen"><circle class="dot" cx="142" cy="89" r="2"/><circle class="dot" cx="150" cy="89" r="2"/></g>
+            ${GROUND}`,
+          front: "",
+          steps: [
+            { me: { x: -20 }, dog: { x: -34, show: 1 }, arms: "pet", held: "bowl", face: "cute", move: 0, dur: 1700 },
+            { me: { x: 50 }, legs: "skip", arms: "hold", held: "tray", face: "happy", move: 900, dur: 900 },
+            { me: { x: 50 }, arms: "reach", held: "", face: "happy", dur: 600, do: () => storyBeat("bake") },
+            // Waiting...
+            { me: { x: 50 }, arms: "chin", face: "cur", dur: 1500 },
+            { me: { x: 50 }, arms: "reach", face: "joy", dur: 500,
+              do: (still) => { storyBeat("done"); still || playSample("xylophone"); } },
+            { me: { x: 16 }, arms: "hold", held: "muffin", face: "cute", act: "munch", move: 500, dur: 2000,
+              do: (still) => still || playSample("mmm", 0.5) },
+            { me: { x: 16 }, arms: "pet", held: "", face: "joy", act: "pet love", dog: { x: 100, flip: -1 }, dogRun: true, move: 800, dur: 1600,
+              do: (still) => still || playSample("frisky-bark", 0.8) },
+          ],
+        },
+        {
+          id: "clay",
+          caption: "🗿 A clay statue",
+          back: `${SUN}
+            <g class="stage clay-1"><ellipse class="clay" cx="112" cy="136" rx="13" ry="7"/></g>
+            <g class="stage clay-2"><ellipse class="clay" cx="112" cy="132" rx="14" ry="10"/><circle class="clay" cx="124" cy="120" r="7"/></g>
+            <g class="stage clay-3 pen"><path class="clay" d="M100 128q-6-6-3-14"/><ellipse class="clay" cx="112" cy="128" rx="15" ry="8"/><circle class="clay" cx="128" cy="117" r="8"/><path class="clay" d="M122 111c-5 0-7 6-4 10c3-1 5-5 4-10z"/><rect class="clay" x="102" y="134" width="4" height="8"/><rect class="clay" x="116" y="134" width="4" height="8"/><circle class="dot" cx="131" cy="115" r="1.3"/></g>
+            ${GROUND}`,
+          front: "",
+          steps: [
+            { me: { x: -70 }, dog: { x: -110, show: 1 }, legs: "skip", held: "", face: "happy", move: 0, dur: 50 },
+            { me: { x: 6 }, dog: { x: -32 }, legs: "skip", face: "happy", dogRun: true, move: 1100, dur: 1100 },
+            { me: { x: 6 }, body: { sit: 14 }, legs: "squat", arms: "mold", face: "cute", move: 300, dur: 1300, do: () => storyBeat("clay1") },
+            { me: { x: 6 }, body: { sit: 14 }, legs: "squat", arms: "mold", face: "cur", dur: 1300, do: () => storyBeat("clay2") },
+            { me: { x: 6 }, body: { sit: 14 }, legs: "squat", arms: "mold", face: "happy", dur: 1300, do: () => storyBeat("clay3") },
+            // Ta-da! And Frisky meets his twin
+            { me: { x: -24 }, legs: "stand", arms: "clap", face: "joy", move: 500, dur: 900 },
+            { me: { x: -24 }, arms: "up", face: "joy", act: "love", dog: { x: 132, flip: -1 }, dogRun: true, move: 1300, dur: 2000,
+              do: (still) => { still || playSample("frisky-bark", 1.3); still || playSample("laugh-boy", 1.6); } },
+          ],
+        },
       ];
 
       let storyBuddy = null;
+      let swingRun = null;
+
+      // The swing: her and the ropes rock on the top bar's pivot together. When
+      // she lets go, the ropes keep swinging and slowly settle.
+      function startSwing(still) {
+        const ropes = document.querySelector("#story-front .swing-ropes");
+        const me = storyBuddy.me;
+        if (still || !ropes) return;
+        // She sits at translate(50, -22); rotating around (pivot - that offset)
+        // turns her around the pivot itself
+        me.style.transformBox = "view-box";
+        me.style.transformOrigin = "60px -20px";
+        me.style.transition = "none";
+        const run = { start: performance.now(), held: true, let: 0 };
+        swingRun = run;
+        const frame = (now) => {
+          if (swingRun !== run) return;
+          const t = (now - run.start) / 1000;
+          let amp = Math.min(1, t / 1.2) * 26;
+          if (!run.held) amp *= Math.max(0, 1 - (now - run.let) / 2600);
+          const angle = amp * Math.sin((2 * Math.PI * t) / 1.7);
+          ropes.style.transform = `rotate(${angle.toFixed(2)}deg)`;
+          if (run.held) me.style.transform = `translate(50px, -22px) rotate(${angle.toFixed(2)}deg)`;
+          requestAnimationFrame(frame);
+        };
+        requestAnimationFrame(frame);
+      }
+
+      function letGoOfSwing() {
+        if (!swingRun) return;
+        swingRun.held = false;
+        swingRun.let = performance.now();
+      }
+
+      function stopSwing() {
+        swingRun = null;
+        if (storyBuddy) {
+          storyBuddy.me.style.transformBox = "";
+          storyBuddy.me.style.transformOrigin = "";
+        }
+      }
       let storyClose = null;
 
       function storyBeat(beat) {
@@ -4671,10 +5086,8 @@
           localStorage.setItem(STORY_SEEN_KEY, "1");
         } catch (e) {}
         clearTapHints();
-        if (!storyBuddy) {
-          storyBuddy = new Buddy(document.getElementById("story-buddy"), STORY_VIEW);
-          storyBuddy.svg.querySelector(".me-bob").insertAdjacentHTML("beforeend", HELD_PROPS);
-        }
+        if (!storyBuddy) storyBuddy = makeStoryBuddy();
+        stopSwing();
         const tale = STORIES[nextStoryIndex()];
         // A story can zoom out (a bigger viewBox) to make the world bigger than her
         const view = tale.view || STORY_VIEW;
@@ -4707,6 +5120,7 @@
         if (story.hidden || !story.classList.contains("open")) return;
         clearTimeout(storyClose);
         storyBuddy.stop();
+        setTimeout(stopSwing, 800);
         story.classList.remove("open");
         setTimeout(() => {
           story.hidden = true;
