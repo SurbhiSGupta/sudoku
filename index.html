@@ -3042,14 +3042,80 @@
         osc.stop(at + length + 0.05);
       }
 
-      function playSound(kind) {
-        if (!soundOn) return;
+      // Recorded sounds in sounds/ (all CC0, see sounds/CREDITS.md). The files
+      // are left as downloaded; gain evens out their loudness and from/to skip
+      // silence at the ends.
+      const SAMPLES = {
+        "laugh-girl": { gain: 8.9 },
+        "laugh-boy": { gain: 2.0, to: 4.6 },
+        "laugh-child": { gain: 1.13 },
+        xylophone: { gain: 1.05 },
+        awesome: { gain: 0.28, from: 0.2, to: 1.95 },
+        wow: { gain: 1.5, to: 0.75 },
+        "frisky-happy": { gain: 1.08 },
+        "frisky-bark": { gain: 0.29 },
+        // Saved for the stories
+        mmm: { gain: 0.63 },
+        humming: { gain: 0.36, from: 0.36, to: 2.2 },
+      };
+      const SAMPLE_VOLUME = 0.55;
+      const LAUGHS = ["laugh-girl", "laugh-boy", "laugh-child"];
+      const sampleBuffers = {};
+      let lastLaugh = -1;
+      let lastBark = 0;
+
+      function ensureAudio() {
+        if (!soundOn) return false;
         try {
-          audio ||= new (window.AudioContext || window.webkitAudioContext)();
+          if (!audio) {
+            audio = new (window.AudioContext || window.webkitAudioContext)();
+            // Fetch the recordings once sound is first used, so they're ready in time
+            Object.keys(SAMPLES).forEach((name) => loadSample(name).catch(() => {}));
+          }
           if (audio.state === "suspended") audio.resume();
+          return true;
         } catch (e) {
-          return;
+          return false;
         }
+      }
+
+      function loadSample(name) {
+        sampleBuffers[name] ||= fetch(`sounds/${name}.mp3`)
+          .then((res) => res.arrayBuffer())
+          .then((data) => audio.decodeAudioData(data));
+        return sampleBuffers[name];
+      }
+
+      function playSample(name, delay = 0, volume = 1) {
+        if (!ensureAudio()) return;
+        const { gain, from = 0, to } = SAMPLES[name];
+        loadSample(name)
+          .then((buffer) => {
+            const source = audio.createBufferSource();
+            const level = audio.createGain();
+            source.buffer = buffer;
+            level.gain.value = gain * SAMPLE_VOLUME * volume;
+            source.connect(level).connect(audio.destination);
+            source.start(audio.currentTime + delay, from, to ? to - from : undefined);
+          })
+          .catch(() => {});
+      }
+
+      // The win card: "awesome!" for a new best, "wow!" for today's puzzle,
+      // otherwise one of the laughs in turn; Frisky barks along
+      function playCheer({ isNewBest, dailyToday }) {
+        if (isNewBest) playSample("awesome");
+        else if (dailyToday) {
+          playSample("wow");
+          playSample(LAUGHS[(lastLaugh = (lastLaugh + 1) % LAUGHS.length)], 0.6);
+        } else {
+          playSample(LAUGHS[(lastLaugh = (lastLaugh + 1) % LAUGHS.length)]);
+        }
+        playSample("frisky-happy", 1.1, 0.8);
+      }
+
+      function playSound(kind) {
+        if (!ensureAudio()) return;
         const t = audio.currentTime;
         if (kind === "tap") {
           tone(880, t, 0.07, { type: "triangle", volume: 0.035 });
@@ -3057,12 +3123,11 @@
           tone(240, t, 0.2, { volume: 0.06 });
           tone(190, t + 0.11, 0.24, { volume: 0.05 });
         } else if (kind === "line") {
-          tone(784, t, 0.16);
-          tone(1047, t + 0.1, 0.26);
+          // Frisky barks once, even when a move finishes a row and a box together
+          if (performance.now() - lastBark > 400) playSample("frisky-bark");
+          lastBark = performance.now();
         } else if (kind === "win") {
-          [523, 659, 784, 1047, 1319].forEach((f, i) =>
-            tone(f, t + i * 0.11, 0.45, { volume: 0.06 })
-          );
+          playSample("xylophone");
         }
       }
 
@@ -3527,6 +3592,7 @@
         chart.hidden = false;
         renderWeekChart(chart, loadHistory(), { animate: celebrate });
         playWinScene();
+        if (celebrate) playCheer({ isNewBest, dailyToday: daily === today });
 
         if (stopFireworks) stopFireworks();
         stopFireworks = celebrate
