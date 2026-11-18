@@ -1711,6 +1711,77 @@
         font-size: 0.85em;
       }
 
+      /* "Tap me" bubble by her head, then an occasional sparkle */
+      .tap-hint {
+        position: fixed;
+        z-index: 41;
+        transform: translate(0, -100%);
+        cursor: pointer;
+      }
+
+      .tap-hint[hidden] {
+        display: none;
+      }
+
+      .tap-hint span {
+        display: block;
+        animation: hintIn 0.35s ease-out both, hintFloat 1.6s ease-in-out 0.35s infinite alternate;
+      }
+
+      .tap-hint.bubble span {
+        position: relative;
+        padding: 6px 12px;
+        border-radius: 14px;
+        background: var(--surface);
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 800;
+        white-space: nowrap;
+        box-shadow: 0 2px 0 var(--edge);
+      }
+
+      /* The bubble's little tail points down at her */
+      .tap-hint.bubble span::after {
+        content: "";
+        position: absolute;
+        left: 10px;
+        bottom: -6px;
+        border: 6px solid transparent;
+        border-bottom: 0;
+        border-top-color: var(--surface);
+      }
+
+      .tap-hint.sparkle span {
+        font-size: 22px;
+        animation: twinkle 1.8s ease-in-out both;
+      }
+
+      @keyframes hintIn {
+        from {
+          opacity: 0;
+          transform: scale(0.8) translateY(6px);
+        }
+      }
+
+      @keyframes hintFloat {
+        to {
+          transform: translateY(-4px);
+        }
+      }
+
+      @keyframes twinkle {
+        0%,
+        100% {
+          opacity: 0;
+          transform: scale(0.4) rotate(-20deg);
+        }
+        30%,
+        70% {
+          opacity: 1;
+          transform: scale(1) rotate(10deg);
+        }
+      }
+
       /* "New here?" card, until it's dismissed */
       .guide-card {
         display: flex;
@@ -2494,6 +2565,7 @@
           </button>
         </div>
         <div class="home-buddy" id="buddy-home"></div>
+        <div class="tap-hint" id="tap-hint" hidden aria-hidden="true" onclick="tapHintOpen(event)"><span></span></div>
 
         <div class="guide-card" id="guide-card" hidden>
           <p>New to Sudoku? Take the one-minute tour.</p>
@@ -4419,6 +4491,11 @@
       async function openStory(from) {
         const story = document.getElementById("story");
         if (!story.hidden) return;
+        // Seen a story: from now on the hint is just an occasional sparkle
+        try {
+          localStorage.setItem(STORY_SEEN_KEY, "1");
+        } catch (e) {}
+        clearTapHints();
         if (!storyBuddy) {
           storyBuddy = new Buddy(document.getElementById("story-buddy"), STORY_VIEW);
           storyBuddy.svg.querySelector(".me-bob").insertAdjacentHTML("beforeend", HELD_PROPS);
@@ -4458,6 +4535,7 @@
         story.classList.remove("open");
         setTimeout(() => {
           story.hidden = true;
+          if (homeOpen()) scheduleTapHints();
           if (game && !homeOpen() && document.getElementById("win-screen").hidden) game.resume();
         }, motionOff() ? 0 : 750);
       }
@@ -4488,6 +4566,76 @@
         if (from) openStory(from);
       });
 
+      // ---------- "Tap me" hint ----------
+      // Until someone has seen a story, a bubble by her head says "Psst... tap me!".
+      // After that, only a sparkle now and then on the home screen.
+      const STORY_SEEN_KEY = "sudoku-story-seen";
+      let tapHintTimers = [];
+      let tapHintFollow = null;
+
+      function storySeen() {
+        try {
+          return localStorage.getItem(STORY_SEEN_KEY) === "1";
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function hideTapHint() {
+        clearInterval(tapHintFollow);
+        document.getElementById("tap-hint").hidden = true;
+      }
+
+      function clearTapHints() {
+        tapHintTimers.forEach((id) => {
+          clearTimeout(id);
+          clearInterval(id);
+        });
+        tapHintTimers = [];
+        hideTapHint();
+      }
+
+      function showTapHint(kind) {
+        if (!homeBuddy || !homeOpen()) return;
+        const hint = document.getElementById("tap-hint");
+        hint.className = `tap-hint ${kind}`;
+        const label = hint.firstElementChild;
+        label.textContent = kind === "bubble" ? "Psst… tap me!" : "✨";
+        // Restart the pop-in each time
+        label.style.animation = "none";
+        void label.offsetWidth;
+        label.style.animation = "";
+        // Stay by her head as she moves around
+        const follow = () => {
+          const box = homeBuddy.me.getBoundingClientRect();
+          hint.style.left = `${box.left + box.width * 0.6}px`;
+          hint.style.top = `${box.top + 6}px`;
+        };
+        follow();
+        hint.hidden = false;
+        clearInterval(tapHintFollow);
+        tapHintFollow = setInterval(follow, 120);
+      }
+
+      function scheduleTapHints() {
+        clearTapHints();
+        if (!storySeen()) {
+          tapHintTimers.push(setTimeout(() => showTapHint("bubble"), 1800));
+          return;
+        }
+        const twinkle = () => {
+          showTapHint("sparkle");
+          tapHintTimers.push(setTimeout(hideTapHint, 1800));
+        };
+        tapHintTimers.push(setTimeout(twinkle, 6000));
+        tapHintTimers.push(setInterval(twinkle, 25000));
+      }
+
+      function tapHintOpen(e) {
+        e.stopPropagation();
+        if (homeBuddy) openStory(homeBuddy.me.getBoundingClientRect());
+      }
+
       // ---------- Home ----------
       let homeBuddy;
 
@@ -4501,6 +4649,7 @@
           const scene = WIN_SCENES[Math.floor(Math.random() * WIN_SCENES.length)];
           homeBuddy.play(scene.steps, { loopFrom: scene.loopFrom });
         }
+        scheduleTapHints();
         if (focusOn) window.Capacitor?.Plugins?.Bodai?.setFocus({ on: false });
       }
 
@@ -4508,6 +4657,7 @@
         const home = document.getElementById("home-screen");
         if (home.hidden) return;
         home.hidden = true;
+        clearTapHints();
         if (homeBuddy) homeBuddy.stop();
         if (focusOn) window.Capacitor?.Plugins?.Bodai?.setFocus({ on: true });
       }
