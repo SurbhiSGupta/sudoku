@@ -73,6 +73,11 @@
         --track: #b3c1bd;
         --cand: #fbfde4;
         --scrim: rgba(246, 244, 236, 0.72);
+        --sky: #d6eff4;
+        --leaf: #9ad46f;
+        --wood: #c99a6b;
+        --water: #a6d9ea;
+        --mango: #ffae34;
         --lv-puppy: #56622a;
         --lv-easy: #7d8c2c;
         --lv-medium: #b9cc3a;
@@ -116,6 +121,11 @@
           --track: #44707e;
           --cand: #4a5222;
           --scrim: rgba(10, 30, 37, 0.74);
+          --sky: #15475a;
+          --leaf: #5f9a43;
+          --wood: #8f6a48;
+          --water: #3d86a3;
+          --mango: #f29a1f;
         }
       }
 
@@ -154,6 +164,11 @@
         --track: #44707e;
         --cand: #4a5222;
         --scrim: rgba(10, 30, 37, 0.74);
+        --sky: #15475a;
+        --leaf: #5f9a43;
+        --wood: #8f6a48;
+        --water: #3d86a3;
+        --mango: #f29a1f;
       }
 
       *,
@@ -1515,6 +1530,199 @@
         color: var(--bg);
       }
 
+      /* ---------- Surprise stories: tap her and the screen opens into her world ---------- */
+      .story {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        background: linear-gradient(var(--sky), var(--bg) 88%);
+        clip-path: circle(0 at var(--ox, 50%) var(--oy, 20%));
+        transition: clip-path 0.75s cubic-bezier(0.55, 0, 0.2, 1);
+        cursor: pointer;
+      }
+
+      .story[hidden] {
+        display: none;
+      }
+
+      .story.open {
+        clip-path: circle(150vmax at var(--ox, 50%) var(--oy, 20%));
+      }
+
+      .story-stage {
+        position: absolute;
+        inset: max(24px, env(safe-area-inset-top)) 8px 76px;
+      }
+
+      .story-stage > * {
+        position: absolute;
+        inset: 0;
+      }
+
+      .story-caption {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: max(22px, env(safe-area-inset-bottom));
+        margin: 0;
+        text-align: center;
+        font-size: 20px;
+        font-weight: 800;
+      }
+
+      .story-caption small {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      /* In a story her face is filled in, so leaves and water don't show through */
+      .story .buddy .head {
+        fill: var(--bg);
+      }
+
+      /* Props share the stick figure's pencil look */
+      .buddy .leafy {
+        fill: var(--leaf);
+      }
+
+      .buddy .wood {
+        fill: var(--wood);
+      }
+
+      .buddy .water {
+        fill: var(--water);
+        stroke: none;
+      }
+
+      .buddy .wave {
+        stroke: #ffffff;
+        stroke-width: 1.6;
+        opacity: 0.7;
+        animation: waveDrift 2.4s ease-in-out infinite alternate;
+      }
+
+      .buddy .sun {
+        fill: var(--flash);
+      }
+
+      .buddy .mango {
+        fill: var(--mango);
+      }
+
+      .buddy .paper {
+        fill: #ffffff;
+      }
+
+      .buddy .cone {
+        fill: #e2b06a;
+      }
+
+      .buddy .scoop {
+        fill: #ffa3bd;
+      }
+
+      @keyframes waveDrift {
+        to {
+          transform: translateX(6px);
+        }
+      }
+
+      /* Things she holds, shown for the pose she's in */
+      .buddy .held {
+        display: none;
+      }
+
+      .buddy[data-held="mango-up"] .held-mango-up,
+      .buddy[data-held="mango"] .held-mango,
+      .buddy[data-held="icecream"] .held-icecream,
+      .buddy[data-held="icecream-share"] .held-icecream-share,
+      .buddy[data-held="boat"] .held-boat,
+      .buddy[data-held="boat-reach"] .held-boat-reach {
+        display: inline;
+      }
+
+      /* Eating: the mango gets smaller bite by bite */
+      .buddy[data-act~="munch"] .held-mango {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: munch 2.2s steps(4) forwards;
+      }
+
+      @keyframes munch {
+        to {
+          transform: scale(0.35);
+        }
+      }
+
+      /* Ice cream drips down the cone */
+      .buddy .drip {
+        animation: drip 1.1s ease-in infinite;
+      }
+
+      @keyframes drip {
+        from {
+          transform: translateY(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateY(16px);
+          opacity: 0;
+        }
+      }
+
+      /* Sitting on the bench, swinging her legs */
+      .buddy[data-act~="swing"] .l-sit path {
+        transform-box: view-box;
+        animation: legSwing 0.5s ease-in-out infinite alternate;
+      }
+
+      .buddy[data-act~="swing"] .l-sit path:first-child {
+        transform-origin: 53px 108px;
+      }
+
+      .buddy[data-act~="swing"] .l-sit path:last-child {
+        transform-origin: 67px 108px;
+        animation-delay: -0.25s;
+      }
+
+      @keyframes legSwing {
+        from {
+          transform: rotate(-10deg);
+        }
+        to {
+          transform: rotate(14deg);
+        }
+      }
+
+      /* Scene beats: the mango leaves the tree, the boat sets sail */
+      .story[data-beat~="picked"] .tree-mango {
+        display: none;
+      }
+
+      .story .boat {
+        display: none;
+      }
+
+      .story[data-beat~="sail"] .boat {
+        display: inline;
+        animation: sail 5s ease-in-out forwards;
+      }
+
+      .story .boat-bob {
+        animation: bob 0.6s ease-in-out infinite alternate;
+      }
+
+      @keyframes sail {
+        from {
+          transform: translate(108px, 122px);
+        }
+        to {
+          transform: translate(228px, 118px);
+        }
+      }
+
       /* ---------- Home screen: today's puzzle first, then your own games ---------- */
       .home {
         position: fixed;
@@ -2410,6 +2618,15 @@
         <feDisplacementMap in="SourceGraphic" in2="n" scale="3" />
       </filter>
     </svg>
+    <div class="story" id="story" hidden onclick="closeStory()" role="dialog" aria-labelledby="story-caption">
+      <div class="story-stage">
+        <svg class="buddy story-back" id="story-back" aria-hidden="true"></svg>
+        <div id="story-buddy"></div>
+        <svg class="buddy story-front" id="story-front" aria-hidden="true"></svg>
+      </div>
+      <p class="story-caption" id="story-caption"></p>
+    </div>
+
     <div class="home" id="home-screen" hidden>
       <div class="home-inner">
         <div class="home-head">
@@ -2800,6 +3017,7 @@
           <li><b>Undo</b> and <b>Redo</b>: step back and forward through your moves.</li>
           <li><b>Number First</b> (Settings): pick a number, then tap or drag across every square it goes in.</li>
           <li><b>Focus Mode</b> (Settings): hides everything but the board and the number pad.</li>
+          <li><b>Tap her</b> (the stick figure) for a little story with Frisky.</li>
         </ul>
 
         <h3>Today's puzzle</h3>
@@ -3699,7 +3917,7 @@
             <path class="collar" d="M37 113.5q3 2.5 7 1.5"/>
           </g></g>
           <g class="me-move">${withFlower ? `<g class="flower"><g class="pen" filter="url(#pencil)"><path class="stem" d="M100 142V124"/><path class="leaf" d="M100 136c-6-1-8-5-7-8c4 0 7 4 7 8z"/><circle class="petal" cx="100" cy="117" r="3.6"/><circle class="petal" cx="106.5" cy="121.5" r="3.6"/><circle class="petal" cx="104" cy="128" r="3.6"/><circle class="petal" cx="96" cy="128" r="3.6"/><circle class="petal" cx="93.5" cy="121.5" r="3.6"/><circle class="bud-c" cx="100" cy="123" r="3"/></g></g>` : ""}<g class="me-body"><g class="me-bob"><g class="pen" filter="url(#pencil)">
-            <path d="M60 14c13-1 23 9 22 22c0 13-10 22-23 21c-12 0-21-10-20-22c1-12 9-21 21-21"/>
+            <path class="head" d="M60 14c13-1 23 9 22 22c0 13-10 22-23 21c-12 0-21-10-20-22c1-12 9-21 21-21"/>
             <g class="navy" style="stroke-width:1.7"><path d="M43.6 31h13.2q1 0 1 1v3.4q0 4-4 4h-6.4q-3.6 0-4.1-3.6l-.6-3.8q-.1-1 .9-1z"/><path d="M76.4 31h-13.2q-1 0-1 1v3.4q0 4 4 4h6.4q3.6 0 4.1-3.6l.6-3.8q.1-1-.9-1z"/><path d="M57.8 33.4q2.2-1.3 4.4 0"/><path d="M42.8 32.4l-4.3-1.2M77.2 32.4l4.3-1.2"/></g>
             ${BUDDY_FACES}
             <path d="M37 38c-3-18 8-28 23-28s26 10 23 28"/><path d="M60 11c-8 2-15 7-19 17"/><path d="M60 11c8 2 15 7 19 17"/><path d="M37 38c-3 7 1 11-2 17s2 9-3 15"/><path d="M83 38c3 7-1 11 2 17s-2 9 3 15"/><path style="stroke-width:1.6" d="M40 46c-2 5 1 8-1 13"/><path style="stroke-width:1.6" d="M80 46c2 5-1 8 1 13"/>
@@ -3756,6 +3974,7 @@
           dataset.act = step.act || "";
           dataset.dog = step.dogRun ? "run" : "";
           if ("flower" in step) dataset.flower = step.flower;
+          if ("held" in step) dataset.held = step.held;
           const ms = step.move ?? 500;
           if (step.me) this.place(this.me, step.me, ms, 60);
           if (step.dog) this.place(this.dog, step.dog, ms, 28);
@@ -3768,11 +3987,14 @@
         async play(steps, { loopFrom = null } = {}) {
           const id = ++this.runId;
           if (motionOff()) {
+            // No movement: run every step's prop changes, then show the last pose
+            steps.forEach((step) => step.do?.(true));
             this.pose({ ...steps[steps.length - 1], move: 0 });
             return;
           }
           let i = 0;
           while (id === this.runId && i < steps.length) {
+            steps[i].do?.();
             this.pose(steps[i]);
             await sleep(steps[i].dur);
             i++;
@@ -4012,6 +4234,183 @@
         game.openDaily(date);
       }
 
+      // ---------- Surprise stories ----------
+      // Tap her (in the header or on the home screen) and the screen opens into
+      // a big stage where she and Frisky act out a little story. They take turns.
+      const STORY_VIEW = "-20 -125 220 290";
+      const STORY_KEY = "sudoku-story";
+      const PEN = 'class="pen" filter="url(#pencil)"';
+      // A gentle wave: a dead-flat line has no height, and the pencil filter hides it
+      const GROUND = `<path ${PEN} d="M-30 142q65-3 130 0t130 0"/>`;
+      const SUN = `<circle class="sun" cx="6" cy="-96" r="12" stroke="none"/>`;
+
+      // Held things live inside her body group, at the hand for each pose
+      const HELD_PROPS = `<g ${PEN}>
+        <g class="held held-mango-up"><path d="M40 37v-5"/><ellipse class="mango" cx="40" cy="44" rx="5" ry="7"/></g>
+        <g class="held held-mango"><ellipse class="mango" cx="72" cy="52" rx="5" ry="7"/></g>
+        <g class="held held-icecream"><path class="cone" d="M68.5 56h11L74 71z"/><circle class="scoop" cx="74" cy="51.5" r="6"/><circle class="scoop drip" cx="69.5" cy="57" r="1.6" stroke="none"/></g>
+        <g class="held held-icecream-share"><path class="cone" d="M91 88h11l-5.5 15z"/><circle class="scoop" cx="96.5" cy="83.5" r="6"/></g>
+        <g class="held held-boat"><path class="paper" d="M64 58h20l-3 6H67z"/><path class="paper" d="M74 58V45l7 12z"/></g>
+        <g class="held held-boat-reach"><path class="paper" d="M88 104h20l-3 6H91z"/><path class="paper" d="M98 104V91l7 12z"/></g>
+      </g>`;
+
+      const STORIES = [
+        {
+          caption: "🥭 Mango time!",
+          back: `${SUN}
+            <path class="wood" ${PEN} d="M144 142Q148 60 146-14L160-14Q158 60 166 142Z"/>
+            <path ${PEN} d="M147 8Q132-2 119-10"/>
+            <g class="leafy" ${PEN}>
+              <circle cx="152" cy="-56" r="40"/><circle cx="118" cy="-44" r="26"/>
+              <circle cx="184" cy="-42" r="24"/><circle cx="150" cy="-92" r="28"/>
+            </g>
+            <g class="tree-mango" ${PEN}><path d="M119-10v12"/><ellipse class="mango" cx="119" cy="9" rx="5" ry="7"/></g>
+            ${GROUND}`,
+          front: "",
+          steps: [
+            { me: { x: -30 }, dog: { x: -14, show: 1 }, held: "", arms: "chin", face: "cur", move: 0, dur: 1000 },
+            { me: { x: 78 }, dog: { x: 30 }, legs: "skip", face: "happy", dogRun: true, move: 1200, dur: 1200 },
+            { me: { x: 78, y: -42 }, dog: { x: 30 }, arms: "up", legs: "skip", face: "cur", act: "hop", move: 2000, dur: 2000,
+              do: (still) => still || playSample("frisky-bark") },
+            { me: { x: 78, y: -42 }, arms: "up", face: "joy", held: "mango-up", dur: 700,
+              do: (still) => { storyBeat("picked"); still || playSample("laugh-child"); } },
+            { me: { x: 78, y: 0 }, arms: "up", face: "joy", held: "mango-up", move: 450, dur: 650 },
+            { me: { x: 16 }, dog: { x: 104, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "hold", held: "mango", face: "cute", act: "munch", move: 700, dur: 2300,
+              do: (still) => still || playSample("mmm", 0.6) },
+            { me: { x: 16 }, dog: { x: 104, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "pet", held: "", face: "joy", act: "pet love", dur: 1700 },
+          ],
+        },
+        {
+          caption: "🍦 Ice cream on the bench",
+          back: `${SUN}
+            <g class="wood" ${PEN}><rect x="34" y="108" width="112" height="7" rx="2"/><rect x="42" y="115" width="5" height="27"/><rect x="133" y="115" width="5" height="27"/></g>
+            <g class="leafy" ${PEN}><circle cx="178" cy="128" r="16"/><circle cx="194" cy="134" r="12"/></g>
+            ${GROUND}`,
+          front: "",
+          steps: [
+            { me: { x: -110 }, dog: { x: -140, show: 1 }, legs: "skip", arms: "hold", held: "icecream", face: "happy", move: 0, dur: 50 },
+            { me: { x: 26 }, dog: { x: -16 }, legs: "skip", arms: "hold", held: "icecream", face: "happy", dogRun: true, move: 1600, dur: 1600 },
+            { me: { x: 26, y: -22 }, dog: { x: -16 }, body: { sit: 22 }, legs: "sit", arms: "hold", held: "icecream", face: "cute", act: "swing", move: 500, dur: 2100,
+              do: (still) => still || playSample("mmm", 0.3) },
+            { me: { x: 26, y: -22 }, body: { sit: 22 }, legs: "sit", arms: "hold", held: "icecream", face: "kiss", act: "swing", dur: 1200 },
+            { me: { x: 26, y: -22 }, dog: { x: 120, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "pet", held: "icecream-share", face: "joy", act: "swing pet", dogRun: true, move: 1300, dur: 2200,
+              do: (still) => still || playSample("frisky-bark", 1.2) },
+            { me: { x: 26, y: -22 }, dog: { x: 120, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "clap", held: "", face: "joy", act: "swing love hop", dur: 1500 },
+          ],
+        },
+        {
+          caption: "⛵ The paper boat",
+          // She kneels on the bank on the left; the stream runs off to the right
+          back: `${SUN}
+            <rect class="water" x="92" y="112" width="140" height="60"/>
+            <path class="wave" fill="none" d="M108 124q8-4 16 0t16 0M150 136q8-4 16 0t16 0M120 150q8-4 16 0t16 0M176 120q8-4 16 0t16 0"/>
+            <g class="boat"><g class="boat-bob" ${PEN}><path class="paper" d="M-10-2h20l-3 6H-7z"/><path class="paper" d="M0-2V-15l7 12z"/></g></g>
+            <path ${PEN} d="M-30 142q60-3 121 0q4-14 1-30q60 2 140-1"/>`,
+          front: "",
+          steps: [
+            { me: { x: -100 }, dog: { x: -150, show: 1 }, legs: "skip", arms: "hold", held: "boat", face: "happy", move: 0, dur: 50 },
+            { me: { x: 6 }, dog: { x: -22 }, legs: "skip", arms: "hold", held: "boat", face: "happy", dogRun: true, move: 1400, dur: 1400,
+              do: (still) => still || playSample("humming") },
+            { me: { x: 6 }, body: { sit: 14 }, legs: "squat", arms: "reach", held: "boat-reach", face: "cute", move: 500, dur: 1300 },
+            { me: { x: 6 }, arms: "wave", held: "", face: "joy", move: 500, dur: 1400,
+              do: () => storyBeat("sail") },
+            { me: { x: 6 }, dog: { x: -22 }, arms: "wave", face: "joy", act: "hop", dur: 2400,
+              do: (still) => still || playSample("frisky-bark", 0.4) },
+            { me: { x: 6 }, arms: "clap", face: "joy", act: "love", dur: 1400 },
+          ],
+        },
+      ];
+
+      let storyBuddy = null;
+      let storyClose = null;
+
+      function storyBeat(beat) {
+        const story = document.getElementById("story");
+        story.dataset.beat = `${story.dataset.beat || ""} ${beat}`.trim();
+      }
+
+      function nextStoryIndex() {
+        let last = -1;
+        try {
+          last = Number(localStorage.getItem(STORY_KEY) ?? -1);
+        } catch (e) {}
+        const next = (last + 1) % STORIES.length;
+        try {
+          localStorage.setItem(STORY_KEY, String(next));
+        } catch (e) {}
+        return next;
+      }
+
+      // Opens from the spot she was tapped, so the screen grows out of her
+      async function openStory(from) {
+        const story = document.getElementById("story");
+        if (!story.hidden) return;
+        if (!storyBuddy) {
+          storyBuddy = new Buddy(document.getElementById("story-buddy"), STORY_VIEW);
+          storyBuddy.svg.querySelector(".me-bob").insertAdjacentHTML("beforeend", HELD_PROPS);
+        }
+        const tale = STORIES[nextStoryIndex()];
+        for (const id of ["story-back", "story-front"]) {
+          document.getElementById(id).setAttribute("viewBox", STORY_VIEW);
+        }
+        document.getElementById("story-back").innerHTML = tale.back;
+        document.getElementById("story-front").innerHTML = tale.front;
+        document.getElementById("story-caption").innerHTML =
+          `${tale.caption}<small>Tap to go back</small>`;
+        story.dataset.beat = "";
+        story.style.setProperty("--ox", `${from.left + from.width / 2}px`);
+        story.style.setProperty("--oy", `${from.top + from.height / 2}px`);
+        if (game && !homeOpen()) game.suspend();
+        story.hidden = false;
+        void story.offsetWidth; // start the grow from a closed circle
+        story.classList.add("open");
+
+        const run = storyBuddy.runId + 1;
+        await sleep(motionOff() ? 0 : 450);
+        if (!story.classList.contains("open")) return; // tapped away already
+        await storyBuddy.play(tale.steps);
+        if (storyBuddy.runId !== run) return;
+        storyClose = setTimeout(closeStory, motionOff() ? 3500 : 900);
+      }
+
+      function closeStory() {
+        const story = document.getElementById("story");
+        if (story.hidden || !story.classList.contains("open")) return;
+        clearTimeout(storyClose);
+        storyBuddy.stop();
+        story.classList.remove("open");
+        setTimeout(() => {
+          story.hidden = true;
+          if (game && !homeOpen() && document.getElementById("win-screen").hidden) game.resume();
+        }, motionOff() ? 0 : 750);
+      }
+
+      // A tap on her (or Frisky) anywhere she's standing opens a story
+      function storyTapTarget(e) {
+        if (e.target.closest("button, a, select, input, .sudoku-grid, .number-pad, .story")) return null;
+        for (const buddy of [homeOpen() ? homeBuddy : headBuddy]) {
+          if (!buddy) continue;
+          for (const part of [buddy.me, buddy.dog]) {
+            const box = part.getBoundingClientRect();
+            if (!box.width) continue;
+            if (
+              e.clientX >= box.left - 12 &&
+              e.clientX <= box.right + 12 &&
+              e.clientY >= box.top - 12 &&
+              e.clientY <= box.bottom + 12
+            ) {
+              return buddy.me.getBoundingClientRect();
+            }
+          }
+        }
+        return null;
+      }
+
+      document.addEventListener("click", (e) => {
+        const from = storyTapTarget(e);
+        if (from) openStory(from);
+      });
+
       // ---------- Home ----------
       let homeBuddy;
 
@@ -4109,6 +4508,7 @@
         "Tip: stuck? Tap the Done box for a hint.",
         "Tip: turn on Notes to pencil in numbers that could fit.",
         "Tip: Focus Mode in Settings hides everything but the board.",
+        "Tip: tap the stick figure for a little surprise.",
       ];
 
       function guideDismissed() {
