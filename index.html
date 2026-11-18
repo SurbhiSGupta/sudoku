@@ -1468,7 +1468,8 @@
         fill: var(--bg);
       }
 
-      /* Props share the stick figure's clean line look */
+      /* Props share the stick figure's clean line look. Scenery (trees, bushes,
+         the bench) is flat colour with no outline, so she and her things stand out. */
       .buddy .leafy {
         fill: var(--leaf);
       }
@@ -4301,34 +4302,41 @@
       const STORIES = [
         {
           caption: "🥭 Mango time!",
-          back: `${SUN}
-            <path class="wood" ${PEN} d="M144 142Q148 60 146-14L160-14Q158 60 166 142Z"/>
-            <path ${PEN} d="M147 6Q126-8 108-24"/>
-            <g class="leafy" ${PEN}>
-              <circle cx="152" cy="-56" r="40"/><circle cx="118" cy="-44" r="26"/>
-              <circle cx="184" cy="-42" r="24"/><circle cx="150" cy="-92" r="28"/>
+          // Zoomed out, so a full-grown mango tree towers over her
+          view: "-60 -330 320 500",
+          back: `<circle class="sun" cx="-28" cy="-290" r="16" stroke="none"/>
+            <path class="wood" d="M140 142Q150 20 150-170L168-170Q170 20 178 142Z"/>
+            <path ${PEN} d="M151-58Q122-78 90-112M167-118Q188-138 204-160"/>
+            <g class="leafy">
+              <circle cx="100" cy="-185" r="50"/><circle cx="216" cy="-182" r="46"/>
+              <circle cx="112" cy="-250" r="44"/><circle cx="202" cy="-254" r="44"/>
+              <circle cx="156" cy="-282" r="52"/><circle cx="158" cy="-215" r="72"/>
             </g>
-            <g class="tree-mango" ${PEN}><path d="M108-24v10"/><ellipse class="mango" cx="108" cy="-7" rx="5" ry="7"/></g>
-            ${GROUND}`,
+            <g ${PEN}>
+              <ellipse class="mango" cx="128" cy="-196" rx="5" ry="6.5"/><ellipse class="mango" cx="192" cy="-228" rx="5" ry="6.5"/>
+              <ellipse class="mango" cx="176" cy="-168" rx="5" ry="6.5"/><ellipse class="mango" cx="118" cy="-262" rx="5" ry="6.5"/>
+            </g>
+            <g class="tree-mango pen"><path d="M90-112q2.5 6 0 12"/><ellipse class="mango" cx="90" cy="-93" rx="6" ry="8"/></g>
+            <path ${PEN} d="M-70 142q82-3 165 0t165 0"/>`,
           front: "",
           steps: [
-            { me: { x: -30 }, dog: { x: -14, show: 1 }, held: "", arms: "chin", face: "cur", move: 0, dur: 1000 },
-            { me: { x: 78 }, dog: { x: 30 }, legs: "skip", face: "happy", dogRun: true, move: 1200, dur: 1200 },
-            { me: { x: 78, y: -42 }, dog: { x: 30 }, arms: "up", legs: "skip", face: "cur", act: "hop", move: 2000, dur: 2000,
+            { me: { x: -40 }, dog: { x: -50, show: 1 }, held: "", arms: "chin", face: "cur", move: 0, dur: 1100 },
+            { me: { x: 60 }, dog: { x: 10 }, legs: "skip", face: "happy", dogRun: true, move: 1300, dur: 1300 },
+            { me: { x: 60, y: -121 }, dog: { x: 10 }, arms: "up", legs: "skip", face: "cur", act: "hop", move: 2400, dur: 2400,
               do: (still) => still || playSample("frisky-bark") },
-            { me: { x: 78, y: -42 }, arms: "up", face: "joy", held: "mango-up", dur: 700,
+            { me: { x: 60, y: -121 }, arms: "up", face: "joy", held: "mango-up", dur: 700,
               do: (still) => { storyBeat("picked"); still || playSample("laugh-child"); } },
-            { me: { x: 78, y: 0 }, arms: "up", face: "joy", held: "mango-up", move: 450, dur: 650 },
-            { me: { x: 16 }, dog: { x: 104, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "hold", held: "mango", face: "cute", act: "munch", move: 700, dur: 2300,
+            { me: { x: 60, y: 0 }, arms: "up", face: "joy", held: "mango-up", move: 700, dur: 850 },
+            { me: { x: 0 }, dog: { x: 88, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "hold", held: "mango", face: "cute", act: "munch", move: 700, dur: 2300,
               do: (still) => still || playSample("mmm", 0.6) },
-            { me: { x: 16 }, dog: { x: 104, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "pet", held: "", face: "joy", act: "pet love", dur: 1700 },
+            { me: { x: 0 }, dog: { x: 88, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "pet", held: "", face: "joy", act: "pet love", dur: 1700 },
           ],
         },
         {
           caption: "🍦 Ice cream on the bench",
           back: `${SUN}
-            <g class="wood" ${PEN}><rect x="34" y="108" width="112" height="7" rx="2"/><rect x="42" y="115" width="5" height="27"/><rect x="133" y="115" width="5" height="27"/></g>
-            <g class="leafy" ${PEN}><circle cx="178" cy="128" r="16"/><circle cx="194" cy="134" r="12"/></g>
+            <g class="wood"><rect x="34" y="108" width="112" height="7" rx="2"/><rect x="42" y="115" width="5" height="27"/><rect x="133" y="115" width="5" height="27"/></g>
+            <g class="leafy"><circle cx="178" cy="128" r="16"/><circle cx="194" cy="134" r="12"/></g>
             ${GROUND}`,
           front: "",
           steps: [
@@ -4348,7 +4356,7 @@
           back: `${SUN}
             <rect class="water" x="92" y="112" width="140" height="60"/>
             <path class="wave" fill="none" d="M108 124q8-4 16 0t16 0M150 136q8-4 16 0t16 0M120 150q8-4 16 0t16 0M176 120q8-4 16 0t16 0"/>
-            <g class="boat"><g class="boat-bob" ${PEN}><path class="paper" d="M-10-2h20l-3 6H-7z"/><path class="paper" d="M0-2V-15l7 12z"/></g></g>
+            <g class="boat"><g class="boat-bob pen"><path class="paper" d="M-10-2h20l-3 6H-7z"/><path class="paper" d="M0-2V-15l7 12z"/></g></g>
             <path ${PEN} d="M-30 142q60-3 121 0q4-14 1-30q60 2 140-1"/>`,
           front: "",
           steps: [
@@ -4394,8 +4402,11 @@
           storyBuddy.svg.querySelector(".me-bob").insertAdjacentHTML("beforeend", HELD_PROPS);
         }
         const tale = STORIES[nextStoryIndex()];
+        // A story can zoom out (a bigger viewBox) to make the world bigger than her
+        const view = tale.view || STORY_VIEW;
+        storyBuddy.svg.setAttribute("viewBox", view);
         for (const id of ["story-back", "story-front"]) {
-          document.getElementById(id).setAttribute("viewBox", STORY_VIEW);
+          document.getElementById(id).setAttribute("viewBox", view);
         }
         document.getElementById("story-back").innerHTML = tale.back;
         document.getElementById("story-front").innerHTML = tale.front;
