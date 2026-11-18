@@ -8,37 +8,51 @@ Copy each section into the matching box in Play Console.
 
 ## Short description (max 80 characters)
 
-Calm Sudoku with notes, hints, dark mode and stats. No sign-up, works offline.
+A new Sudoku every day, five levels and Frisky the dog. Calm, free and offline.
 
 ## Full description (max 4000 characters)
 
 A calm, friendly Sudoku made for your phone, with a little stick figure and her yellow dog, Frisky, keeping you company.
 
-Every puzzle has exactly one solution, so you can always solve it with logic, never guesswork. Pick Easy, Medium or Hard and play at your own pace.
+Every puzzle has exactly one solution, so you can always solve it with logic, never guesswork.
 
-FEATURES
+TODAY'S PUZZLE
+• A new puzzle every day, the same one for everyone
+• Keep your streak going, and see every day you've played on the calendar
+• The calendar's little batteries show how close you came to your best time
+• Missed a day? Play it later from the calendar
+• Optional morning reminder, at a time you pick
+
+FIVE LEVELS
+Puppy, Stroll, Fetch, Sprint and Zoomies: from a gentle warm-up to a real challenge.
+
+MADE FOR PLAYING
 • Notes (pencil marks) that clear themselves as you fill the board
-• Number First mode: pick a number, then tap every cell where it goes. Drag across cells to pencil it in, or double-tap for a candidate
-• Show Candidates highlights every cell where your number can still go
-• Hints when you're stuck, with a short rest between them
+• Hints in two steps: first a nudge to the right square, then the number if you want it
+• Tap the clock to pause; the board hides so the time stays fair
+• Number First mode: pick a number, then tap or drag across every square it goes in
 • Choose how many mistakes you're allowed: 3, 5, no limit, or hide mistakes entirely
 • Undo and redo for every move
-• Finished rows, columns, boxes and numbers light up as you complete them
-• Your stats: puzzles solved and best time per level, plus a chart of your week
-• Dark mode that follows your phone, or pick light or dark yourself
-• Your game saves automatically. Close the app and pick up right where you left off
-• Works fully offline
+• Your best time for each level, right under the clock
+• Finished rows, columns and boxes light up, and Frisky barks along
+• Focus Mode hides everything but the board and the number pad
+• Works in split screen, in dark mode, and with large text
+• Sound, vibration and animations can each be switched off
+
+YOUR STATS
+Puzzles solved and best times for every level, plus a chart of your week.
 
 PRIVATE BY DESIGN
-No account, no sign-up, no tracking, no ads. Your games and stats stay on your phone.
+No account, no sign-up, no tracking, no ads. Your games and stats stay on your phone. Found a bug? Report it from Settings with one tap.
 
-Free to play.
+Free to play. Works fully offline.
 
 ## Category and tags
 
 - App or game: **Game**
 - Category: **Puzzle**
 - Tags (pick up to 5): Sudoku, Logic, Number, Brain games, Offline
+- Promo text idea for a launch post: "A new Sudoku every day, with Frisky the dog cheering you on."
 
 ## Contact details
 
@@ -62,6 +76,8 @@ Free to play.
 
 - Does your app collect or share any of the required user data types? **No**
 - (Game progress is stored only on the device and never sent anywhere, which does not count as "collected".)
+- The daily reminder is scheduled on the phone, and backup goes through Android's own backup, so neither counts as collected.
+- Report a bug opens the player's own email app; nothing is sent unless they send that email themselves.
 
 ## Graphics
 
@@ -69,9 +85,11 @@ All in `play-store/graphics/`:
 
 - App icon: `icon-512.png` (512 × 512)
 - Feature graphic: `feature-graphic.png` (1024 × 500)
-- Phone screenshots: `screenshot-1.png` to `screenshot-5.png` (1080 × 1920, 9:16)
-  1. A game in progress, with the selected number highlighted
-  2. Number First mode with candidates
-  3. Dark mode
-  4. The win card with stats
-  5. The stats screen
+- Phone screenshots: `screenshot-1.png` to `screenshot-5.png` (1080 × 2160, 1:2). Upload them in this order:
+  1. The home screen, with today's puzzle and a 12-day streak
+  2. A Fetch game in progress, with every 7 highlighted and the best time under the clock
+  3. The win card: today's puzzle done, a new best time and the week's chart
+  4. The daily puzzle calendar with its batteries
+  5. Dark mode, with candidates showing
+
+The screenshots are made with demo data (streak, times, calendar) by a script that runs the real game in headless Chrome.
