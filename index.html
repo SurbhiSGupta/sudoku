@@ -78,6 +78,8 @@
         --wood: #c99a6b;
         --water: #a6d9ea;
         --mango: #ffae34;
+        --cloud: #d2dbe0;
+        --gloom: rgba(70, 92, 108, 0.26);
         --lv-puppy: #56622a;
         --lv-easy: #7d8c2c;
         --lv-medium: #b9cc3a;
@@ -126,6 +128,8 @@
           --wood: #8f6a48;
           --water: #3d86a3;
           --mango: #f29a1f;
+          --cloud: #4a6470;
+          --gloom: rgba(0, 0, 0, 0.28);
         }
       }
 
@@ -169,6 +173,8 @@
         --wood: #8f6a48;
         --water: #3d86a3;
         --mango: #f29a1f;
+        --cloud: #4a6470;
+        --gloom: rgba(0, 0, 0, 0.28);
       }
 
       *,
@@ -1560,6 +1566,123 @@
       }
 
       /* Sitting on the bench, swinging her legs */
+      /* Rain: clouds roll in, drops fall, puddles splash, then a rainbow */
+      .buddy .cloud {
+        fill: var(--cloud);
+      }
+
+      /* The rainy light dims the whole screen, behind her and the props */
+      .story::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--gloom);
+        opacity: 0;
+        transition: opacity 1.2s ease;
+        pointer-events: none;
+      }
+
+      .story .clouds-l,
+      .story .clouds-r {
+        transition: transform 1.8s ease-in-out;
+      }
+
+      .story .rain {
+        opacity: 0;
+        transition: opacity 0.8s ease;
+      }
+
+      .story .rain path {
+        stroke: #6b98b6;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        animation: rainFall 0.7s linear infinite;
+      }
+
+      @keyframes rainFall {
+        from {
+          transform: translate(0, 0);
+          opacity: 0.9;
+        }
+        to {
+          transform: translate(-8px, 46px);
+          opacity: 0;
+        }
+      }
+
+      .story[data-beat~="rain"]::before,
+      .story[data-beat~="rain"] .rain {
+        opacity: 1;
+      }
+
+      .story[data-beat~="clear"]::before,
+      .story[data-beat~="clear"] .rain {
+        opacity: 0;
+      }
+
+      .story[data-beat~="clear"] .clouds-l {
+        transform: translateX(-120px);
+      }
+
+      .story[data-beat~="clear"] .clouds-r {
+        transform: translateX(120px);
+      }
+
+      .story .sun-late,
+      .story .rainbow {
+        opacity: 0;
+        transition: opacity 1.4s ease 0.4s;
+      }
+
+      .story[data-beat~="clear"] .sun-late {
+        opacity: 1;
+      }
+
+      .story[data-beat~="clear"] .rainbow {
+        opacity: 0.85;
+      }
+
+      .story .rainbow path {
+        fill: none;
+        stroke-width: 6;
+      }
+
+      .story .splash circle {
+        fill: var(--water);
+        opacity: 0;
+      }
+
+      .story[data-beat~="splash"] .splash-1 circle,
+      .story[data-beat~="splash2"] .splash-2 circle {
+        animation: splashOut 0.7s ease-out forwards;
+      }
+
+      @keyframes splashOut {
+        from {
+          transform: translate(0, 0);
+          opacity: 1;
+        }
+        to {
+          transform: translate(var(--dx), var(--dy));
+          opacity: 0;
+        }
+      }
+
+      /* Frisky shakes off the water */
+      .buddy[data-act~="shake"] .dog {
+        transform-origin: center;
+        animation: dogShake 0.1s ease-in-out infinite alternate;
+      }
+
+      @keyframes dogShake {
+        from {
+          transform: rotate(-6deg);
+        }
+        to {
+          transform: rotate(6deg);
+        }
+      }
+
       /* Scene beats: the mango leaves the tree, the boat sets sail */
       .story[data-beat~="picked"] .tree-mango {
         display: none;
@@ -4381,6 +4504,7 @@
 
       const STORIES = [
         {
+          id: "mango",
           caption: "🥭 Mango time!",
           // Zoomed out, so a full-grown mango tree towers over her
           view: "-60 -330 320 500",
@@ -4427,6 +4551,7 @@
           ],
         },
         {
+          id: "icecream",
           caption: "🍦 Ice cream on the bench",
           back: `${SUN}
             <g class="wood"><rect x="34" y="108" width="112" height="7" rx="2"/><rect x="42" y="115" width="5" height="27"/><rect x="133" y="115" width="5" height="27"/></g>
@@ -4445,6 +4570,7 @@
           ],
         },
         {
+          id: "boat",
           caption: "⛵ The paper boat",
           // She kneels on the bank on the left; the stream runs off to the right
           back: `${SUN}
@@ -4465,6 +4591,46 @@
             { me: { x: 6 }, arms: "clap", face: "joy", act: "love", dur: 1400 },
           ],
         },
+        {
+          id: "rain",
+          caption: "🌧️ Playing in the rain",
+          back: `<circle class="sun sun-late" cx="160" cy="-92" r="13" stroke="none"/>
+            <g class="rainbow">
+              <path stroke="#ff8f8f" d="M-12 142A102 102 0 0 1 192 142"/><path stroke="#ffd36b" d="M-6 142A96 96 0 0 1 186 142"/>
+              <path stroke="#8fd16a" d="M0 142A90 90 0 0 1 180 142"/><path stroke="#7ab8ff" d="M6 142A84 84 0 0 1 174 142"/>
+            </g>
+            <g class="clouds-l cloud"><circle cx="20" cy="-96" r="22"/><circle cx="44" cy="-102" r="26"/><circle cx="68" cy="-94" r="18"/></g>
+            <g class="clouds-r cloud"><circle cx="128" cy="-100" r="20"/><circle cx="152" cy="-108" r="25"/><circle cx="176" cy="-98" r="19"/></g>
+            <g class="rain"><path d="M-14 -112l-3 9" style="animation-delay:-0.00s"/><path d="M23 -59l-3 9" style="animation-delay:-0.13s"/><path d="M60 -6l-3 9" style="animation-delay:-0.26s"/><path d="M97 47l-3 9" style="animation-delay:-0.39s"/><path d="M134 -105l-3 9" style="animation-delay:-0.52s"/><path d="M171 -52l-3 9" style="animation-delay:-0.65s"/><path d="M208 1l-3 9" style="animation-delay:-0.08s"/><path d="M17 54l-3 9" style="animation-delay:-0.21s"/><path d="M54 -98l-3 9" style="animation-delay:-0.34s"/><path d="M91 -45l-3 9" style="animation-delay:-0.47s"/><path d="M128 8l-3 9" style="animation-delay:-0.60s"/><path d="M165 61l-3 9" style="animation-delay:-0.03s"/><path d="M202 -91l-3 9" style="animation-delay:-0.16s"/><path d="M11 -38l-3 9" style="animation-delay:-0.29s"/><path d="M48 15l-3 9" style="animation-delay:-0.42s"/><path d="M85 68l-3 9" style="animation-delay:-0.55s"/><path d="M122 -84l-3 9" style="animation-delay:-0.68s"/><path d="M159 -31l-3 9" style="animation-delay:-0.11s"/><path d="M196 22l-3 9" style="animation-delay:-0.24s"/><path d="M5 75l-3 9" style="animation-delay:-0.37s"/><path d="M42 -77l-3 9" style="animation-delay:-0.50s"/><path d="M79 -24l-3 9" style="animation-delay:-0.63s"/><path d="M116 29l-3 9" style="animation-delay:-0.06s"/><path d="M153 82l-3 9" style="animation-delay:-0.19s"/><path d="M190 -70l-3 9" style="animation-delay:-0.32s"/><path d="M-1 -17l-3 9" style="animation-delay:-0.45s"/><path d="M36 36l-3 9" style="animation-delay:-0.58s"/><path d="M73 89l-3 9" style="animation-delay:-0.01s"/><path d="M110 -63l-3 9" style="animation-delay:-0.14s"/><path d="M147 -10l-3 9" style="animation-delay:-0.27s"/></g>
+            <ellipse class="water" cx="122" cy="143" rx="46" ry="7"/>
+            <ellipse class="water" cx="8" cy="144" rx="20" ry="5"/>
+            ${GROUND}`,
+          front: `<g class="splash splash-1"><circle cx="140" cy="140" r="2.4" style="--dx:-16px;--dy:-16px"/><circle cx="140" cy="140" r="2.4" style="--dx:-8px;--dy:-26px"/><circle cx="140" cy="140" r="2.4" style="--dx:2px;--dy:-28px"/><circle cx="140" cy="140" r="2.4" style="--dx:10px;--dy:-22px"/><circle cx="140" cy="140" r="2.4" style="--dx:18px;--dy:-12px"/><circle cx="140" cy="140" r="2.4" style="--dx:-22px;--dy:-6px"/><circle cx="140" cy="140" r="2.4" style="--dx:24px;--dy:-4px"/></g><g class="splash splash-2"><circle cx="102" cy="140" r="2.4" style="--dx:-16px;--dy:-16px"/><circle cx="102" cy="140" r="2.4" style="--dx:-8px;--dy:-26px"/><circle cx="102" cy="140" r="2.4" style="--dx:2px;--dy:-28px"/><circle cx="102" cy="140" r="2.4" style="--dx:10px;--dy:-22px"/><circle cx="102" cy="140" r="2.4" style="--dx:18px;--dy:-12px"/><circle cx="102" cy="140" r="2.4" style="--dx:-22px;--dy:-6px"/><circle cx="102" cy="140" r="2.4" style="--dx:24px;--dy:-4px"/></g>`,
+          steps: [
+            { me: { x: 0 }, dog: { x: -30, show: 1 }, held: "", arms: "chin", face: "cur", move: 0, dur: 1100,
+              do: () => storyBeat("rain") },
+            { me: { x: 0 }, arms: "wave", face: "happy", dur: 1100 },
+            // A twirl in the rain
+            { me: { x: 0, flip: -1 }, arms: "up", face: "joy", move: 300, dur: 320 },
+            { me: { x: 0, flip: 1 }, arms: "up", face: "joy", move: 300, dur: 320 },
+            { me: { x: 0, flip: -1 }, arms: "up", face: "joy", move: 300, dur: 320 },
+            { me: { x: 0, flip: 1 }, arms: "up", face: "joy", move: 300, dur: 420 },
+            // Skip to the puddle and jump in
+            { me: { x: 80 }, legs: "skip", arms: "down", face: "happy", move: 1100, dur: 1100 },
+            { me: { x: 80 }, body: { sit: 14 }, legs: "squat", arms: "down", face: "joy", move: 180, dur: 200 },
+            { me: { x: 80, y: -26 }, arms: "up", face: "joy", move: 280, ease: "up", dur: 300 },
+            { me: { x: 80, y: 0 }, arms: "up", face: "joy", move: 260, ease: "down", dur: 260 },
+            { me: { x: 80 }, body: { sit: 12 }, legs: "squat", arms: "up", face: "joy", move: 150, dur: 700,
+              do: (still) => { storyBeat("splash"); still || playSample("laugh-girl"); } },
+            // Frisky splashes in too, then shakes off
+            { me: { x: 80 }, dog: { x: 72 }, arms: "clap", face: "joy", dogRun: true, move: 900, dur: 900 },
+            { me: { x: 80 }, dog: { x: 72 }, arms: "clap", face: "joy", act: "shake", dur: 1000,
+              do: (still) => { storyBeat("splash2"); still || playSample("frisky-bark"); } },
+            // The rain stops and a rainbow comes out
+            { me: { x: 80 }, dog: { x: 72 }, arms: "up", face: "joy", act: "love", dur: 1800,
+              do: (still) => { storyBeat("clear"); still || playSample("xylophone", 0.3); } },
+          ],
+        },
       ];
 
       let storyBuddy = null;
@@ -4475,14 +4641,23 @@
         story.dataset.beat = `${story.dataset.beat || ""} ${beat}`.trim();
       }
 
+      // Stories you haven't seen yet come first (so a new one shows up on the
+      // next tap); after that they take turns
       function nextStoryIndex() {
-        let last = -1;
+        let saved = {};
         try {
-          last = Number(localStorage.getItem(STORY_KEY) ?? -1);
+          saved = JSON.parse(localStorage.getItem(STORY_KEY)) || {};
         } catch (e) {}
-        const next = (last + 1) % STORIES.length;
+        if (typeof saved !== "object") saved = { last: Number(saved) };
+        const seen = saved.seen || [];
+        let next = STORIES.findIndex((tale) => !seen.includes(tale.id));
+        if (next === -1) next = ((saved.last ?? -1) + 1) % STORIES.length;
+        const id = STORIES[next].id;
         try {
-          localStorage.setItem(STORY_KEY, String(next));
+          localStorage.setItem(
+            STORY_KEY,
+            JSON.stringify({ last: next, seen: seen.includes(id) ? seen : [...seen, id] })
+          );
         } catch (e) {}
         return next;
       }
