@@ -3849,6 +3849,14 @@
         return a + d * t;
       }
 
+      // How a move speeds up and slows down. "up" and "down" feel like gravity:
+      // fast off the ground and slowing at the top, then speeding up as she falls
+      const MOVE_EASE = {
+        glide: "cubic-bezier(0.45, 0, 0.3, 1)",
+        up: "cubic-bezier(0.15, 0.6, 0.35, 1)",
+        down: "cubic-bezier(0.55, 0, 0.85, 0.4)",
+      };
+
       const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -4000,8 +4008,8 @@
         // x/y move, flip turns around (-1), show fades in or out
         // Moving glides over the step's time; turning round is a quick, separate
         // move, so she never stays squashed thin through a long walk
-        place(el, { x = 0, y = 0, flip = 1, show = 1 } = {}, ms, center) {
-          el.style.transition = `transform ${ms}ms cubic-bezier(0.45, 0, 0.3, 1), opacity 300ms`;
+        place(el, { x = 0, y = 0, flip = 1, show = 1 } = {}, ms, center, ease = MOVE_EASE.glide) {
+          el.style.transition = `transform ${ms}ms ${ease}, opacity 300ms`;
           el.style.transform = `translate(${x}px, ${y}px)`;
           el.style.opacity = show;
           const turn = el.firstElementChild;
@@ -4021,7 +4029,7 @@
           if ("flower" in step) dataset.flower = step.flower;
           if ("held" in step) dataset.held = step.held;
           const ms = step.move ?? 500;
-          if (step.me) this.place(this.me, step.me, ms, 60);
+          if (step.me) this.place(this.me, step.me, ms, 60, MOVE_EASE[step.ease] || MOVE_EASE.glide);
           if (step.dog) this.place(this.dog, step.dog, ms, 28);
           const { rot = 0, sit = 0 } = step.body || {};
           this.body.style.transition = `transform ${Math.min(ms, 600)}ms ease-in-out`;
@@ -4306,7 +4314,7 @@
           view: "-60 -330 320 500",
           back: `<circle class="sun" cx="-28" cy="-290" r="16" stroke="none"/>
             <path class="wood" d="M140 142Q150 20 150-170L168-170Q170 20 178 142Z"/>
-            <path ${PEN} d="M151-58Q122-78 90-112M167-118Q188-138 204-160"/>
+            <path ${PEN} d="M151-34Q120-46 92-36M167-118Q188-138 204-160"/>
             <g class="leafy">
               <circle cx="100" cy="-185" r="50"/><circle cx="216" cy="-182" r="46"/>
               <circle cx="112" cy="-250" r="44"/><circle cx="202" cy="-254" r="44"/>
@@ -4316,20 +4324,34 @@
               <ellipse class="mango" cx="128" cy="-196" rx="5" ry="6.5"/><ellipse class="mango" cx="192" cy="-228" rx="5" ry="6.5"/>
               <ellipse class="mango" cx="176" cy="-168" rx="5" ry="6.5"/><ellipse class="mango" cx="118" cy="-262" rx="5" ry="6.5"/>
             </g>
-            <g class="tree-mango pen"><path d="M90-112q2.5 6 0 12"/><ellipse class="mango" cx="90" cy="-93" rx="6" ry="8"/></g>
+            <g class="tree-mango pen"><path d="M92-36q2.5 5 0 10"/><ellipse class="mango" cx="92" cy="-19" rx="6" ry="8"/></g>
             <path ${PEN} d="M-70 142q82-3 165 0t165 0"/>`,
           front: "",
           steps: [
-            { me: { x: -40 }, dog: { x: -50, show: 1 }, held: "", arms: "chin", face: "cur", move: 0, dur: 1100 },
-            { me: { x: 60 }, dog: { x: 10 }, legs: "skip", face: "happy", dogRun: true, move: 1300, dur: 1300 },
-            { me: { x: 60, y: -121 }, dog: { x: 10 }, arms: "up", legs: "skip", face: "cur", act: "hop", move: 2400, dur: 2400,
+            { me: { x: -40 }, dog: { x: -50, show: 1 }, held: "", arms: "chin", face: "cur", move: 0, dur: 900 },
+            { me: { x: 62 }, dog: { x: 0 }, legs: "skip", face: "happy", dogRun: true, move: 1300, dur: 1300 },
+            // Jump 1: not even close
+            { me: { x: 62 }, body: { sit: 14 }, legs: "squat", arms: "down", face: "cur", move: 200, dur: 220 },
+            { me: { x: 62, y: -22 }, arms: "up", face: "happy", move: 300, ease: "up", dur: 320 },
+            { me: { x: 62, y: 0 }, arms: "up", face: "happy", move: 300, ease: "down", dur: 300 },
+            { me: { x: 62 }, body: { sit: 14 }, legs: "squat", arms: "chin", face: "cur", move: 180, dur: 520 },
+            // Jump 2: fingertips almost there
+            { me: { x: 62 }, body: { sit: 16 }, legs: "squat", arms: "down", face: "cur", move: 200, dur: 240,
               do: (still) => still || playSample("frisky-bark") },
-            { me: { x: 60, y: -121 }, arms: "up", face: "joy", held: "mango-up", dur: 700,
+            { me: { x: 62, y: -38 }, arms: "up", face: "happy", move: 340, ease: "up", dur: 360 },
+            { me: { x: 62, y: 0 }, arms: "up", face: "cur", move: 340, ease: "down", dur: 340 },
+            { me: { x: 62 }, body: { sit: 14 }, legs: "squat", arms: "down", face: "sad", move: 180, dur: 600 },
+            // Jump 3: got it!
+            { me: { x: 62 }, body: { sit: 18 }, legs: "squat", arms: "down", face: "cur", move: 260, dur: 300,
+              do: (still) => still || playSample("frisky-bark") },
+            { me: { x: 62, y: -48 }, arms: "up", face: "joy", move: 380, ease: "up", dur: 400 },
+            { me: { x: 62, y: -48 }, arms: "up", face: "joy", held: "mango-up", move: 0, dur: 160,
               do: (still) => { storyBeat("picked"); still || playSample("laugh-child"); } },
-            { me: { x: 60, y: 0 }, arms: "up", face: "joy", held: "mango-up", move: 700, dur: 850 },
-            { me: { x: 0 }, dog: { x: 88, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "hold", held: "mango", face: "cute", act: "munch", move: 700, dur: 2300,
+            { me: { x: 62, y: 0 }, arms: "up", face: "joy", held: "mango-up", move: 380, ease: "down", dur: 380 },
+            { me: { x: 62 }, body: { sit: 14 }, legs: "squat", arms: "up", face: "joy", held: "mango-up", move: 180, dur: 500 },
+            { me: { x: 0 }, dog: { x: 88, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "hold", held: "mango", face: "cute", act: "munch", move: 700, dur: 2100,
               do: (still) => still || playSample("mmm", 0.6) },
-            { me: { x: 0 }, dog: { x: 88, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "pet", held: "", face: "joy", act: "pet love", dur: 1700 },
+            { me: { x: 0 }, dog: { x: 88, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "pet", held: "", face: "joy", act: "pet love", dur: 1600 },
           ],
         },
         {
