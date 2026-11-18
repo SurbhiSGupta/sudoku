@@ -15,6 +15,16 @@ import androidx.core.content.FileProvider;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import com.android.billingclient.api.AcknowledgePurchaseParams;
+import com.android.billingclient.api.BillingClient;
+import com.android.billingclient.api.BillingClientStateListener;
+import com.android.billingclient.api.BillingFlowParams;
+import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.PendingPurchasesParams;
+import com.android.billingclient.api.ProductDetails;
+import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.QueryProductDetailsParams;
+import com.android.billingclient.api.QueryPurchasesParams;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -22,9 +32,11 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.Collections;
+import java.util.List;
 
-// Small native helpers the game calls from index.html:
-// a bug report email with a screenshot, and focus mode (hides the phone's bars)
+// Small native helpers the game calls from index.html: a bug report email with
+// a screenshot, focus mode (hides the phone's bars) and the Support Bodai purchase
 @CapacitorPlugin(name = "Bodai")
 public class BodaiPlugin extends Plugin {
 
@@ -115,6 +127,179 @@ public class BodaiPlugin extends Plugin {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    // ---------- Support Bodai: a one-time purchase through Google Play ----------
+    // One connection to Play, opened on first use. buy() waits for Play's answer
+    // in onPurchasesUpdated; restore() asks Play what this account already owns.
+    private BillingClient billing;
+    private PluginCall buyCall;
+
+    private void withBilling(PluginCall call, Runnable ready) {
+        if (billing == null) {
+            billing = BillingClient
+                .newBuilder(getContext())
+                .setListener(this::onPurchasesUpdated)
+                .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
+                .enableAutoServiceReconnection()
+                .build();
+        }
+        if (billing.isReady()) {
+            ready.run();
+            return;
+        }
+        billing.startConnection(
+            new BillingClientStateListener() {
+                @Override
+                public void onBillingSetupFinished(BillingResult result) {
+                    if (result.getResponseCode() == BillingClient.BillingResponseCode.OK) ready.run();
+                    else call.reject("Google Play isn't available: " + result.getDebugMessage());
+                }
+
+                @Override
+                public void onBillingServiceDisconnected() {}
+            }
+        );
+    }
+
+    private void productDetails(PluginCall call, String productId, ProductReady ready) {
+        QueryProductDetailsParams params = QueryProductDetailsParams
+            .newBuilder()
+            .setProductList(
+                Collections.singletonList(
+                    QueryProductDetailsParams.Product
+                        .newBuilder()
+                        .setProductId(productId)
+                        .setProductType(BillingClient.ProductType.INAPP)
+                        .build()
+                )
+            )
+            .build();
+        billing.queryProductDetailsAsync(
+            params,
+            (result, details) -> {
+                List<ProductDetails> list = details.getProductDetailsList();
+                if (result.getResponseCode() != BillingClient.BillingResponseCode.OK || list.isEmpty()) {
+                    call.reject("Product not found: " + productId);
+                    return;
+                }
+                ready.done(list.get(0));
+            }
+        );
+    }
+
+    interface ProductReady {
+        void done(ProductDetails product);
+    }
+
+    // The price in the player's own currency, e.g. "$2.99" or "₹250.00"
+    @PluginMethod
+    public void billingPrice(PluginCall call) {
+        String productId = call.getString("productId", "");
+        withBilling(call, () ->
+            productDetails(call, productId, product -> {
+                JSObject out = new JSObject();
+                ProductDetails.OneTimePurchaseOfferDetails offer = product.getOneTimePurchaseOfferDetails();
+                out.put("price", offer == null ? "" : offer.getFormattedPrice());
+                call.resolve(out);
+            })
+        );
+    }
+
+    @PluginMethod
+    public void buy(PluginCall call) {
+        String productId = call.getString("productId", "");
+        withBilling(call, () ->
+            productDetails(call, productId, product -> {
+                BillingFlowParams params = BillingFlowParams
+                    .newBuilder()
+                    .setProductDetailsParamsList(
+                        Collections.singletonList(
+                            BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(product).build()
+                        )
+                    )
+                    .build();
+                getActivity().runOnUiThread(() -> {
+                    buyCall = call;
+                    BillingResult result = billing.launchBillingFlow(getActivity(), params);
+                    if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) {
+                        buyCall = null;
+                        if (result.getResponseCode() == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
+                            call.resolve(state("purchased"));
+                        } else {
+                            call.reject("Couldn't start the purchase: " + result.getDebugMessage());
+                        }
+                    }
+                });
+            })
+        );
+    }
+
+    private void onPurchasesUpdated(BillingResult result, List<Purchase> purchases) {
+        PluginCall call = buyCall;
+        buyCall = null;
+        int code = result.getResponseCode();
+        String outcome = "failed";
+        if (code == BillingClient.BillingResponseCode.OK && purchases != null) {
+            outcome = "canceled";
+            for (Purchase purchase : purchases) {
+                if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+                    acknowledge(purchase);
+                    outcome = "purchased";
+                } else if (purchase.getPurchaseState() == Purchase.PurchaseState.PENDING) {
+                    outcome = "pending";
+                }
+            }
+        } else if (code == BillingClient.BillingResponseCode.USER_CANCELED) {
+            outcome = "canceled";
+        } else if (code == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
+            outcome = "purchased";
+        }
+        if (call != null) call.resolve(state(outcome));
+        else if ("purchased".equals(outcome)) notifyListeners("purchased", state(outcome));
+    }
+
+    // Play refunds a purchase after three days unless the app acknowledges it
+    private void acknowledge(Purchase purchase) {
+        if (purchase.isAcknowledged()) return;
+        billing.acknowledgePurchase(
+            AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.getPurchaseToken()).build(),
+            result -> {}
+        );
+    }
+
+    // What this Google account owns, so a new phone or a reinstall gets the pack back
+    @PluginMethod
+    public void restore(PluginCall call) {
+        String productId = call.getString("productId", "");
+        withBilling(call, () ->
+            billing.queryPurchasesAsync(
+                QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build(),
+                (result, purchases) -> {
+                    if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) {
+                        call.reject("Couldn't check purchases: " + result.getDebugMessage());
+                        return;
+                    }
+                    String outcome = "none";
+                    for (Purchase purchase : purchases) {
+                        if (!purchase.getProducts().contains(productId)) continue;
+                        if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+                            acknowledge(purchase);
+                            outcome = "purchased";
+                        } else if (purchase.getPurchaseState() == Purchase.PurchaseState.PENDING) {
+                            outcome = "pending";
+                        }
+                    }
+                    call.resolve(state(outcome));
+                }
+            )
+        );
+    }
+
+    private JSObject state(String outcome) {
+        JSObject out = new JSObject();
+        out.put("state", outcome);
+        return out;
     }
 
     // Focus mode: hide the status and navigation bars; a swipe from the edge

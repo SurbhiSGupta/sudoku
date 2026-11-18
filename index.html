@@ -15,6 +15,11 @@
         if (theme === "light" || theme === "dark") {
           document.documentElement.dataset.theme = theme;
         }
+        // Support pack colors (the game checks the pack is still valid once it loads)
+        const look = JSON.parse(localStorage.getItem("sudoku-look") || "null");
+        if (localStorage.getItem("sudoku-supporter") && look?.palette && look.palette !== "bodai") {
+          document.documentElement.dataset.palette = look.palette;
+        }
         // Animations switched off in Settings
         if (localStorage.getItem("sudoku-motion") === "off") {
           document.documentElement.classList.add("no-motion");
@@ -62,6 +67,8 @@
         --sel-ink: #eeff41;
         --accent: #eeff41;
         --accent-ink: #10303b;
+        /* Frisky's coat: always his own yellow, whatever the color theme */
+        --fur: #eeff41;
         --green: #3ecf8e;
         --green-ink: #0b2a33;
         --score: #10303b;
@@ -222,6 +229,198 @@
         letter-spacing: -0.02em;
       }
 
+      /* Support pack color themes. They swap the lime family only: Frisky stays
+         yellow, and every text pair keeps the same contrast as the default. A
+         theme can sit on :root (the whole game) or on one card (a preview). */
+      [data-palette="bodai"] {
+        --accent: #eeff41;
+        --sel-ink: #eeff41;
+        --same: #eeff41;
+        --flash: #eeff41;
+        --user: #f3faae;
+        --user-hl: #e6f08a;
+        --cand: #fbfde4;
+        --lv-puppy: #56622a;
+        --lv-easy: #7d8c2c;
+        --lv-medium: #b9cc3a;
+        --lv-hard: #eeff41;
+        --mark-img: initial;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) [data-palette="bodai"] {
+          --sel-ink: #0a1e25;
+          --user: #3b4612;
+          --user-hl: #4a5719;
+          --user-ink: #f2ffb0;
+          --cand: #4a5222;
+        }
+      }
+
+      :root[data-theme="dark"] [data-palette="bodai"] {
+        --sel-ink: #0a1e25;
+        --user: #3b4612;
+        --user-hl: #4a5719;
+        --user-ink: #f2ffb0;
+        --cand: #4a5222;
+      }
+
+      [data-palette="mango"] {
+        --accent: #ffb547;
+        --sel-ink: #ffb547;
+        --same: #ffb547;
+        --flash: #ffb547;
+        --user: #ffe9c4;
+        --user-hl: #ffd894;
+        --cand: #fff6e6;
+        --lv-puppy: #6b4a12;
+        --lv-easy: #a8701f;
+        --lv-medium: #e8942e;
+        --lv-hard: #ffb547;
+        --mark-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 60' preserveAspectRatio='none'%3E%3Cpath d='M10 12L14 8L22 10C80 6 170 9 240 6C262 5 280 7 288 9L292 15L289 22L295 30L290 38L294 46L286 52C230 54 150 51 80 54C50 55 30 54 16 53L9 47L13 40L7 32L12 25L6 18Z' fill='%23ffb547'/%3E%3Cpath d='M232 8C255 6 275 7 287 10L291 16L288 23L293 31L289 39L292 46L285 51C268 52 250 52 234 53L238 30Z' fill='%23f59a1a' fill-opacity='.6'/%3E%3Cpath d='M20 21C100 18 190 20 280 18M18 41C110 39 200 42 285 40' stroke='%23ffd79a' stroke-width='2.5' fill='none' stroke-opacity='.7'/%3E%3C/svg%3E");
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"])[data-palette="mango"],
+        :root:not([data-theme="light"]) [data-palette="mango"] {
+          --same: #ffb547;
+          --flash: #ffb547;
+          --sel-ink: #0a1e25;
+          --user: #4a3410;
+          --user-hl: #5c4116;
+          --user-ink: #ffe2b0;
+          --cand: #4f3a1c;
+        }
+      }
+
+      :root[data-theme="dark"][data-palette="mango"],
+      :root[data-theme="dark"] [data-palette="mango"] {
+        --same: #ffb547;
+        --flash: #ffb547;
+        --sel-ink: #0a1e25;
+        --user: #4a3410;
+        --user-hl: #5c4116;
+        --user-ink: #ffe2b0;
+        --cand: #4f3a1c;
+      }
+
+      [data-palette="ocean"] {
+        --accent: #6ee7e0;
+        --sel-ink: #6ee7e0;
+        --same: #6ee7e0;
+        --flash: #6ee7e0;
+        --user: #d3f6f4;
+        --user-hl: #aeeeea;
+        --cand: #ecfbfa;
+        --lv-puppy: #1f5f63;
+        --lv-easy: #2f8f93;
+        --lv-medium: #4cc4c4;
+        --lv-hard: #6ee7e0;
+        --mark-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 60' preserveAspectRatio='none'%3E%3Cpath d='M10 12L14 8L22 10C80 6 170 9 240 6C262 5 280 7 288 9L292 15L289 22L295 30L290 38L294 46L286 52C230 54 150 51 80 54C50 55 30 54 16 53L9 47L13 40L7 32L12 25L6 18Z' fill='%236ee7e0'/%3E%3Cpath d='M232 8C255 6 275 7 287 10L291 16L288 23L293 31L289 39L292 46L285 51C268 52 250 52 234 53L238 30Z' fill='%233fcfc6' fill-opacity='.6'/%3E%3Cpath d='M20 21C100 18 190 20 280 18M18 41C110 39 200 42 285 40' stroke='%23b6f5f1' stroke-width='2.5' fill='none' stroke-opacity='.7'/%3E%3C/svg%3E");
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"])[data-palette="ocean"],
+        :root:not([data-theme="light"]) [data-palette="ocean"] {
+          --same: #6ee7e0;
+          --flash: #6ee7e0;
+          --sel-ink: #0a1e25;
+          --user: #0f3f45;
+          --user-hl: #155159;
+          --user-ink: #c8fbf8;
+          --cand: #1d4a4f;
+        }
+      }
+
+      :root[data-theme="dark"][data-palette="ocean"],
+      :root[data-theme="dark"] [data-palette="ocean"] {
+        --same: #6ee7e0;
+        --flash: #6ee7e0;
+        --sel-ink: #0a1e25;
+        --user: #0f3f45;
+        --user-hl: #155159;
+        --user-ink: #c8fbf8;
+        --cand: #1d4a4f;
+      }
+
+      [data-palette="berry"] {
+        --accent: #ff9fd2;
+        --sel-ink: #ff9fd2;
+        --same: #ff9fd2;
+        --flash: #ff9fd2;
+        --user: #ffe0f1;
+        --user-hl: #ffc6e5;
+        --cand: #fff1f8;
+        --lv-puppy: #7a2f58;
+        --lv-easy: #b54a85;
+        --lv-medium: #e776b0;
+        --lv-hard: #ff9fd2;
+        --mark-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 60' preserveAspectRatio='none'%3E%3Cpath d='M10 12L14 8L22 10C80 6 170 9 240 6C262 5 280 7 288 9L292 15L289 22L295 30L290 38L294 46L286 52C230 54 150 51 80 54C50 55 30 54 16 53L9 47L13 40L7 32L12 25L6 18Z' fill='%23ff9fd2'/%3E%3Cpath d='M232 8C255 6 275 7 287 10L291 16L288 23L293 31L289 39L292 46L285 51C268 52 250 52 234 53L238 30Z' fill='%23f77dbd' fill-opacity='.6'/%3E%3Cpath d='M20 21C100 18 190 20 280 18M18 41C110 39 200 42 285 40' stroke='%23ffd0e8' stroke-width='2.5' fill='none' stroke-opacity='.7'/%3E%3C/svg%3E");
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"])[data-palette="berry"],
+        :root:not([data-theme="light"]) [data-palette="berry"] {
+          --same: #ff9fd2;
+          --flash: #ff9fd2;
+          --sel-ink: #0a1e25;
+          --user: #4a1835;
+          --user-hl: #5c2043;
+          --user-ink: #ffd3ea;
+          --cand: #4f2440;
+        }
+      }
+
+      :root[data-theme="dark"][data-palette="berry"],
+      :root[data-theme="dark"] [data-palette="berry"] {
+        --same: #ff9fd2;
+        --flash: #ff9fd2;
+        --sel-ink: #0a1e25;
+        --user: #4a1835;
+        --user-hl: #5c2043;
+        --user-ink: #ffd3ea;
+        --cand: #4f2440;
+      }
+
+      [data-palette="lavender"] {
+        --accent: #c9b6ff;
+        --sel-ink: #c9b6ff;
+        --same: #c9b6ff;
+        --flash: #c9b6ff;
+        --user: #ece5ff;
+        --user-hl: #dccfff;
+        --cand: #f6f2ff;
+        --lv-puppy: #4b3b86;
+        --lv-easy: #6d58bf;
+        --lv-medium: #9c86ec;
+        --lv-hard: #c9b6ff;
+        --mark-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 60' preserveAspectRatio='none'%3E%3Cpath d='M10 12L14 8L22 10C80 6 170 9 240 6C262 5 280 7 288 9L292 15L289 22L295 30L290 38L294 46L286 52C230 54 150 51 80 54C50 55 30 54 16 53L9 47L13 40L7 32L12 25L6 18Z' fill='%23c9b6ff'/%3E%3Cpath d='M232 8C255 6 275 7 287 10L291 16L288 23L293 31L289 39L292 46L285 51C268 52 250 52 234 53L238 30Z' fill='%23ab93f5' fill-opacity='.6'/%3E%3Cpath d='M20 21C100 18 190 20 280 18M18 41C110 39 200 42 285 40' stroke='%23e6dcff' stroke-width='2.5' fill='none' stroke-opacity='.7'/%3E%3C/svg%3E");
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"])[data-palette="lavender"],
+        :root:not([data-theme="light"]) [data-palette="lavender"] {
+          --same: #c9b6ff;
+          --flash: #c9b6ff;
+          --sel-ink: #0a1e25;
+          --user: #2e2350;
+          --user-hl: #3a2d63;
+          --user-ink: #e2d9ff;
+          --cand: #34295a;
+        }
+      }
+
+      :root[data-theme="dark"][data-palette="lavender"],
+      :root[data-theme="dark"] [data-palette="lavender"] {
+        --same: #c9b6ff;
+        --flash: #c9b6ff;
+        --sel-ink: #0a1e25;
+        --user: #2e2350;
+        --user-hl: #3a2d63;
+        --user-ink: #e2d9ff;
+        --cand: #34295a;
+      }
+
       /* Highlighter: one quick, slightly tilted pass of a real marker.
          ?mark=swipe shows the underline-swipe version for comparison. */
       .mark {
@@ -237,7 +436,7 @@
         position: absolute;
         z-index: -1;
         inset: -0.02em -0.28em -0.1em;
-        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 60' preserveAspectRatio='none'%3E%3Cpath d='M10 12L14 8L22 10C80 6 170 9 240 6C262 5 280 7 288 9L292 15L289 22L295 30L290 38L294 46L286 52C230 54 150 51 80 54C50 55 30 54 16 53L9 47L13 40L7 32L12 25L6 18Z' fill='%23eeff41'/%3E%3Cpath d='M232 8C255 6 275 7 287 10L291 16L288 23L293 31L289 39L292 46L285 51C268 52 250 52 234 53L238 30Z' fill='%23cfe21a' fill-opacity='.6'/%3E%3Cpath d='M20 21C100 18 190 20 280 18M18 41C110 39 200 42 285 40' stroke='%23f7ff9a' stroke-width='2.5' fill='none' stroke-opacity='.7'/%3E%3C/svg%3E")
+        background: var(--mark-img, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 60' preserveAspectRatio='none'%3E%3Cpath d='M10 12L14 8L22 10C80 6 170 9 240 6C262 5 280 7 288 9L292 15L289 22L295 30L290 38L294 46L286 52C230 54 150 51 80 54C50 55 30 54 16 53L9 47L13 40L7 32L12 25L6 18Z' fill='%23eeff41'/%3E%3Cpath d='M232 8C255 6 275 7 287 10L291 16L288 23L293 31L289 39L292 46L285 51C268 52 250 52 234 53L238 30Z' fill='%23cfe21a' fill-opacity='.6'/%3E%3Cpath d='M20 21C100 18 190 20 280 18M18 41C110 39 200 42 285 40' stroke='%23f7ff9a' stroke-width='2.5' fill='none' stroke-opacity='.7'/%3E%3C/svg%3E"))
           center / 100% 100% no-repeat;
         transform: rotate(-2deg);
       }
@@ -560,7 +759,7 @@
       }
 
       .buddy .fur {
-        fill: var(--accent);
+        fill: var(--fur);
       }
 
       .buddy .ear {
@@ -741,6 +940,152 @@
         }
       }
 
+      /* Support pack: her outfit and Frisky's look, one of each at a time */
+      .buddy .wear,
+      .buddy .dogwear {
+        display: none;
+      }
+
+      .buddy[data-outfit="cape"] .wear-cape,
+      .buddy[data-outfit="shades"] .wear-shades,
+      .buddy[data-outfit="party"] .wear-party,
+      .buddy[data-outfit="crown"] .wear-crown,
+      .buddy[data-outfit="beret"] .wear-beret,
+      .buddy[data-outfit="scarf"] .wear-scarf,
+      .buddy[data-dogwear="bandana"] .dw-bandana,
+      .buddy[data-dogwear="bow"] .dw-bow {
+        display: inline;
+      }
+
+      .buddy .wear-cape {
+        fill: #8a6cff;
+        stroke-width: 2;
+      }
+
+      .buddy .wear-shades {
+        fill: #1d2733;
+        stroke: none;
+      }
+
+      .buddy .wear-shades .shine {
+        fill: none;
+        stroke: #ffffff;
+        stroke-width: 1.2;
+      }
+
+      .buddy .wear-party path {
+        fill: #ff8fb7;
+        stroke-width: 2;
+      }
+
+      .buddy .wear-party .stripe {
+        fill: none;
+        stroke: #ffffff;
+        stroke-width: 2.4;
+      }
+
+      .buddy .wear-party .pom {
+        fill: #ffd84a;
+        stroke-width: 1.6;
+      }
+
+      .buddy .wear-crown {
+        fill: #ffcf3f;
+        stroke-width: 2;
+      }
+
+      .buddy .wear-beret path:first-child {
+        fill: #e5484d;
+        stroke-width: 2;
+      }
+
+      .buddy .wear-scarf path {
+        fill: #2f80ed;
+        stroke-width: 1.8;
+      }
+
+      .buddy .dw-bandana {
+        fill: #e5484d;
+        stroke-width: 1.6;
+      }
+
+      .buddy .dw-bow path,
+      .buddy .dw-bow circle {
+        fill: #2f80ed;
+        stroke-width: 1.4;
+      }
+
+      /* Support pack tricks: tail chase, roll over, sit up and beg, play dead */
+      .buddy[data-act~="dogspin"] .dog,
+      .buddy[data-act~="dogroll"] .dog,
+      .buddy[data-act~="dogdead"] .dog {
+        transform-origin: center;
+      }
+
+      .buddy[data-act~="dogspin"] .dog {
+        animation: dogSpin 1.5s ease-in-out both;
+      }
+
+      .buddy[data-act~="dogroll"] .dog {
+        animation: dogRoll 1.5s ease-in-out both;
+      }
+
+      .buddy[data-act~="dogbeg"] .dog {
+        transform-origin: left bottom;
+        animation: dogBeg 1.7s ease-in-out both;
+      }
+
+      .buddy[data-act~="dogdead"] .dog {
+        animation: dogDead 1.9s ease-in-out both;
+      }
+
+      @keyframes dogSpin {
+        0%,
+        100% {
+          transform: scaleX(1);
+        }
+        25%,
+        75% {
+          transform: translateY(-5px) scaleX(-1);
+        }
+        50% {
+          transform: scaleX(1);
+        }
+      }
+
+      @keyframes dogRoll {
+        0%,
+        10% {
+          transform: rotate(0);
+        }
+        70%,
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes dogBeg {
+        0%,
+        100% {
+          transform: rotate(0);
+        }
+        25%,
+        80% {
+          transform: rotate(-30deg);
+        }
+      }
+
+      @keyframes dogDead {
+        0%,
+        100% {
+          transform: rotate(0);
+        }
+        25%,
+        80% {
+          transform: translateY(2px) rotate(180deg);
+        }
+      }
+
       @keyframes bob {
         to {
           transform: translateY(-9px);
@@ -879,7 +1224,7 @@
       }
 
       .mdog .fur {
-        fill: var(--accent);
+        fill: var(--fur);
       }
 
       .mdog .ear {
@@ -889,7 +1234,7 @@
       .mdog .legs,
       .mdog .tail {
         fill: none;
-        stroke: var(--accent);
+        stroke: var(--fur);
         stroke-width: 4;
         stroke-linecap: round;
       }
@@ -2255,6 +2600,190 @@
         margin: 4px 0 0;
       }
 
+      /* Support Bodai: try-on preview, choices, and the one-time purchase */
+      .support-card .support-lead {
+        margin: 6px 0 0;
+        text-align: center;
+        line-height: 1.45;
+      }
+
+      .support-card h3 {
+        margin: 16px 0 8px;
+        font-size: 15px;
+      }
+
+      .support-stage {
+        height: 150px;
+        margin: 4px -10px 0;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chips button {
+        min-height: 36px;
+        padding: 6px 12px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 999px;
+        background: var(--slot);
+        color: var(--ink);
+        box-shadow: none;
+      }
+
+      .chips button[aria-pressed="true"] {
+        background: var(--accent);
+        color: var(--accent-ink);
+        font-weight: 800;
+      }
+
+      .chips .swatch {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        margin-right: 6px;
+        vertical-align: -2px;
+        border-radius: 50%;
+        background: var(--c);
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+      }
+
+      .support-sample {
+        display: inline-grid;
+        grid-template-columns: repeat(5, 40px);
+        gap: 4px;
+        margin-top: 10px;
+        padding: 4px;
+        border-radius: 12px;
+        background: var(--board);
+      }
+
+      .support-sample span {
+        display: grid;
+        place-items: center;
+        height: 40px;
+        border-radius: 8px;
+        font-weight: 800;
+        font-size: 20px;
+      }
+
+      .support-sample .s-given {
+        background: var(--given);
+        color: var(--given-ink);
+      }
+
+      .support-sample .s-user {
+        background: var(--user);
+        color: var(--user-ink);
+      }
+
+      .support-sample .s-same {
+        background: var(--same);
+        color: var(--same-ink);
+      }
+
+      .support-sample .s-sel {
+        background: var(--sel);
+        color: var(--sel-ink);
+      }
+
+      .support-sample .s-note {
+        background: var(--cand);
+        color: var(--note-ink);
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .support-buy {
+        margin-top: 22px;
+        text-align: center;
+      }
+
+      .support-buy .btn-primary {
+        width: 100%;
+      }
+
+      .support-buy a.btn-primary {
+        display: block;
+        box-sizing: border-box;
+        padding: 12px 18px;
+        border-radius: 12px;
+        font-weight: 700;
+        text-decoration: none;
+        box-shadow: 0 3px 0 var(--edge);
+      }
+
+      .support-small {
+        margin: 8px 0 0;
+        font-size: 13px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .support-thanks {
+        margin: 0;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: var(--cand);
+        color: var(--ink);
+        text-align: left;
+        line-height: 1.45;
+      }
+
+      .support-msg {
+        min-height: 1.2em;
+        margin: 10px 0 0;
+        font-size: 14px;
+        text-align: center;
+      }
+
+      .support-code {
+        margin-top: 14px;
+      }
+
+      .support-code summary {
+        cursor: pointer;
+        color: var(--muted);
+        font-size: 14px;
+        text-align: center;
+      }
+
+      .code-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .code-row input {
+        flex: 1;
+        min-width: 0;
+        padding: 10px 12px;
+        font: inherit;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink);
+        background: var(--surface);
+        border: 1px solid var(--edge);
+        border-radius: 10px;
+      }
+
+      .supporter-badge {
+        margin-left: auto;
+        margin-right: 4px;
+        padding: 4px 6px;
+        font-size: 20px;
+        background: none;
+        box-shadow: none;
+      }
+
+      .supporter-badge[hidden] {
+        display: none;
+      }
+
       /* Help: how to play, the buttons, the levels */
       .help-card h3 {
         margin: 18px 0 6px;
@@ -2845,6 +3374,7 @@
       <div class="home-inner">
         <div class="home-head">
           <h1><span class="mark">Bodai Sudoku</span></h1>
+          <button class="supporter-badge" id="supporter-badge" onclick="showSupport()" aria-label="You're a Bodai supporter" hidden>💛</button>
           <button class="icon-btn" onclick="showHelp()" aria-label="Help">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/></svg>
           </button>
@@ -3015,6 +3545,7 @@
         </div>
 
         <div class="settings-links">
+          <button onclick="toggleSettings(); showSupport()">💛 Support Bodai</button>
           <button onclick="reportBug()">🐞 Report a bug</button>
           <a
             href="https://play.google.com/store/apps/details?id=com.bodaijewels.sudoku"
@@ -3245,6 +3776,7 @@
         <div class="help-levels" id="help-levels"></div>
 
         <div class="settings-links">
+          <button onclick="hideHelp(); showSupport()">💛 Support Bodai</button>
           <button onclick="hideHelp(); reportBug()">🐞 Report a bug</button>
           <a
             href="https://play.google.com/store/apps/details?id=com.bodaijewels.sudoku"
@@ -3267,6 +3799,42 @@
         <details class="stats-table">
           <summary>Show as a table</summary>
           <table id="stats-table"></table>
+        </details>
+      </div>
+    </div>
+
+    <div class="win-screen" id="support-screen" role="dialog" aria-labelledby="support-title" hidden>
+      <div class="win-card stats-card support-card" id="support-card">
+        <button class="close-btn" onclick="hideSupport()" aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+        <h2><span class="mark" id="support-title">Support Bodai</span></h2>
+        <p class="support-lead" id="support-lead"></p>
+        <div class="support-stage" id="buddy-support"></div>
+
+        <h3>Her outfit</h3>
+        <div class="chips" id="outfit-chips" role="group" aria-label="Her outfit"></div>
+        <h3>Frisky's look</h3>
+        <div class="chips" id="dogwear-chips" role="group" aria-label="Frisky's look"></div>
+        <h3>Colors</h3>
+        <div class="chips" id="palette-chips" role="group" aria-label="Colors"></div>
+        <div class="support-sample" aria-hidden="true">
+          <span class="s-given">4</span><span class="s-user">7</span><span class="s-same">7</span><span class="s-sel">2</span><span class="s-note">1 5 9</span>
+        </div>
+        <h3>Frisky's tricks</h3>
+        <div class="chips">
+          <button onclick="watchTricks()">▶ Chase his tail, roll over, beg, play dead</button>
+        </div>
+
+        <div class="support-buy" id="support-buy"></div>
+        <p class="support-msg" id="support-msg" aria-live="polite"></p>
+
+        <details class="support-code" id="support-code">
+          <summary>Have a code?</summary>
+          <form class="code-row" onsubmit="redeemCode(event)">
+            <input id="code-input" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX" aria-label="Code" />
+            <button class="btn-primary" type="submit">Use code</button>
+          </form>
         </details>
       </div>
     </div>
@@ -3692,6 +4260,285 @@
         } catch (e) {
           return false;
         }
+      }
+
+      // ---------- Support Bodai ----------
+      // A one-time pack of extras: her outfits, Frisky's look and tricks, color
+      // themes and a little heart on the home screen. Bought once on Google Play,
+      // or unlocked with a code from Surbhi (friends, family, testers). Every
+      // puzzle and story stays free either way.
+      const PACK_ID = "support_bodai";
+      const SUPPORTER_KEY = "sudoku-supporter";
+      const LOOK_KEY = "sudoku-look";
+      const PLAY_LINK = "https://play.google.com/store/apps/details?id=com.bodaijewels.sudoku";
+      const OUTFITS = [["none", "None"], ["party", "Party hat"], ["crown", "Crown"], ["beret", "Beret"], ["shades", "Sunglasses"], ["scarf", "Scarf"], ["cape", "Cape"]];
+      const DOGWEAR = [["none", "Collar"], ["bandana", "Bandana"], ["bow", "Bow tie"]];
+      const PALETTES = [["bodai", "Bodai", "#eeff41"], ["mango", "Mango", "#ffb547"], ["ocean", "Ocean", "#6ee7e0"], ["berry", "Berry", "#ff9fd2"], ["lavender", "Lavender", "#c9b6ff"]];
+      const DEFAULT_LOOK = { outfit: "none", dogwear: "none", palette: "bodai" };
+
+      function readJson(key) {
+        try {
+          return JSON.parse(localStorage.getItem(key));
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function writeJson(key, value) {
+        try {
+          if (value == null) localStorage.removeItem(key);
+          else localStorage.setItem(key, JSON.stringify(value));
+        } catch (e) {}
+      }
+
+      // Bought on Play, or a code that hasn't run out yet
+      function supporterInfo() {
+        const info = readJson(SUPPORTER_KEY);
+        if (!info || (info.until && info.until < dayKey())) return null;
+        return info;
+      }
+
+      const isSupporter = () => !!supporterInfo();
+      const savedLook = () => ({ ...DEFAULT_LOOK, ...(readJson(LOOK_KEY) || {}) });
+      const activeLook = () => (isSupporter() ? savedLook() : DEFAULT_LOOK);
+
+      function dressBuddy(svg, look) {
+        svg.dataset.outfit = look.outfit;
+        svg.dataset.dogwear = look.dogwear;
+      }
+
+      // Puts the chosen look on every stick figure in the game (not the try-on preview)
+      function applyLook() {
+        const look = activeLook();
+        document.querySelectorAll("svg.buddy").forEach((svg) => {
+          if (!svg.closest("#support-screen")) dressBuddy(svg, look);
+        });
+        if (look.palette === "bodai") delete document.documentElement.dataset.palette;
+        else document.documentElement.dataset.palette = look.palette;
+        document.getElementById("supporter-badge").hidden = !isSupporter();
+      }
+
+      let supportBuddy;
+      let trialLook = DEFAULT_LOOK;
+      let packPrice = "$2.99";
+      let buying = false;
+
+      function showSupport() {
+        trialLook = savedLook();
+        document.getElementById("support-screen").hidden = false;
+        if (!supportBuddy) {
+          supportBuddy = new Buddy(document.getElementById("buddy-support"), "-20 -40 280 186");
+        }
+        restPreview();
+        document.getElementById("support-msg").textContent = "";
+        renderSupport();
+        loadPackPrice();
+      }
+
+      function hideSupport() {
+        if (supportBuddy) supportBuddy.stop();
+        document.getElementById("support-screen").hidden = true;
+      }
+
+      function restPreview() {
+        supportBuddy.pose({ me: { x: 40 }, dog: { x: 130, flip: -1, show: 1 }, flower: "", arms: "down", face: "happy", move: 0 });
+      }
+
+      async function watchTricks() {
+        await supportBuddy.play(PACK_TRICK_SCENE);
+        if (!document.getElementById("support-screen").hidden) restPreview();
+      }
+
+      // Trying something on: supporters get it everywhere at once; everyone
+      // else sees it on the preview, and it's waiting for them if they get the pack
+      function pickLook(kind, value) {
+        trialLook = { ...trialLook, [kind]: value };
+        writeJson(LOOK_KEY, trialLook);
+        if (isSupporter()) {
+          applyLook();
+          saveBackup();
+        }
+        renderChoices();
+      }
+
+      function renderChoices() {
+        const chips = (id, kind, list) => {
+          document.getElementById(id).innerHTML = list
+            .map(
+              ([value, label, color]) =>
+                `<button aria-pressed="${trialLook[kind] === value}" onclick="pickLook('${kind}', '${value}')">` +
+                (color ? `<span class="swatch" style="--c:${color}"></span>` : "") +
+                `${label}</button>`
+            )
+            .join("");
+        };
+        chips("outfit-chips", "outfit", OUTFITS);
+        chips("dogwear-chips", "dogwear", DOGWEAR);
+        chips("palette-chips", "palette", PALETTES);
+        dressBuddy(supportBuddy.svg, trialLook);
+        document.getElementById("support-card").dataset.palette = trialLook.palette;
+      }
+
+      function renderSupport() {
+        const info = supporterInfo();
+        const store = billing();
+        document.getElementById("support-lead").textContent = info
+          ? "Pick her outfit, Frisky's look and your colors. They show up all over the game."
+          : "Bodai Sudoku is free, with no ads. If you enjoy it, this one-time pack says thanks and unlocks a few fun extras. Try them on here.";
+        let buy;
+        if (info) {
+          const until = info.until
+            ? `<p class="support-small">Your code works until ${prettyDay(info.until, { month: "long", day: "numeric", year: "numeric" })}.</p>`
+            : "";
+          buy = `<p class="support-thanks">💛 Thank you! Bodai is made by one person, and your support keeps it free and ad-free for everyone. — Surbhi</p>${until}`;
+        } else if (store) {
+          buy =
+            `<button class="btn-primary" onclick="buyPack()" ${buying ? "disabled" : ""}>Get the pack · ${packPrice}</button>` +
+            `<p class="support-small">Pay once. No subscription, no ads, and every puzzle and story stays free.</p>` +
+            `<button class="link-btn" onclick="restorePack()">Already bought it? Restore</button>`;
+        } else {
+          buy =
+            `<a class="btn-primary" href="${PLAY_LINK}" target="_blank" rel="noopener">Get the pack in the Android app</a>` +
+            `<p class="support-small">Pay once. No subscription, no ads, and every puzzle and story stays free.</p>`;
+        }
+        document.getElementById("support-buy").innerHTML = buy;
+        renderChoices();
+      }
+
+      function supportMessage(text) {
+        document.getElementById("support-msg").textContent = text;
+      }
+
+      function unlockPack(via, until = null) {
+        writeJson(SUPPORTER_KEY, { via, until, since: dayKey() });
+        applyLook();
+        saveBackup();
+        if (!document.getElementById("support-screen").hidden) {
+          renderSupport();
+          if (!motionOff()) supportBuddy.play(PACK_TRICK_SCENE).then(restPreview);
+        }
+      }
+
+      // ---------- Google Play purchase (Android app only) ----------
+      const billing = () => (isNativeApp ? window.Capacitor?.Plugins?.Bodai : null);
+
+      // The real price in the player's currency, once Play tells us
+      async function loadPackPrice() {
+        const store = billing();
+        if (!store || isSupporter()) return;
+        try {
+          const { price } = await store.billingPrice({ productId: PACK_ID });
+          if (price && price !== packPrice) {
+            packPrice = price;
+            renderSupport();
+          }
+        } catch (e) {}
+      }
+
+      async function buyPack() {
+        const store = billing();
+        if (!store || buying) return;
+        buying = true;
+        renderSupport();
+        supportMessage("");
+        try {
+          const { state } = await store.buy({ productId: PACK_ID });
+          if (state === "purchased") unlockPack("play");
+          else if (state === "pending")
+            supportMessage("Your payment is pending. The pack unlocks as soon as Google Play confirms it.");
+        } catch (e) {
+          supportMessage("Google Play couldn't start the purchase. Please try again in a moment.");
+        }
+        buying = false;
+        renderSupport();
+      }
+
+      // Asks Play what this Google account owns: brings the pack back on a new
+      // phone, and takes it away again if a purchase was refunded
+      async function restorePack({ quiet = false } = {}) {
+        const store = billing();
+        if (!store) return;
+        try {
+          const { state } = await store.restore({ productId: PACK_ID });
+          const info = readJson(SUPPORTER_KEY);
+          if (state === "purchased") {
+            if (info?.via !== "play") unlockPack("play");
+            if (!quiet) supportMessage("Your pack is back. Thank you!");
+          } else if (info?.via === "play") {
+            writeJson(SUPPORTER_KEY, null);
+            applyLook();
+            if (!document.getElementById("support-screen").hidden) renderSupport();
+          } else if (!quiet) {
+            supportMessage(
+              state === "pending"
+                ? "Your payment is still pending with Google Play."
+                : "No purchase found on this Google account."
+            );
+          }
+        } catch (e) {
+          if (!quiet) supportMessage("Couldn't reach Google Play. Check your connection and try again.");
+        }
+      }
+
+      // ---------- Codes ----------
+      // 12 letters: 16 bits for the last day it works (days after 1 Jan 2026,
+      // 0 = forever), 12 bits of serial number, then a 32-bit signature. Codes
+      // are made with play-store/tools/make-codes.mjs, which reads this secret.
+      const CODE_SECRET = "v-Z8YUMP8py_KfIJfRS9yoW8";
+      const CODE_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+      const CODE_EPOCH = Date.UTC(2026, 0, 1);
+
+      async function codeSignature(days, serial) {
+        const key = await crypto.subtle.importKey(
+          "raw",
+          new TextEncoder().encode(CODE_SECRET),
+          { name: "HMAC", hash: "SHA-256" },
+          false,
+          ["sign"]
+        );
+        const payload = new Uint8Array([days >> 8, days & 255, serial >> 8, serial & 255]);
+        const sig = new Uint8Array(await crypto.subtle.sign("HMAC", key, payload));
+        return ((sig[0] << 24) | (sig[1] << 16) | (sig[2] << 8) | sig[3]) >>> 0;
+      }
+
+      // Forgiving about dashes, spaces, case, and O/0 or I/L/1 mix-ups
+      async function readCode(text) {
+        const clean = text.toUpperCase().replace(/[^0-9A-Z]/g, "").replace(/O/g, "0").replace(/[IL]/g, "1");
+        if (clean.length !== 12 || !window.crypto?.subtle) return null;
+        let bits = 0n;
+        for (const ch of clean) {
+          const value = CODE_ALPHABET.indexOf(ch);
+          if (value < 0) return null;
+          bits = bits * 32n + BigInt(value);
+        }
+        const days = Number(bits >> 44n);
+        const serial = Number((bits >> 32n) & 0xfffn);
+        if (Number(bits & 0xffffffffn) !== (await codeSignature(days, serial))) return null;
+        const until = days ? new Date(CODE_EPOCH + days * 864e5).toISOString().slice(0, 10) : null;
+        return { until, serial };
+      }
+
+      async function redeemCode(event) {
+        event.preventDefault();
+        const input = document.getElementById("code-input");
+        const code = await readCode(input.value);
+        if (!code) {
+          supportMessage("That code doesn't look right. Check the letters and try again.");
+          return;
+        }
+        if (code.until && code.until < dayKey()) {
+          supportMessage(`That code ended on ${prettyDay(code.until, { month: "long", day: "numeric" })}.`);
+          return;
+        }
+        const info = supporterInfo();
+        if (info && (!info.until || (code.until && code.until <= info.until))) {
+          supportMessage("You already have the pack. Thank you!");
+          return;
+        }
+        input.value = "";
+        document.getElementById("support-code").open = false;
+        unlockPack("code", code.until);
+        supportMessage("Code accepted. Enjoy the extras!");
       }
 
       function haptic(kind) {
@@ -4130,13 +4977,21 @@
             <circle class="dot eye" cx="46" cy="106" r="1.4"/>
             <path class="tongue" d="M50.5 115.5q1.2 4.5 3.2 0"/>
             <path class="collar" d="M37 113.5q3 2.5 7 1.5"/>
+            <path class="dogwear dw-bandana" d="M35.5 111.5q6.5 5.5 13.5 1.5l-6 12.5z"/>
+            <g class="dogwear dw-bow"><path d="M42 116l-7-4.6v9.2zM42 116l7-4.6v9.2z"/><circle cx="42" cy="116" r="1.8"/></g>
           </g></g></g>
           <g class="me-move"><g class="flip">${withFlower ? `<g class="flower"><g class="pen"><path class="stem" d="M100 142V124"/><path class="leaf" d="M100 136c-6-1-8-5-7-8c4 0 7 4 7 8z"/><circle class="petal" cx="100" cy="117" r="3.6"/><circle class="petal" cx="106.5" cy="121.5" r="3.6"/><circle class="petal" cx="104" cy="128" r="3.6"/><circle class="petal" cx="96" cy="128" r="3.6"/><circle class="petal" cx="93.5" cy="121.5" r="3.6"/><circle class="bud-c" cx="100" cy="123" r="3"/></g></g>` : ""}<g class="me-body"><g class="me-bob"><g class="pen">
+            <path class="wear wear-cape" d="M58 62.5q-14 24-25.5 49.5l12.5-4l15-42zM62 62.5q14 24 25.5 49.5l-12.5-4l-15-42z"/>
             <path class="head" d="M60 14c13-1 23 9 22 22c0 13-10 22-23 21c-12 0-21-10-20-22c1-12 9-21 21-21"/>
             <g class="navy" style="stroke-width:1.7"><path d="M43.6 31h13.2q1 0 1 1v3.4q0 4-4 4h-6.4q-3.6 0-4.1-3.6l-.6-3.8q-.1-1 .9-1z"/><path d="M76.4 31h-13.2q-1 0-1 1v3.4q0 4 4 4h6.4q3.6 0 4.1-3.6l.6-3.8q.1-1-.9-1z"/><path d="M57.8 33.4q2.2-1.3 4.4 0"/><path d="M42.8 32.4l-4.3-1.2M77.2 32.4l4.3-1.2"/></g>
             ${BUDDY_FACES}
             <path d="M37 38c-3-18 8-28 23-28s26 10 23 28"/><path d="M60 11c-8 2-15 7-19 17"/><path d="M60 11c8 2 15 7 19 17"/><path d="M37 38c-3 7 1 11-2 17s2 9-3 15"/><path d="M83 38c3 7-1 11 2 17s-2 9 3 15"/><path style="stroke-width:1.6" d="M40 46c-2 5 1 8-1 13"/><path style="stroke-width:1.6" d="M80 46c2 5-1 8 1 13"/>
+            <g class="wear wear-shades"><path d="M43.6 31h13.2q1 0 1 1v3.4q0 4-4 4h-6.4q-3.6 0-4.1-3.6l-.6-3.8q-.1-1 .9-1zM76.4 31h-13.2q-1 0-1 1v3.4q0 4 4 4h6.4q3.6 0 4.1-3.6l.6-3.8q.1-1-.9-1z"/><path class="shine" d="M46.5 33.5l3-2M65.5 33.5l3-2"/></g>
+            <g class="wear wear-party"><path d="M49 13.5l13.5-27l10.5 28q-12-4-24-1z"/><path class="stripe" d="M53 6.5q7-1.6 13.5.5M57.5-3q3.5-.8 7 .3"/><circle class="pom" cx="62.5" cy="-14.5" r="3.6"/></g>
+            <path class="wear wear-crown" d="M45 16l-1.5-14l8.5 7l8-10.5l8 10.5l8.5-7l-1.5 14q-15-4.5-30 0z"/>
+            <g class="wear wear-beret"><path d="M37.5 19q-2-15 21-16.5q26-1 23.5 14.5q-22-8-44.5 2z"/><path d="M59 2.6q.6-3.4 2.6-4.6"/></g>
             <path d="M60 57V66M60 66L45 108H75Z"/>
+            <g class="wear wear-scarf"><path d="M50.5 58.5q9.5 5.5 19 0v5.5q-9.5 5.5-19 0z"/><path d="M63 65l3.5 15.5l5-1.5l-3.5-15"/></g>
             <g class="arm-l-g"><path class="limb arm-l" d="M60 74Q49.5 84 43 94"/></g>
             <g class="arm-r-g"><path class="limb arm-r" d="M60 74Q70.5 84 77 94"/><circle class="wave-hand" cx="80" cy="97" r="3.5"/></g>
             <circle class="ball" cx="85" cy="38" r="6.5"/>
@@ -4231,6 +5086,7 @@
         constructor(holder, viewBox, withFlower = false) {
           holder.innerHTML = buddySvg(viewBox, withFlower);
           this.svg = holder.firstElementChild;
+          dressBuddy(this.svg, activeLook());
           this.me = this.svg.querySelector(".me-move");
           this.body = this.svg.querySelector(".me-body");
           this.dog = this.svg.querySelector(".dog-move");
@@ -4505,11 +5361,21 @@
         { me: { x: 20 }, dog: { x: 130, flip: -1 }, arms: "up", face: "joy", move: 350, dur: 350 },
         { me: { x: 20 }, dog: { x: 130, flip: -1 }, arms: "up", face: "joy", act: "hop dogflip", dur: 2200 },
       ];
+      // Support pack: Frisky shows off his new tricks while she cheers him on
+      const PACK_TRICK_SCENE = [
+        { me: { x: 20 }, dog: { x: 130, flip: -1, show: 1 }, flower: "", arms: "wave", face: "happy", move: 0, dur: 900 },
+        { me: { x: 20 }, dog: { x: 130, flip: -1 }, arms: "chin", face: "cur", act: "dogspin", dur: 1700 },
+        { me: { x: 20 }, dog: { x: 130, flip: -1 }, arms: "clap", face: "joy", act: "dogroll", dur: 1700 },
+        { me: { x: 20 }, dog: { x: 130, flip: -1 }, arms: "wave", face: "happy", act: "dogbeg", dur: 1900 },
+        { me: { x: 20 }, dog: { x: 130, flip: -1 }, arms: "chin", face: "cur", act: "dogdead", dur: 2100 },
+        { me: { x: 20 }, dog: { x: 130, flip: -1 }, arms: "up", face: "joy", act: "hop", dur: 1500 },
+      ];
       const WIN_SCENES = [
         { steps: CUDDLE_SCENE, loopFrom: 2 },
         { steps: FETCH_SCENE, loopFrom: 1 },
         { steps: ZOOMIES_SCENE, loopFrom: 1 },
         { steps: TRICK_SCENE, loopFrom: 1 },
+        { steps: PACK_TRICK_SCENE, loopFrom: 1, pack: true },
       ];
       const WIN_SCENE_KEY = "sudoku-win-scene";
 
@@ -4519,7 +5385,9 @@
         try {
           last = Number(localStorage.getItem(WIN_SCENE_KEY) ?? -1);
         } catch (e) {}
-        const choices = WIN_SCENES.map((_, i) => i).filter((i) => i !== last);
+        const choices = WIN_SCENES.map((_, i) => i).filter(
+          (i) => i !== last && (!WIN_SCENES[i].pack || isSupporter())
+        );
         const pick = choices[Math.floor(Math.random() * choices.length)];
         try {
           localStorage.setItem(WIN_SCENE_KEY, String(pick));
@@ -7138,6 +8006,10 @@
         document.getElementById("reminder-row").hidden = !isNativeApp;
         saveReminder(loadReminder());
         startBuddies();
+        applyLook();
+        restorePack({ quiet: true });
+        // A purchase that was pending finishes while the app is open
+        billing()?.addListener("purchased", () => unlockPack("play"));
         // Every visit starts on the home screen, with today's puzzle up top
         document.getElementById("home-screen").hidden = false;
         game = new SudokuGame();
@@ -7148,10 +8020,11 @@
         const App = window.Capacitor?.Plugins?.App;
         // Android's Back: close what's open, then go home, then leave
         App?.addListener("backButton", () => {
-          const dialog = ["help-screen", "calendar-screen", "stats-screen"].find(
+          const dialog = ["help-screen", "calendar-screen", "stats-screen", "support-screen"].find(
             (id) => !document.getElementById(id).hidden
           );
-          if (dialog) document.getElementById(dialog).hidden = true;
+          if (dialog === "support-screen") hideSupport();
+          else if (dialog) document.getElementById(dialog).hidden = true;
           else if (!document.getElementById("settings-panel").hidden) toggleSettings();
           else if (!homeOpen()) showHome();
           else App.minimizeApp();
@@ -7183,6 +8056,10 @@
       );
 
       document.addEventListener("keydown", (e) => {
+        if (!document.getElementById("support-screen").hidden) {
+          if (e.key === "Escape") hideSupport();
+          return;
+        }
         if (homeOpen()) return;
         if (e.key.startsWith("Arrow")) e.preventDefault();
 
