@@ -1386,10 +1386,13 @@
         font-weight: 800;
       }
 
+      /* Your numbers are lighter than the bold starting numbers, so the two
+         differ by more than their background color */
       .sudoku-grid .cell.filled {
         --cell-bg: var(--user);
         --cell-hl: var(--user-hl);
         color: var(--user-ink);
+        font-weight: 500;
       }
 
       .sudoku-grid .cell.row-highlight,
@@ -1400,11 +1403,15 @@
       /* Empty cells where the picked number is still possible */
       .sudoku-grid .cell.cand-match {
         background: var(--cand);
+        outline: 2px dashed color-mix(in srgb, var(--ink) 35%, transparent);
+        outline-offset: -4px;
       }
 
+      /* Matching numbers get a ring too, not just a color */
       .sudoku-grid .cell.number-highlight {
         background: var(--same);
         color: var(--same-ink);
+        box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--same-ink) 50%, transparent);
       }
 
       .sudoku-grid .cell.conflict {
@@ -1412,16 +1419,25 @@
         color: var(--bad-ink);
       }
 
-      /* A wrong number is also underlined, so it doesn't rely on color alone */
+      /* A wrong number also gets a light ✕ over it, so it doesn't rely on
+         color alone; faint enough that the number still reads */
       .sudoku-grid .cell.conflict::after {
         content: "";
         position: absolute;
-        left: 28%;
-        right: 28%;
-        bottom: 12%;
-        height: 3px;
-        border-radius: 2px;
+        inset: 16%;
         background: currentColor;
+        opacity: 0.38;
+        pointer-events: none;
+        -webkit-mask: var(--cross) center / contain no-repeat;
+        mask: var(--cross) center / contain no-repeat;
+        --cross: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M1.5 1.5l7 7m0-7l-7 7' stroke='%23000' stroke-width='0.9' stroke-linecap='round'/%3E%3C/svg%3E");
+      }
+
+      /* Keyboard cursor: a soft green glow, shown only while you use the arrows */
+      .sudoku-grid .cell.kb-cursor {
+        box-shadow:
+          inset 0 0 0 3px var(--green),
+          inset 0 0 14px color-mix(in srgb, var(--green) 55%, transparent);
       }
 
       .sudoku-grid .cell.selected {
@@ -2560,38 +2576,47 @@
         visibility: hidden;
       }
 
-      .batt {
-        position: relative;
-        width: 68%;
-        max-width: 26px;
-        height: 10px;
-        border: 1.5px solid currentColor;
-        border-radius: 3px;
+      /* Each solved day grows a little picture: closer to your best time, the
+         further along it is. Stages differ by shape, not just color. */
+      .stage {
+        width: 70%;
+        max-width: 28px;
+        aspect-ratio: 1;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
 
-      .batt::after {
-        content: "";
-        position: absolute;
-        right: -4px;
-        top: 2px;
-        width: 2px;
-        height: 3px;
-        border-radius: 0 1px 1px 0;
-        background: currentColor;
-      }
+      .stage .lf { fill: #7ccf5a; }
+      .stage .wood { fill: #a8743f; }
+      .stage .fruit { fill: #ff6b4a; }
+      .stage .egg { fill: #fff6dc; }
+      .stage .bug { fill: #c4e65a; }
+      .stage .coc { fill: #e2c98f; }
+      .stage .wing { fill: #ffb547; }
 
-      .batt i {
-        position: absolute;
-        left: 1px;
-        top: 1px;
-        bottom: 1px;
-        width: calc((100% - 2px) * var(--fill, 0));
-        border-radius: 1px;
-        background: var(--green);
-      }
-
-      .cal-day.missed .batt {
+      .cal-day.missed .stage {
         opacity: 0.35;
+      }
+
+      .cal-legend {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        margin-top: 12px;
+      }
+
+      .cal-legend .stage {
+        width: 30px;
+        max-width: none;
+      }
+
+      .cal-legend b {
+        color: var(--muted);
+        font-size: 13px;
       }
 
       .cal-detail {
@@ -3057,15 +3082,40 @@
         gap: 5px;
       }
 
+      /* Each level has a pattern as well as a color, so the chart reads
+         without color: Puppy plain, Stroll dots, Fetch stripes, Sprint
+         lines, Zoomies checks */
       .legend i,
-      .level-tile .swatch {
-        background: var(--lv);
+      .level-tile .swatch,
+      .seg {
+        background: var(--pat, none), var(--lv);
       }
 
       .legend i {
-        width: 10px;
-        height: 10px;
+        width: 12px;
+        height: 12px;
         border-radius: 3px;
+      }
+
+      .level-tile .swatch {
+        width: 12px;
+        height: 12px;
+      }
+
+      [data-lv="easy"] {
+        --pat: radial-gradient(rgba(16, 48, 59, 0.55) 0.9px, transparent 1.3px) 0 0 / 4px 4px;
+      }
+
+      [data-lv="medium"] {
+        --pat: repeating-linear-gradient(45deg, rgba(16, 48, 59, 0.4) 0 1.2px, transparent 1.2px 4px);
+      }
+
+      [data-lv="hard"] {
+        --pat: repeating-linear-gradient(0deg, rgba(16, 48, 59, 0.4) 0 1.2px, transparent 1.2px 4px);
+      }
+
+      [data-lv="zoomies"] {
+        --pat: conic-gradient(rgba(16, 48, 59, 0.35) 25%, transparent 0 50%, rgba(16, 48, 59, 0.35) 0 75%, transparent 0) 0 0 / 6px 6px;
       }
 
       .chart {
@@ -3146,7 +3196,6 @@
       .seg {
         width: 60%;
         margin: 0 auto;
-        background: var(--lv);
         flex: none;
         min-height: 3px;
       }
@@ -3744,10 +3793,8 @@
         </div>
         <div class="cal-grid" id="cal-grid"></div>
         <div class="cal-detail" id="cal-detail" aria-live="polite"></div>
-        <p class="cal-note">
-          🔋 The battery shows how close you came to your best time for that level.
-          A full battery means you matched or beat it.
-        </p>
+        <div class="cal-legend" id="cal-legend"></div>
+        <p class="cal-note" id="cal-legend-note"></p>
       </div>
     </div>
 
@@ -6451,6 +6498,50 @@
         return Math.min(1, best / result.seconds);
       }
 
+      // Stage 1-5 for a solved day; 5 is your best time (or within 5% of it)
+      function growth(result) {
+        const c = charge(result);
+        return c >= 0.95 ? 5 : c >= 0.8 ? 4 : c >= 0.6 ? 3 : c >= 0.4 ? 2 : 1;
+      }
+
+      // Months take turns: a plant grows one month, a butterfly the next.
+      // Each picture is line art, 24 x 24, ground at the bottom.
+      const STAGE_GROUND = '<path d="M3 21h18"/>';
+      const STAGE_LEAF = '<path class="lf" d="M4 19.5c4-4.5 12-4.5 16 0-4 2.8-12 2.8-16 0z"/>';
+      const STAGE_WINGS =
+        '<path class="wing" d="M12 12C8 5 3 6 4 10s4 3 8 2zM12 12c4-7 9-6 8-2s-4 3-8 2z"/>' +
+        '<path class="wing" d="M12 12c-3 1-6 3-5 6s4 0 5-6zM12 12c3 1 6 3 5 6s-4 0-5-6z"/>' +
+        '<path d="M12 8.5v8M12 8.5l-1.6-2.6M12 8.5l1.6-2.6"/>';
+      const LIFECYCLES = [
+        {
+          stages: ["Seed", "Sprout", "Little plant", "Tree", "Fruit tree"],
+          art: [
+            `<path d="M3 21h18" opacity=".6"/>`,
+            `${STAGE_GROUND}<ellipse class="wood" cx="12" cy="19" rx="2.6" ry="1.7"/>`,
+            `${STAGE_GROUND}<path d="M12 21v-6"/><path class="lf" d="M12 16c-3 0-4.6-1.6-4.6-3.7 3 0 4.6 1.6 4.6 3.7zM12 15c3 0 4.6-1.6 4.6-3.7-3 0-4.6 1.6-4.6 3.7z"/>`,
+            `${STAGE_GROUND}<path d="M12 21V7"/><path class="lf" d="M12 18c-3 0-4.6-1.4-4.6-3.4 3 0 4.6 1.4 4.6 3.4zM12 14c3 0 4.6-1.4 4.6-3.4-3 0-4.6 1.4-4.6 3.4zM12 10.5c-2.6 0-4-1.2-4-3 2.6 0 4 1.2 4 3zM12 7c0-2 1-3.5 2.6-4.2.2 2-.8 3.6-2.6 4.2z"/>`,
+            `${STAGE_GROUND}<path class="wood" d="M10.9 21l.5-7.5h1.2l.5 7.5z"/><circle class="lf" cx="12" cy="9" r="6.3"/>`,
+            `${STAGE_GROUND}<path class="wood" d="M10.9 21l.5-7.5h1.2l.5 7.5z"/><circle class="lf" cx="12" cy="9" r="6.3"/><circle class="fruit" cx="9.3" cy="8" r="1.4"/><circle class="fruit" cx="14.6" cy="6.8" r="1.4"/><circle class="fruit" cx="13" cy="11.6" r="1.4"/>`,
+          ],
+        },
+        {
+          stages: ["Egg", "Caterpillar", "Cocoon", "New butterfly", "Flying butterfly"],
+          art: [
+            `<path d="M4 19.5c4-4.5 12-4.5 16 0-4 2.8-12 2.8-16 0z" opacity=".6"/>`,
+            `${STAGE_LEAF}<ellipse class="egg" cx="12" cy="14.2" rx="1.9" ry="2.4"/>`,
+            `${STAGE_LEAF}<g class="bug"><circle cx="6.5" cy="15.2" r="1.9"/><circle cx="9.3" cy="14.6" r="1.9"/><circle cx="12.1" cy="14.6" r="1.9"/><circle cx="14.9" cy="14.6" r="1.9"/></g><circle class="bug" cx="17.8" cy="13.6" r="2.3"/><path d="M18.4 11.4l.6-1.8M17 11.5l-.4-1.8"/>`,
+            `<path class="wood" d="M3 3.5h18v1.4H3z"/><path d="M12 5v1.5"/><path class="coc" d="M12 6.5c2.5 0 3.2 3.8 3.2 6.8S14 19.5 12 19.5s-3.2-3.2-3.2-6.2.7-6.8 3.2-6.8z"/><path d="M9.3 11h5.4M9.2 14.2h5.6"/>`,
+            `${STAGE_LEAF}<g transform="translate(12 0) scale(.42 .9) translate(-12 -1.5)">${STAGE_WINGS}</g>`,
+            `<g transform="rotate(-12 12 12)">${STAGE_WINGS}</g><path d="M2.5 15.5h3M3.5 18.5h3" opacity=".7"/>`,
+          ],
+        },
+      ];
+
+      function stageIcon(month, stage, label) {
+        const art = LIFECYCLES[month % LIFECYCLES.length].art[stage];
+        return `<svg class="stage" viewBox="0 0 24 24" ${label ? `role="img" aria-label="${label}"` : 'aria-hidden="true"'}>${art}</svg>`;
+      }
+
       function renderCalendar() {
         const results = loadDaily();
         const today = dayKey();
@@ -6482,9 +6573,7 @@
           const classes = ["cal-day"];
           if (key === today) classes.push("today");
           if (!result && !future) classes.push("missed");
-          const battery = future
-            ? ""
-            : `<span class="batt"><i style="--fill: ${result ? charge(result).toFixed(2) : 0}"></i></span>`;
+          const battery = future ? "" : stageIcon(month, result ? growth(result) : 0);
           const label = `${prettyDay(key)}${result ? `, solved in ${formatTime(result.seconds)}` : future ? "" : ", not solved"}`;
           html += `<button class="${classes.join(" ")}" data-day="${key}" aria-label="${label}" aria-pressed="${key === calendarPick}" ${future ? "disabled" : ""}>${d}${battery}</button>`;
         }
@@ -6499,6 +6588,13 @@
             showCalendarDay(calendarPick);
           })
         );
+        const life = LIFECYCLES[month % LIFECYCLES.length];
+        document.getElementById("cal-legend").innerHTML = life.stages
+          .map((stage, i) => (i ? "<b>›</b>" : "") + stageIcon(month, i + 1, stage))
+          .join("");
+        document.getElementById("cal-legend-note").textContent =
+          `${life.stages[0]} to ${life.stages[4].toLowerCase()}: the closer you came to your best time, the further it grows. ` +
+          `${life.stages[4]} means you matched or beat it.`;
         showCalendarDay(calendarPick);
       }
 
@@ -6517,7 +6613,7 @@
             head +
             `Solved in ${formatTime(result.seconds)}` +
             (best ? ` · your best ${formatTime(best)}` : "") +
-            ` · 🔋 ${Math.round(charge(result) * 100)}%` +
+            ` · ${LIFECYCLES[dateFromKey(key).getMonth() % LIFECYCLES.length].stages[growth(result) - 1]}` +
             (result.onDay ? "" : " · played later");
         } else {
           detail.innerHTML =
@@ -6604,7 +6700,7 @@
             const segs = LEVELS.filter((l) => day.seconds[l])
               .map(
                 (l) =>
-                  `<div class="seg" style="--lv: var(--lv-${l}); height: calc(${(day.seconds[l] / 60 / top) * 100}% - 2px)"></div>`
+                  `<div class="seg" data-lv="${l}" style="--lv: var(--lv-${l}); height: calc(${(day.seconds[l] / 60 / top) * 100}% - 2px)"></div>`
               )
               .join("");
             return `<button class="bar-col" style="--i: ${i}" data-day="${i}" aria-label="${describeDay(day)}" aria-pressed="false"><div class="stack">${segs}</div></button>`;
@@ -6615,7 +6711,7 @@
           <p class="chart-title">Time spent solving</p>
           <p class="chart-sub">Minutes per day, last 7 days</p>
           <div class="legend" aria-hidden="true">
-            ${LEVELS.map((l) => `<span style="--lv: var(--lv-${l})"><i></i>${levelName(l)}</span>`).join("")}
+            ${LEVELS.map((l) => `<span data-lv="${l}" style="--lv: var(--lv-${l})"><i></i>${levelName(l)}</span>`).join("")}
           </div>
           <div class="chart">
             <div class="chart-axis" aria-hidden="true">
@@ -6659,7 +6755,7 @@
         document.getElementById("level-tiles").innerHTML = LEVELS.map((level) => {
           const count = history.filter((h) => h.level === level).length;
           const bestText = best[level] !== undefined ? `Best ${formatTime(best[level])}` : "No best yet";
-          return `<div class="level-tile" style="--lv: var(--lv-${level})">
+          return `<div class="level-tile" data-lv="${level}" style="--lv: var(--lv-${level})">
             <div class="level-name"><span class="swatch"></span>${levelName(level)}</div>
             <div class="level-count">${count}</div>
             <div class="level-best">${bestText}</div>
@@ -7322,6 +7418,29 @@
           this.afterMove();
         }
 
+        // Arrow keys move a cursor around the board. Picking cells first, the
+        // cursor is the selected square; picking numbers first, Enter places
+        // the picked number where the cursor is.
+        moveCursor(rowStep, colStep) {
+          let start = this.keyboardOn ? this.cursor : this.selectedCell?.index;
+          if (start == null) start = 40; // the middle square
+          else {
+            const row = Math.min(8, Math.max(0, Math.floor(start / 9) + rowStep));
+            const col = Math.min(8, Math.max(0, (start % 9) + colStep));
+            start = row * 9 + col;
+          }
+          this.cursor = start;
+          this.keyboardOn = true;
+          if (!this.numberFirstMode) {
+            this.selectedCell = { row: Math.floor(start / 9), col: start % 9, index: start };
+          }
+          this.updateDisplay();
+        }
+
+        pressCursor() {
+          if (this.keyboardOn && this.cursor != null && !this.isPaused) this.selectCell(this.cursor);
+        }
+
         selectCell(index) {
           const row = Math.floor(index / 9);
           const col = index % 9;
@@ -7626,6 +7745,7 @@
             if (this.givens[row][col]) cell.classList.add("given");
             else if (value !== 0) cell.classList.add("filled");
             if (index === this.popIndex) cell.classList.add("pop");
+            if (this.keyboardOn && index === this.cursor) cell.classList.add("kb-cursor");
 
             if (this.selectedCell) {
               const selectedRow = this.selectedCell.row;
@@ -8293,31 +8413,26 @@
           inputNumber(parseInt(e.key));
         } else if (e.key === "Backspace" || e.key === "Delete") {
           clearCell();
-        } else if (
-          e.key === "ArrowUp" ||
-          e.key === "ArrowDown" ||
-          e.key === "ArrowLeft" ||
-          e.key === "ArrowRight"
-        ) {
-          if (game && game.selectedCell) {
-            const { row, col } = game.selectedCell;
-            let newRow = row;
-            let newCol = col;
-            // Calculate new position
-            if (e.key === "ArrowUp" && row > 0) newRow = row - 1;
-            else if (e.key === "ArrowDown" && row < 8) newRow = row + 1;
-            else if (e.key === "ArrowLeft" && col > 0) newCol = col - 1;
-            else if (e.key === "ArrowRight" && col < 8) newCol = col + 1;
-
-            // Always move to the new cell (given or not)
-            if (newRow !== row || newCol !== col) {
-              const newIndex = newRow * 9 + newCol;
-              game.selectedCell = { row: newRow, col: newCol, index: newIndex };
-              game.updateDisplay();
-            }
-          }
+        } else if (ARROWS[e.key] && game) {
+          game.moveCursor(...ARROWS[e.key]);
+        } else if (e.key === "Enter" && game?.keyboardOn && !e.target.closest?.("button, select, input")) {
+          e.preventDefault();
+          game.pressCursor();
         }
       });
+
+      const ARROWS = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
+
+      // Touching the screen hides the keyboard cursor until the arrows are used again
+      document.addEventListener(
+        "pointerdown",
+        () => {
+          if (!game?.keyboardOn) return;
+          game.keyboardOn = false;
+          game.updateDisplay();
+        },
+        true
+      );
     </script>
   </body>
 </html>
