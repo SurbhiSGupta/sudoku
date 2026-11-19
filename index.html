@@ -2315,6 +2315,16 @@
         gap: 8px;
       }
 
+      /* "Levels" over the level picker; the home column's gap is too wide for a label */
+      .home-label {
+        margin: 4px 0 -6px 4px;
+        color: var(--muted);
+        font-weight: 800;
+        font-size: 13px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
       .home-links {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -3399,9 +3409,10 @@
           <span>▶ Continue</span><small id="continue-info"></small>
         </button>
 
+        <label class="home-label" for="home-level">Levels</label>
         <div class="home-new">
           <div class="select-wrap">
-            <select id="home-level" aria-label="Level for a new game"></select>
+            <select id="home-level"></select>
           </div>
           <button class="btn-primary" onclick="startFromHome()">New game</button>
         </div>
@@ -4809,8 +4820,163 @@
         hard: "Sprint",
         zoomies: "Zoomies",
       };
-      // How many numbers each level tries to take away (fewer givens = harder)
-      const LEVEL_BLANKS = { puppy: 28, easy: 35, medium: 45, hard: 55, zoomies: 64 };
+      // How many numbers each level tries to take away (fewer givens = harder),
+      // and the range of solving steps it may need (see gradePuzzle)
+      const LEVEL_BLANKS = { puppy: 22, easy: 35, medium: 45, hard: 55, zoomies: 64 };
+      const LEVEL_STEPS = {
+        puppy: [0, 0], // every move is a square with one number left
+        easy: [0, 0],
+        medium: [0, 1],
+        hard: [1, 3], // no guessing
+        zoomies: [3, 5], // always needs pairs or harder
+      };
+
+      // ---------- How hard is a puzzle? ----------
+      // Solves it the way a person would, trying easy steps first, and reports
+      // the hardest step it needed:
+      //   0 a square with only one number left   1 the only place for a number
+      //   2 a number locked into a line in a box 3 pairs     4 X-wing
+      //   5 people would have to guess
+      const UNITS = (() => {
+        const units = [];
+        for (let i = 0; i < 9; i++) {
+          units.push(Array.from({ length: 9 }, (_, c) => i * 9 + c));
+          units.push(Array.from({ length: 9 }, (_, r) => r * 9 + i));
+          const r0 = Math.floor(i / 3) * 3;
+          const c0 = (i % 3) * 3;
+          units.push(Array.from({ length: 9 }, (_, k) => (r0 + Math.floor(k / 3)) * 9 + c0 + (k % 3)));
+        }
+        return units;
+      })();
+      const PEERS = Array.from({ length: 81 }, (_, cell) => {
+        const set = new Set();
+        UNITS.filter((u) => u.includes(cell)).forEach((u) => u.forEach((p) => p !== cell && set.add(p)));
+        return [...set];
+      });
+      const bitCount = (n) => {
+        let c = 0;
+        for (; n; n &= n - 1) c++;
+        return c;
+      };
+      const bitDigit = (bit) => 31 - Math.clz32(bit); // 1 << d -> d
+
+      function gradePuzzle(grid, maxStep = 4) {
+        const value = grid.flat();
+        const cand = value.map(() => 0x3fe); // bits 1-9
+        let hardest = 0;
+        const place = (cell, d) => {
+          value[cell] = d;
+          cand[cell] = 0;
+          for (const p of PEERS[cell]) cand[p] &= ~(1 << d);
+        };
+        value.forEach((d, cell) => {
+          if (d) {
+            const v = d;
+            value[cell] = 0;
+            place(cell, v);
+          }
+        });
+
+        const nakedSingle = () => {
+          for (let cell = 0; cell < 81; cell++) {
+            if (!value[cell] && bitCount(cand[cell]) === 1) {
+              place(cell, bitDigit(cand[cell]));
+              return true;
+            }
+          }
+          return false;
+        };
+        const hiddenSingle = () => {
+          for (const unit of UNITS) {
+            for (let d = 1; d <= 9; d++) {
+              const spots = unit.filter((c) => cand[c] & (1 << d));
+              if (spots.length === 1) {
+                place(spots[0], d);
+                return true;
+              }
+            }
+          }
+          return false;
+        };
+        // A number that can only go in one row or column of a box (or one box
+        // of a line) can be crossed off the rest of that line (or box)
+        const lockedCandidates = () => {
+          let changed = false;
+          for (const unit of UNITS) {
+            for (let d = 1; d <= 9; d++) {
+              const bit = 1 << d;
+              const spots = unit.filter((c) => cand[c] & bit);
+              if (spots.length < 2) continue;
+              for (const other of UNITS) {
+                if (other === unit || !spots.every((c) => other.includes(c))) continue;
+                for (const c of other) {
+                  if (!spots.includes(c) && cand[c] & bit) {
+                    cand[c] &= ~bit;
+                    changed = true;
+                  }
+                }
+              }
+            }
+          }
+          return changed;
+        };
+        // Two squares in a line or box that can only be the same two numbers
+        const nakedPairs = () => {
+          let changed = false;
+          for (const unit of UNITS) {
+            const pairs = unit.filter((c) => bitCount(cand[c]) === 2);
+            for (let i = 0; i < pairs.length; i++) {
+              for (let j = i + 1; j < pairs.length; j++) {
+                if (cand[pairs[i]] !== cand[pairs[j]]) continue;
+                for (const c of unit) {
+                  if (c !== pairs[i] && c !== pairs[j] && cand[c] & cand[pairs[i]]) {
+                    cand[c] &= ~cand[pairs[i]];
+                    changed = true;
+                  }
+                }
+              }
+            }
+          }
+          return changed;
+        };
+        const xWing = () => {
+          let changed = false;
+          for (const byRow of [true, false]) {
+            const line = (i) => UNITS[i * 3 + (byRow ? 0 : 1)];
+            for (let d = 1; d <= 9; d++) {
+              const bit = 1 << d;
+              const where = [];
+              for (let i = 0; i < 9; i++) {
+                const spots = line(i).filter((c) => cand[c] & bit).map((c) => (byRow ? c % 9 : Math.floor(c / 9)));
+                where.push(spots.length === 2 ? spots.join() : null);
+              }
+              for (let a = 0; a < 9; a++) {
+                for (let b = a + 1; b < 9; b++) {
+                  if (!where[a] || where[a] !== where[b]) continue;
+                  for (const k of where[a].split(",").map(Number)) {
+                    for (const c of UNITS[k * 3 + (byRow ? 1 : 0)]) {
+                      const i = byRow ? Math.floor(c / 9) : c % 9;
+                      if (i !== a && i !== b && cand[c] & bit) {
+                        cand[c] &= ~bit;
+                        changed = true;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          return changed;
+        };
+
+        const steps = [nakedSingle, hiddenSingle, lockedCandidates, nakedPairs, xWing].slice(0, maxStep + 1);
+        while (value.includes(0)) {
+          const used = steps.findIndex((step) => step());
+          if (used < 0) return 5;
+          hardest = Math.max(hardest, used);
+        }
+        return hardest;
+      }
 
       // ●●●○○ for a level, as text (for dropdowns) or labelled HTML
       function levelDotsText(level) {
@@ -6835,14 +7001,24 @@
           this.grid = this.solution.map((row) => [...row]);
 
           const removeCount = difficulty === "test" ? 5 : LEVEL_BLANKS[difficulty] ?? 35;
-          // Zoomies tries several orders and keeps the one with the fewest numbers
-          // left, so it's clearly a step past Sprint
-          const tries = difficulty === "zoomies" ? 8 : 1;
+          // Keeps trying until the puzzle needs the right kind of steps for its
+          // level, so Zoomies is always a step past Sprint. Gives up after a while
+          // and keeps the closest one (still the same for everyone on a daily).
+          const [low, high] = LEVEL_STEPS[difficulty] || [0, 5];
+          const miss = (step) => Math.max(low - step, step - high, 0);
           let best = null;
-          for (let i = 0; i < tries; i++) {
+          for (let i = 0; i < 40; i++) {
+            if (i && i % 8 === 0) this.generateCompleteSolution();
             const attempt = this.removeNumbers(removeCount);
-            if (!best || attempt.removed > best.removed) best = attempt;
+            attempt.step = gradePuzzle(attempt.grid);
+            attempt.solution = this.solution;
+            if (!best || miss(attempt.step) < miss(best.step) || (miss(attempt.step) === miss(best.step) && attempt.removed > best.removed)) {
+              best = attempt;
+            }
+            // Good enough: the right steps, and about as many blanks as asked
+            if (!miss(best.step) && (best.removed >= removeCount - 2 || i >= 5)) break;
           }
+          this.solution = best.solution;
           this.grid = best.grid;
           this.givens = best.givens;
           const removed = best.removed;
