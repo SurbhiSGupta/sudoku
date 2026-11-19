@@ -2,4 +2,7 @@
 <resources>
     <color name="sudokuBackground">#0a1e25</color>
     <bool name="sudokuLightBars">false</bool>
+    <color name="widgetCard">#0f2c35</color>
+    <color name="widgetInk">#eaf2f0</color>
+    <color name="widgetMuted">#a9bcc0</color>
 </resources>

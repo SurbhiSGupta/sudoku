@@ -36,7 +36,8 @@ import java.util.Collections;
 import java.util.List;
 
 // Small native helpers the game calls from index.html: a bug report email with
-// a screenshot, focus mode (hides the phone's bars) and the Support Bodai purchase
+// a screenshot, focus mode (hides the phone's bars), the Support Bodai purchase
+// and the home-screen widget
 @CapacitorPlugin(name = "Bodai")
 public class BodaiPlugin extends Plugin {
 
@@ -300,6 +301,41 @@ public class BodaiPlugin extends Plugin {
         JSObject out = new JSObject();
         out.put("state", outcome);
         return out;
+    }
+
+    // ---------- Home-screen widget (DailyWidget.java) ----------
+    // The game tells the widget how today is going: solved or not, the clock, the streak
+    @PluginMethod
+    public void updateWidget(PluginCall call) {
+        getContext()
+            .getSharedPreferences(DailyWidget.PREFS, android.content.Context.MODE_PRIVATE)
+            .edit()
+            .putString("date", call.getString("date", ""))
+            .putBoolean("solved", Boolean.TRUE.equals(call.getBoolean("solved", false)))
+            .putInt("seconds", call.getInt("seconds", 0))
+            .putInt("timer", call.getInt("timer", 0))
+            .putInt("streak", call.getInt("streak", 0))
+            .apply();
+        DailyWidget.refresh(getContext());
+        call.resolve();
+    }
+
+    // Was the app opened from the widget? Asked once at startup; later taps
+    // arrive as an "openDaily" event
+    @PluginMethod
+    public void launchAction(PluginCall call) {
+        Intent intent = getActivity().getIntent();
+        boolean daily = intent != null && DailyWidget.OPEN_DAILY.equals(intent.getAction());
+        if (daily) intent.setAction(Intent.ACTION_MAIN);
+        JSObject out = new JSObject();
+        out.put("openDaily", daily);
+        call.resolve(out);
+    }
+
+    @Override
+    protected void handleOnNewIntent(Intent intent) {
+        super.handleOnNewIntent(intent);
+        if (DailyWidget.OPEN_DAILY.equals(intent.getAction())) notifyListeners("openDaily", new JSObject());
     }
 
     // Focus mode: hide the status and navigation bars; a swipe from the edge

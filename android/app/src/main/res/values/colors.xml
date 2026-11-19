@@ -4,4 +4,8 @@
     <color name="sudokuBackground">#f6f4ec</color>
     <!-- Dark status and navigation bar icons on the light background -->
     <bool name="sudokuLightBars">true</bool>
+    <!-- Home-screen widget -->
+    <color name="widgetCard">#f6f4ec</color>
+    <color name="widgetInk">#10303b</color>
+    <color name="widgetMuted">#55666d</color>
 </resources>

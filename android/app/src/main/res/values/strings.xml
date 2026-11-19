@@ -4,4 +4,5 @@
     <string name="title_activity_main">Bodai Sudoku</string>
     <string name="package_name">com.bodaijewels.sudoku</string>
     <string name="custom_url_scheme">com.bodaijewels.sudoku</string>
+    <string name="widget_description">Today\'s puzzle, your streak and a quick way to play</string>
 </resources>

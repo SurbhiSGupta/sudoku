@@ -5516,6 +5516,25 @@
         return streak;
       }
 
+      // Tells the home-screen widget (Android) how today's puzzle is going
+      function syncWidget() {
+        const bodai = window.Capacitor?.Plugins?.Bodai;
+        if (!isNativeApp || !bodai) return;
+        const today = dayKey();
+        const done = loadDaily()[today];
+        const going =
+          game?.mode === "daily" && game.dailyDate === today ? game.snapshot() : readSlot(DAILY_GAME_KEY);
+        bodai
+          .updateWidget({
+            date: today,
+            solved: !!done,
+            seconds: done?.seconds || 0,
+            timer: going?.dailyDate === today ? going.timer || 0 : 0,
+            streak: dailyStreak(),
+          })
+          .catch(() => {});
+      }
+
       function playDaily(date = dayKey()) {
         if (!game) return;
         hideWinScreen();
@@ -7728,6 +7747,7 @@
             if (this.mode === "daily") {
               saveDailyResult(this.dailyDate, this.timer, this.mistakes, this.difficulty);
               scheduleReminders();
+              syncWidget();
             }
             this.updateModeBits();
             saveBackup();
@@ -8016,6 +8036,11 @@
         showHome();
         scheduleReminders();
         saveBackup();
+        syncWidget();
+        // Tapping the home-screen widget opens today's puzzle
+        const bodai = isNativeApp ? window.Capacitor?.Plugins?.Bodai : null;
+        bodai?.launchAction().then((r) => r.openDaily && playDaily(), () => {});
+        bodai?.addListener("openDaily", () => playDaily());
 
         const App = window.Capacitor?.Plugins?.App;
         // Android's Back: close what's open, then go home, then leave
@@ -8037,6 +8062,7 @@
         document.addEventListener("visibilitychange", () => {
           if (document.hidden) {
             saveBackup();
+            syncWidget();
             return;
           }
           if (homeOpen()) renderHome();
