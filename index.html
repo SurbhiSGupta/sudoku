@@ -1535,6 +1535,27 @@
         font-weight: 800;
       }
 
+      /* Notes stay readable on the dark selected square */
+      .sudoku-grid .cell.selected .candidates {
+        color: var(--sel-ink);
+      }
+
+      /* Moving with the arrow keys, the square keeps its own colors and
+         gets the soft green glow instead of the dark fill, so its notes and
+         number show through */
+      .sudoku-grid .cell.selected.kb-cursor {
+        background: var(--cell-bg);
+        color: var(--ink);
+      }
+
+      .sudoku-grid .cell.selected.kb-cursor .candidates {
+        color: var(--note-ink);
+      }
+
+      .sudoku-grid .cell.filled.selected.kb-cursor {
+        color: var(--user-ink);
+      }
+
       .candidate-number {
         display: flex;
         align-items: center;
