@@ -2466,6 +2466,224 @@
         background: var(--slot);
       }
 
+      /* ---------- The tour: pictures first, then three tries ---------- */
+      .tour-card {
+        max-width: 400px;
+        padding-bottom: 18px;
+      }
+
+      .tour-card h2 {
+        margin: 6px 0 4px;
+        font-size: 24px;
+      }
+
+      .tour-card .tour-sub {
+        margin: 0 0 14px;
+        color: var(--muted);
+        font-weight: 600;
+        min-height: 1.4em;
+      }
+
+      .tour-stage {
+        min-height: 300px;
+        display: grid;
+        place-items: center;
+      }
+
+      /* A small board: one row, column or box lights up, the rest fades */
+      .tour-board {
+        display: grid;
+        grid-template-columns: repeat(9, 1fr);
+        gap: 2px;
+        width: min(100%, 290px);
+        padding: 4px;
+        border-radius: 12px;
+        background: var(--board);
+      }
+
+      .tour-board span {
+        aspect-ratio: 1;
+        display: grid;
+        place-items: center;
+        border-radius: 4px;
+        background: var(--slot);
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+        opacity: 0.45;
+      }
+
+      .tour-board span.box-r {
+        margin-right: 2px;
+      }
+
+      .tour-board span.box-b {
+        margin-bottom: 2px;
+      }
+
+      .tour-board span.on {
+        opacity: 1;
+        background: var(--same);
+        color: var(--same-ink);
+        box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--same-ink) 45%, transparent);
+        animation: tourPop 0.4s ease-out both;
+        animation-delay: calc(var(--k) * 90ms + 150ms);
+      }
+
+      @keyframes tourPop {
+        from {
+          transform: scale(0.5);
+          opacity: 0;
+        }
+      }
+
+      /* Practice: one line or box, one empty square, a number pad */
+      .tour-try {
+        display: grid;
+        gap: 4px;
+        padding: 5px;
+        border-radius: 14px;
+        background: var(--board);
+      }
+
+      .tour-try.row {
+        grid-template-columns: repeat(9, 32px);
+      }
+
+      .tour-try.col {
+        grid-template-columns: 30px;
+      }
+
+      .tour-try.col span {
+        height: 26px;
+      }
+
+      .tour-try.box {
+        grid-template-columns: repeat(3, 52px);
+      }
+
+      .tour-try.box span {
+        height: 52px;
+        font-size: 24px;
+      }
+
+      .tour-try span {
+        height: 32px;
+        display: grid;
+        place-items: center;
+        border-radius: 7px;
+        background: var(--given);
+        color: var(--given-ink);
+        font-size: 18px;
+        font-weight: 800;
+      }
+
+      .tour-try span.gap {
+        background: var(--slot);
+        box-shadow:
+          inset 0 0 0 3px var(--green),
+          inset 0 0 12px color-mix(in srgb, var(--green) 50%, transparent);
+        animation: hintPulse 0.9s ease-in-out infinite alternate;
+      }
+
+      .tour-try span.gap.right {
+        animation: tourPop 0.35s ease-out;
+        background: var(--user);
+        color: var(--user-ink);
+        font-weight: 500;
+        box-shadow: none;
+      }
+
+      /* The number that's already there, when you pick it again */
+      .tour-try span.seen {
+        background: var(--bad);
+        color: var(--bad-ink);
+      }
+
+      .tour-pad {
+        display: grid;
+        grid-template-columns: repeat(9, 1fr);
+        gap: 4px;
+        width: 100%;
+        margin-top: 14px;
+      }
+
+      .tour-pad button {
+        padding: 9px 0;
+        font-size: 18px;
+      }
+
+      .tour-pad button.nope {
+        animation: nope 0.35s;
+      }
+
+      @keyframes nope {
+        25% { transform: translateX(-4px); }
+        75% { transform: translateX(4px); }
+      }
+
+      .tour-cheer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 34px;
+        margin-top: 8px;
+        font-weight: 700;
+      }
+
+      .tour-cheer .mdog {
+        animation: tourHop 0.5s ease-out 2;
+      }
+
+      @keyframes tourHop {
+        50% { transform: translateY(-8px); }
+      }
+
+      .tour-practice {
+        width: 100%;
+      }
+
+      .tour-split {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .tour-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .tour-dots {
+        display: flex;
+        gap: 6px;
+      }
+
+      .tour-dots i {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--slot);
+        box-shadow: inset 0 0 0 1.5px var(--muted);
+      }
+
+      .tour-dots i.on {
+        background: var(--ink);
+        box-shadow: none;
+        width: 20px;
+        border-radius: 4px;
+      }
+
+      .tour-nav button {
+        min-width: 86px;
+      }
+
       /* In a daily game, the level dropdown gives way to a "today" chip */
       .daily-chip {
         flex: 1;
@@ -2834,6 +3052,11 @@
 
       .help-card li {
         margin-bottom: 6px;
+      }
+
+      .help-card .help-tour {
+        width: 100%;
+        margin: 14px 0 4px;
       }
 
       .help-levels {
@@ -3443,7 +3666,7 @@
 
         <div class="guide-card" id="guide-card" hidden>
           <p>New to Sudoku? Take the one-minute tour.</p>
-          <button onclick="dismissGuide(); showHelp()">Show me</button>
+          <button onclick="dismissGuide(); showTour()">Show me</button>
           <button onclick="dismissGuide()" aria-label="I know how to play">✕</button>
         </div>
 
@@ -3798,6 +4021,22 @@
       </div>
     </div>
 
+    <div class="win-screen" id="tour-screen" role="dialog" aria-labelledby="tour-title" hidden>
+      <div class="win-card tour-card">
+        <button class="close-btn" onclick="hideTour()" aria-label="Close the tour">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+        <h2 id="tour-title"></h2>
+        <p class="tour-sub" id="tour-sub"></p>
+        <div class="tour-stage" id="tour-stage"></div>
+        <div class="tour-nav">
+          <button id="tour-back" onclick="moveTour(-1)">Back</button>
+          <div class="tour-dots" id="tour-dots" aria-hidden="true"></div>
+          <button class="btn-primary" id="tour-next" onclick="moveTour(1)">Next</button>
+        </div>
+      </div>
+    </div>
+
     <div class="win-screen" id="help-screen" role="dialog" aria-labelledby="help-title" hidden>
       <div class="win-card stats-card help-card">
         <button class="close-btn" onclick="hideHelp()" aria-label="Close help">
@@ -3805,14 +4044,13 @@
         </button>
         <h2><span class="mark" id="help-title">Help</span></h2>
 
-        <h3>Get started</h3>
-        <ol>
-          <li>Fill the board so every row, every column and every 3×3 box has the numbers 1 to 9, each just once.</li>
-          <li>Tap a square, then tap a number below the board.</li>
-          <li>Not sure yet? Turn on <b>Notes</b> and pencil in the numbers that could fit.</li>
+        <button class="btn-primary help-tour" onclick="hideHelp(); showTour()">▶ How to play: 1-minute tour</button>
+
+        <h3>Good to know</h3>
+        <ul>
           <li>Each wrong number uses up one of Frisky's dogs. You can change the limit, or hide mistakes, in Settings.</li>
           <li>Every puzzle has exactly one answer, so you can always solve it with logic. No guessing needed.</li>
-        </ol>
+        </ul>
 
         <h3>Handy buttons</h3>
         <ul>
@@ -6442,6 +6680,115 @@
         document.getElementById("guide-card").hidden = true;
       }
 
+      // ---------- The tour ----------
+      // Three pictures (rows, columns, boxes), then three tries where you fill
+      // the one empty square. Learning by doing, not by reading.
+      // A finished board, shuffled (numbers relabeled, rows and columns swapped
+      // inside their bands) so the answers don't run 1, 2, 3 in order
+      const TOUR_GRID = (() => {
+        const label = [5, 3, 8, 1, 9, 2, 7, 4, 6];
+        const rows = [2, 0, 1, 4, 5, 3, 7, 8, 6];
+        const cols = [1, 0, 2, 5, 3, 4, 8, 6, 7];
+        return rows.map((r) => cols.map((c) => label[(r * 3 + Math.floor(r / 3) + c) % 9]));
+      })();
+      const TOUR = [
+        { title: "Rows", sub: "Every row has 1 to 9, each just once.", show: (r, c) => r === 4 },
+        { title: "Columns", sub: "Every column too.", show: (r, c) => c === 2 },
+        { title: "Boxes", sub: "And every 3×3 box.", show: (r, c) => Math.floor(r / 3) === 1 && Math.floor(c / 3) === 2 },
+        { title: "Your turn", sub: "The green square is picked. Tap the number this row is missing.", shape: "row", cells: TOUR_GRID[1], gap: 5 },
+        { title: "Now a column", sub: "Which one is missing here?", shape: "col", cells: TOUR_GRID.map((row) => row[7]), gap: 2 },
+        { title: "Last one: a box", sub: "Fill the box, and you know how to play!", shape: "box", cells: [6, 7, 8].flatMap((r) => TOUR_GRID[r].slice(3, 6)), gap: 4 },
+      ];
+      let tourStep = 0;
+      let tourSolved = false;
+
+      function showTour() {
+        tourStep = 0;
+        renderTour();
+        document.getElementById("tour-screen").hidden = false;
+      }
+
+      function hideTour() {
+        document.getElementById("tour-screen").hidden = true;
+      }
+
+      function moveTour(step) {
+        if (step > 0 && tourStep === TOUR.length - 1) {
+          hideTour();
+          if (homeOpen()) playDaily();
+          return;
+        }
+        tourStep = Math.max(0, Math.min(TOUR.length - 1, tourStep + step));
+        renderTour();
+      }
+
+      function renderTour() {
+        const slide = TOUR[tourStep];
+        tourSolved = !slide.shape;
+        document.getElementById("tour-title").textContent = slide.title;
+        document.getElementById("tour-sub").textContent = slide.sub;
+        document.getElementById("tour-dots").innerHTML = TOUR.map(
+          (_, i) => `<i class="${i === tourStep ? "on" : ""}"></i>`
+        ).join("");
+        document.getElementById("tour-back").style.visibility = tourStep ? "visible" : "hidden";
+        const stage = document.getElementById("tour-stage");
+        if (slide.shape) {
+          stage.innerHTML =
+            `<div class="tour-practice"><div class="tour-split"><div class="tour-try ${slide.shape}" id="tour-try">` +
+            slide.cells.map((n, i) => (i === slide.gap ? `<span class="gap" aria-label="empty"></span>` : `<span>${n}</span>`)).join("") +
+            `</div></div><div class="tour-pad">` +
+            [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<button onclick="tryTour(this, ${n})">${n}</button>`).join("") +
+            `</div><div class="tour-cheer" id="tour-cheer" aria-live="polite"></div></div>`;
+        } else {
+          let k = 0;
+          stage.innerHTML =
+            `<div class="tour-board" aria-hidden="true">` +
+            TOUR_GRID.flatMap((row, r) =>
+              row.map((n, c) => {
+                const on = slide.show(r, c);
+                const cls = [on ? "on" : "", c === 2 || c === 5 ? "box-r" : "", r === 2 || r === 5 ? "box-b" : ""].join(" ");
+                return `<span class="${cls}"${on ? ` style="--k:${k++}"` : ""}>${n}</span>`;
+              })
+            ).join("") +
+            `</div>`;
+        }
+        updateTourNext();
+      }
+
+      function updateTourNext() {
+        const next = document.getElementById("tour-next");
+        next.disabled = !tourSolved;
+        next.textContent = tourStep === TOUR.length - 1 ? (homeOpen() ? "Play today's" : "Done") : "Next";
+      }
+
+      // Right number: it drops in and Frisky hops. Wrong: the same number
+      // already in the line lights up, so you see why.
+      function tryTour(button, n) {
+        const slide = TOUR[tourStep];
+        if (tourSolved) return;
+        const spans = [...document.querySelectorAll("#tour-try span")];
+        const cheer = document.getElementById("tour-cheer");
+        spans.forEach((s) => s.classList.remove("seen"));
+        if (n === slide.cells[slide.gap]) {
+          tourSolved = true;
+          const gap = spans[slide.gap];
+          gap.textContent = n;
+          gap.classList.add("right");
+          cheer.innerHTML = `<svg class="mdog" viewBox="0 96 62 47" aria-hidden="true">${MINI_DOG}</svg> Yes! That's it.`;
+          haptic("win");
+          if (soundOn) playSample("frisky-bark");
+          updateTourNext();
+        } else {
+          const seen = slide.cells.indexOf(n);
+          if (seen >= 0) spans[seen].classList.add("seen");
+          button.classList.remove("nope");
+          void button.offsetWidth;
+          button.classList.add("nope");
+          cheer.textContent = `${n} is already here. Try another!`;
+          haptic("tap");
+        }
+      }
+
       // Shows the next tip at the start of each of the first few games
       function nextTip() {
         let seen = 0;
@@ -8341,7 +8688,7 @@
         const App = window.Capacitor?.Plugins?.App;
         // Android's Back: close what's open, then go home, then leave
         App?.addListener("backButton", () => {
-          const dialog = ["help-screen", "calendar-screen", "stats-screen", "support-screen"].find(
+          const dialog = ["tour-screen", "help-screen", "calendar-screen", "stats-screen", "support-screen"].find(
             (id) => !document.getElementById(id).hidden
           );
           if (dialog === "support-screen") hideSupport();
@@ -8380,6 +8727,13 @@
       document.addEventListener("keydown", (e) => {
         if (!document.getElementById("support-screen").hidden) {
           if (e.key === "Escape") hideSupport();
+          return;
+        }
+        if (!document.getElementById("tour-screen").hidden) {
+          if (e.key === "Escape") hideTour();
+          else if (e.key >= "1" && e.key <= "9" && TOUR[tourStep].shape) {
+            tryTour(document.querySelectorAll(".tour-pad button")[e.key - 1], Number(e.key));
+          }
           return;
         }
         if (homeOpen()) return;
