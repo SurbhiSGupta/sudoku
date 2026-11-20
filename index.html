@@ -4527,7 +4527,7 @@
           localStorage.setItem(SOUND_KEY, soundOn ? "on" : "off");
         } catch (e) {}
         document.getElementById("sound-toggle").classList.toggle("active", soundOn);
-        playSound("tap");
+        playSound();
       }
 
       // One soft note that fades out
@@ -4551,10 +4551,6 @@
         "laugh-girl": { gain: 8.9 },
         "laugh-boy": { gain: 2.0, to: 4.6 },
         "laugh-child": { gain: 1.13 },
-        xylophone: { gain: 1.05 },
-        awesome: { gain: 0.28, from: 0.2, to: 1.95 },
-        wow: { gain: 1.5, to: 0.75 },
-        "frisky-happy": { gain: 1.08 },
         "frisky-bark": { gain: 0.29 },
         // Saved for the stories
         mmm: { gain: 0.63 },
@@ -4618,25 +4614,16 @@
           .catch(() => {});
       }
 
-      // The win card always gets a laugh (mostly the family's own); a new best
-      // or today's puzzle adds "awesome!" or "wow!" just before it
-      function playCheer({ isNewBest, dailyToday }) {
-        if (isNewBest) playSample("awesome");
-        else if (dailyToday) playSample("wow");
-        playSample(nextLaugh(), isNewBest || dailyToday ? 0.7 : 0);
+      // The win card: one laugh, nothing on top of it (a new best and today's
+      // puzzle already say so on screen)
+      function playCheer() {
+        playSample(nextLaugh());
       }
 
-      function playSound(kind) {
+      // The soft tick when you switch sound on, so you know it works
+      function playSound() {
         if (!ensureAudio()) return;
-        const t = audio.currentTime;
-        if (kind === "tap") {
-          tone(880, t, 0.07, { type: "triangle", volume: 0.035 });
-        } else if (kind === "error") {
-          tone(240, t, 0.2, { volume: 0.06 });
-          tone(190, t + 0.11, 0.24, { volume: 0.05 });
-        } else if (kind === "win") {
-          playSample("xylophone");
-        }
+        tone(520, audio.currentTime, 0.09, { volume: 0.04 });
       }
 
       // ---------- Daily reminder (app only) ----------
@@ -5037,9 +5024,8 @@
         supportMessage("Code accepted. Enjoy the extras!");
       }
 
-      // Moves are felt, not heard: only a finished puzzle makes a sound
+      // Moves are felt, not heard; the only game sound is the laugh on the win card
       function haptic(kind) {
-        if (kind === "win") playSound(kind);
         const haptics = window.Capacitor?.Plugins?.Haptics;
         if (!isNativeApp || !haptics || !hapticsOn) return;
         if (kind === "win") haptics.notification({ type: "SUCCESS" });
@@ -5607,7 +5593,7 @@
         chart.hidden = false;
         renderWeekChart(chart, loadHistory(), { animate: celebrate });
         playWinScene();
-        if (celebrate) playCheer({ isNewBest, dailyToday: daily === today });
+        if (celebrate) playCheer();
 
         if (stopFireworks) stopFireworks();
         stopFireworks = celebrate
@@ -6356,7 +6342,7 @@
               do: (still) => still || playSample("frisky-bark") },
             { me: { x: 62, y: -48 }, arms: "up", face: "joy", move: 380, ease: "up", dur: 400 },
             { me: { x: 62, y: -48 }, arms: "up", face: "joy", held: "mango-up", move: 0, dur: 160,
-              do: (still) => { storyBeat("picked"); still || playSample("laugh-child"); } },
+              do: (still) => { storyBeat("picked"); still || playSample(nextLaugh()); } },
             { me: { x: 62, y: 0 }, arms: "up", face: "joy", held: "mango-up", move: 380, ease: "down", dur: 380 },
             { me: { x: 62 }, body: { sit: 14 }, legs: "squat", arms: "up", face: "joy", held: "mango-up", move: 180, dur: 500 },
             { me: { x: 0 }, dog: { x: 88, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "hold", held: "mango", face: "cute", act: "munch", move: 700, dur: 2100,
@@ -6435,14 +6421,14 @@
             { me: { x: 80, y: -26 }, arms: "up", face: "joy", move: 280, ease: "up", dur: 300 },
             { me: { x: 80, y: 0 }, arms: "up", face: "joy", move: 260, ease: "down", dur: 260 },
             { me: { x: 80 }, body: { sit: 12 }, legs: "squat", arms: "up", face: "joy", move: 150, dur: 700,
-              do: (still) => { storyBeat("splash"); still || playSample("laugh-girl"); } },
+              do: (still) => { storyBeat("splash"); still || playSample(nextLaugh()); } },
             // Frisky splashes in too, then shakes off
             { me: { x: 80 }, dog: { x: 72 }, arms: "clap", face: "joy", dogRun: true, move: 900, dur: 900 },
             { me: { x: 80 }, dog: { x: 72 }, arms: "clap", face: "joy", act: "shake", dur: 1000,
               do: (still) => { storyBeat("splash2"); still || playSample("frisky-bark"); } },
             // The rain stops and a rainbow comes out
             { me: { x: 80 }, dog: { x: 72 }, arms: "up", face: "joy", act: "love", dur: 1800,
-              do: (still) => { storyBeat("clear"); still || playSample("xylophone", 0.3); } },
+              do: (still) => { storyBeat("clear"); } },
           ],
         },
         {
@@ -6464,7 +6450,7 @@
               do: (still) => { storyBeat("caught"); still || playSample("frisky-bark"); } },
             { arms: "clap", face: "joy", dog: { x: 72, flip: -1 }, dogRun: true, move: 1000, dur: 1000 },
             { arms: "pet", face: "joy", act: "pet love", dog: { x: 72, flip: -1 }, dur: 1800,
-              do: (still) => still || playSample("laugh-boy", 0.2) },
+              do: (still) => still || playSample(nextLaugh(), 0.2) },
           ],
         },
         {
@@ -6484,7 +6470,7 @@
               do: (still) => startSwing(still) },
             // Let go at the front of the swing and fly off
             { me: { x: 88, y: -70 }, legs: "stand", arms: "up", face: "joy", move: 380, ease: "up", dur: 400,
-              do: (still) => { letGoOfSwing(); still || playSample("laugh-child"); } },
+              do: (still) => { letGoOfSwing(); still || playSample(nextLaugh()); } },
             { me: { x: 104, y: 0 }, arms: "up", face: "joy", move: 380, ease: "down", dur: 400 },
             { me: { x: 104 }, body: { sit: 14 }, legs: "squat", arms: "up", face: "joy", move: 160, dur: 260 },
             { me: { x: 104 }, arms: "up", face: "joy", act: "love", dog: { x: 52 }, dogRun: true, move: 700, dur: 1600,
@@ -6510,7 +6496,7 @@
             { me: { x: 72, y: -104, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "up", face: "happy", move: 500, dur: 650 },
             // Wheee!
             { me: { x: -46, y: -6, flip: -1 }, body: { sit: 22 }, legs: "sit", arms: "up", face: "joy", move: 1000, ease: "down", dur: 1100,
-              do: (still) => still || playSample("laugh-girl") },
+              do: (still) => still || playSample(nextLaugh()) },
             { me: { x: -30, y: 0, flip: 1 }, legs: "stand", arms: "up", face: "joy", act: "love", dog: { x: 58, flip: -1 }, dogRun: true, move: 600, dur: 1700 },
           ],
         },
@@ -6531,7 +6517,7 @@
             // And back the other way
             { me: { x: 30, flip: -1 }, dog: { x: 110, flip: -1 }, body: { sit: 10 }, legs: "sit", arms: "handlebar", held: "bike", act: "ride swing", face: "happy", dogRun: true, move: 1900, dur: 1900 },
             { me: { x: 30, flip: -1 }, dog: { x: 110, flip: -1 }, body: { sit: 10 }, legs: "sit", arms: "handlebar", held: "bike", act: "love", face: "joy", dur: 1400,
-              do: (still) => still || playSample("laugh-child") },
+              do: (still) => still || playSample(nextLaugh()) },
           ],
         },
         {
@@ -6547,7 +6533,7 @@
             // A little jump with the board
             { me: { x: 50, y: -46 }, legs: "board", arms: "up", held: "board", face: "joy", move: 340, ease: "up", dur: 360 },
             { me: { x: 100, y: -8 }, legs: "board", arms: "balance", held: "board", face: "joy", move: 340, ease: "down", dur: 380,
-              do: (still) => still || playSample("laugh-girl") },
+              do: (still) => still || playSample(nextLaugh()) },
             { me: { x: 240, y: -8 }, dog: { x: 190 }, legs: "board", arms: "balance", held: "board", face: "happy", dogRun: true, move: 1100, dur: 1100 },
             { me: { x: 40, y: -8, flip: -1 }, dog: { x: 110, flip: -1 }, legs: "board", arms: "balance", held: "board", face: "happy", dogRun: true, move: 1700, dur: 1700 },
             { me: { x: 40, y: -8, flip: -1 }, dog: { x: 110, flip: -1 }, legs: "board", arms: "up", held: "board", act: "love", face: "joy", dur: 1400,
@@ -6573,7 +6559,7 @@
             // Step back to look, and Frisky comes to see himself
             { me: { x: -24 }, arms: "clap", held: "", face: "joy", move: 500, dur: 900 },
             { me: { x: -24 }, arms: "up", face: "joy", act: "love", dog: { x: 64 }, dogRun: true, move: 900, dur: 1900,
-              do: (still) => { still || playSample("frisky-bark", 0.9); still || playSample("laugh-child", 1.3); } },
+              do: (still) => { still || playSample("frisky-bark", 0.9); still || playSample(nextLaugh(), 1.3); } },
           ],
         },
         {
@@ -6593,7 +6579,7 @@
             // Waiting...
             { me: { x: 50 }, arms: "chin", face: "cur", dur: 1500 },
             { me: { x: 50 }, arms: "reach", face: "joy", dur: 500,
-              do: (still) => { storyBeat("done"); still || playSample("xylophone"); } },
+              do: (still) => { storyBeat("done"); still || playSample(nextLaugh(), 0.2); } },
             { me: { x: 16 }, arms: "hold", held: "muffin", face: "cute", act: "munch", move: 500, dur: 2000,
               do: (still) => still || playSample("mmm", 0.5) },
             { me: { x: 16 }, arms: "pet", held: "", face: "joy", act: "pet love", dog: { x: 100, flip: -1 }, dogRun: true, move: 800, dur: 1600,
@@ -6618,7 +6604,7 @@
             // Ta-da! And Frisky meets his twin
             { me: { x: -24 }, legs: "stand", arms: "clap", face: "joy", move: 500, dur: 900 },
             { me: { x: -24 }, arms: "up", face: "joy", act: "love", dog: { x: 132, flip: -1 }, dogRun: true, move: 1300, dur: 2000,
-              do: (still) => { still || playSample("frisky-bark", 1.3); still || playSample("laugh-boy", 1.6); } },
+              do: (still) => { still || playSample("frisky-bark", 1.3); still || playSample(nextLaugh(), 1.6); } },
           ],
         },
       ];
