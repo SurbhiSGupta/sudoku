@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home-screen widget: today's puzzle at a glance (DailyWidget.java fills it in) -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_card"
+    android:gravity="center_vertical"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginEnd="10dp"
+            android:importantForAccessibility="no"
+            android:src="@mipmap/ic_launcher_round" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/widget_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:text="Today's puzzle"
+                android:textColor="@color/widgetInk"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/widget_level"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:text="Fetch ●●●○○ · 🔥 3"
+                android:textColor="@color/widgetMuted"
+                android:textSize="14sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/widget_button"
+        android:gravity="center"
+        android:maxLines="1"
+        android:paddingVertical="12dp"
+        android:text="Play"
+        android:textColor="#10303b"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+
+    <!-- After today's solve: a quiet outline instead of the lime button -->
+    <TextView
+        android:id="@+id/widget_done"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/widget_done"
+        android:gravity="center"
+        android:maxLines="1"
+        android:visibility="gone"
+        android:paddingVertical="12dp"
+        android:text="✓ Solved"
+        android:textColor="@color/widgetInk"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+</LinearLayout>
