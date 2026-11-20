@@ -4,3 +4,16 @@ www/
 govwell-permit-form/.share-password
 rewindthefuture-upload/
 .shots.html
+
+# Personal work that must never be published from this public repo
+rewindthefuture-site/
+career-story.html
+govwell-permit-form/
+logos/
+bruno/
+bruno-case-study-notes.md
+bruno-dev-data/
+bruno-mockups/
+bruno-sample-collections/
+bruno-screenshots/
+.claude/
