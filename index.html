@@ -2591,6 +2591,145 @@
         color: var(--bad-ink);
       }
 
+      /* A big green check pops over the board when you get it right */
+      .tour-practice {
+        position: relative;
+      }
+
+      .tour-check {
+        position: absolute;
+        left: 50%;
+        top: 45%;
+        width: 130px;
+        height: 130px;
+        margin: -65px 0 0 -65px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+        display: grid;
+        place-items: center;
+        pointer-events: none;
+        animation: checkIn 1.5s ease-out forwards;
+      }
+
+      .tour-check svg {
+        width: 72px;
+        height: 72px;
+        fill: none;
+        stroke: #fff;
+        stroke-width: 3.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-dasharray: 30;
+        stroke-dashoffset: 30;
+        animation: checkDraw 0.35s 0.2s ease-out forwards;
+      }
+
+      @keyframes checkIn {
+        0% { transform: scale(0.3); opacity: 0; }
+        18% { transform: scale(1.08); opacity: 1; }
+        28% { transform: scale(1); }
+        75% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(0.9); opacity: 0; }
+      }
+
+      @keyframes checkDraw {
+        to { stroke-dashoffset: 0; }
+      }
+
+      .tour-more {
+        margin-left: 6px;
+        padding: 6px 12px;
+        font-size: 14px;
+      }
+
+      /* ---------- Button walkthrough: a spotlight, a note and a dashed loop ---------- */
+      .coach {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+      }
+
+      .coach[hidden] {
+        display: none;
+      }
+
+      .coach-spot {
+        position: fixed;
+        border-radius: 16px;
+        box-shadow:
+          0 0 0 3px var(--green),
+          0 0 0 9999px rgba(10, 30, 37, 0.6);
+        transition: all 0.4s cubic-bezier(0.3, 0.8, 0.3, 1);
+        pointer-events: none;
+      }
+
+      .coach-line {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        overflow: visible;
+      }
+
+      /* Hand-drawn dashed line with a little loop, like a doodle in a notebook */
+      .coach-line path {
+        fill: none;
+        stroke: #e3e7ee;
+        stroke-width: 3.2;
+        stroke-linecap: round;
+        stroke-dasharray: 7 8;
+        animation: coachDraw 0.6s ease-out;
+      }
+
+      @keyframes coachDraw {
+        from { opacity: 0; }
+      }
+
+      .coach-note {
+        position: fixed;
+        width: min(260px, calc(100vw - 32px));
+        background: var(--surface);
+        color: var(--ink);
+        border-radius: 18px;
+        padding: 14px 16px 12px;
+        box-shadow: 0 6px 0 var(--edge), 0 16px 40px rgba(0, 0, 0, 0.2);
+        animation: cardIn 0.4s ease-out both;
+      }
+
+      .coach-note p {
+        margin: 0 0 12px;
+        font-weight: 700;
+        font-size: 17px;
+        line-height: 1.35;
+      }
+
+      .coach-note .coach-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .coach-note small {
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      .coach-note button {
+        padding: 7px 14px;
+        font-size: 14px;
+      }
+
+      .coach-note .coach-skip {
+        background: none;
+        box-shadow: none;
+        color: var(--muted);
+        padding-left: 4px;
+        padding-right: 4px;
+      }
+
       .tour-pad {
         display: grid;
         grid-template-columns: repeat(9, 1fr);
@@ -4008,6 +4147,19 @@
       </div>
     </div>
 
+    <div class="coach" id="coach" role="dialog" aria-label="A quick look at the buttons" hidden>
+      <div class="coach-spot" id="coach-spot"></div>
+      <svg class="coach-line" aria-hidden="true"><path id="coach-path" /></svg>
+      <div class="coach-note" id="coach-note">
+        <p><span class="mark" id="coach-text"></span></p>
+        <div class="coach-row">
+          <button class="coach-skip" onclick="endCoach()">Skip</button>
+          <small id="coach-count"></small>
+          <button class="btn-primary" id="coach-next" onclick="nextCoach()">Next</button>
+        </div>
+      </div>
+    </div>
+
     <div class="win-screen" id="tour-screen" role="dialog" aria-labelledby="tour-title" hidden>
       <div class="win-card tour-card">
         <button class="close-btn" onclick="hideTour()" aria-label="Close the tour">
@@ -4032,6 +4184,7 @@
         <h2><span class="mark" id="help-title">Help</span></h2>
 
         <button class="btn-primary help-tour" onclick="hideHelp(); showTour()">▶ How to play: 1-minute tour</button>
+        <button class="help-tour" onclick="hideHelp(); startCoach()">👀 Tour the buttons</button>
 
         <h3>Good to know</h3>
         <ul>
@@ -6680,8 +6833,8 @@
       })();
       const TOUR = [
         { title: "Rows", sub: "Every row has 1 to 9, each just once.", show: (r, c) => r === 4 },
-        { title: "Columns", sub: "Every column too.", show: (r, c) => c === 2 },
-        { title: "Boxes", sub: "And every 3×3 box.", show: (r, c) => Math.floor(r / 3) === 1 && Math.floor(c / 3) === 2 },
+        { title: "Columns", sub: "Every column has 1 to 9, each just once.", show: (r, c) => c === 2 },
+        { title: "Boxes", sub: "And every 3×3 box: 1 to 9, each just once.", show: (r, c) => Math.floor(r / 3) === 1 && Math.floor(c / 3) === 2 },
         // Practice: the whole board, faded, with one line or box to finish
         { title: "Your turn", sub: "The green square is picked. Tap the number this row is missing.", practice: (r, c) => r === 1, gap: [1, 5] },
         { title: "Now a column", sub: "Which one is missing here?", practice: (r, c) => c === 7, gap: [2, 7] },
@@ -6775,7 +6928,17 @@
           const gap = document.querySelector("#tour-try .gap");
           gap.textContent = n;
           gap.classList.add("right");
-          cheer.innerHTML = `<svg class="mdog" viewBox="0 96 62 47" aria-hidden="true">${MINI_DOG}</svg> Yes! That's it.`;
+          cheer.innerHTML =
+            `<svg class="mdog" viewBox="0 96 62 47" aria-hidden="true">${MINI_DOG}</svg> Yes! That's it.` +
+            (tourStep === TOUR.length - 1
+              ? `<button class="tour-more" onclick="hideTour(); startCoach()">👀 Tour the buttons</button>`
+              : "");
+          document
+            .querySelector(".tour-practice")
+            .insertAdjacentHTML(
+              "beforeend",
+              `<div class="tour-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>`
+            );
           haptic("win");
           if (soundOn) playSample("frisky-bark");
           updateTourNext();
@@ -6788,6 +6951,94 @@
           cheer.textContent = `${n} is already here. Try another!`;
           haptic("tap");
         }
+      }
+
+      // ---------- A quick look at the buttons ----------
+      // Opens today's puzzle and points at each button in turn: a spotlight,
+      // a short note and a dashed doodle line with a loop leading to it.
+      const COACH = [
+        { at: () => document.querySelector(".stats .stat-btn"), text: "Tap the clock to pause. The board hides so it stays fair." },
+        { at: () => document.getElementById("mistakes-box"), text: "Each mistake costs one of Frisky's dogs." },
+        { at: () => document.querySelectorAll(".stats .stat-btn")[1], text: "Stuck? Tap here for a hint." },
+        { at: () => document.getElementById("undo-btn").parentElement, text: "Undo, Redo, and Notes to pencil in numbers that might fit." },
+        { at: () => document.querySelector(".number-pad"), text: "The small number on each key shows how many are left to place." },
+        { at: () => document.getElementById("settings-btn"), text: "Settings: Number First, Focus Mode, themes and more." },
+        { at: () => headBuddy?.me || document.getElementById("buddy-head"), text: "Tap her any time for a little story with Frisky!" },
+      ];
+      let coachStep = 0;
+
+      function startCoach() {
+        playDaily();
+        game?.stopTimer();
+        // The "Good luck" note would sit over the first spotlight
+        clearTimeout(game?.messageTimeout);
+        document.getElementById("message").style.display = "none";
+        coachStep = 0;
+        document.getElementById("coach").hidden = false;
+        requestAnimationFrame(showCoach);
+        addEventListener("resize", showCoach);
+      }
+
+      function endCoach() {
+        document.getElementById("coach").hidden = true;
+        removeEventListener("resize", showCoach);
+        game?.resume();
+      }
+
+      function nextCoach() {
+        if (++coachStep >= COACH.length) return endCoach();
+        showCoach();
+      }
+
+      function showCoach() {
+        const step = COACH[coachStep];
+        const target = step.at();
+        if (!target) return nextCoach();
+        target.scrollIntoView({ block: "nearest" });
+        const r = target.getBoundingClientRect();
+        const pad = 6;
+        Object.assign(document.getElementById("coach-spot").style, {
+          left: `${r.left - pad}px`,
+          top: `${r.top - pad}px`,
+          width: `${r.width + pad * 2}px`,
+          height: `${r.height + pad * 2}px`,
+        });
+        document.getElementById("coach-text").textContent = step.text;
+        document.getElementById("coach-count").textContent = `${coachStep + 1} of ${COACH.length}`;
+        document.getElementById("coach-next").textContent = coachStep === COACH.length - 1 ? "Done" : "Next";
+
+        // The note sits on whichever side has more room, a little off to one side
+        const note = document.getElementById("coach-note");
+        note.style.animation = "none";
+        void note.offsetWidth;
+        note.style.animation = "";
+        const below = r.top < innerHeight / 2;
+        const gapY = 70;
+        const w = note.offsetWidth;
+        const h = note.offsetHeight;
+        const cx = r.left + r.width / 2;
+        const left = Math.min(innerWidth - w - 16, Math.max(16, cx < innerWidth / 2 ? cx + 10 : cx - w - 10));
+        const top = below ? r.bottom + pad + gapY : r.top - pad - gapY - h;
+        note.style.left = `${left}px`;
+        note.style.top = `${Math.max(16, Math.min(innerHeight - h - 16, top))}px`;
+
+        // From the note's edge to the spotlight, with a loop on the way
+        const n = note.getBoundingClientRect();
+        const sx = cx < innerWidth / 2 ? n.left + 28 : n.right - 28;
+        const sy = below ? n.top - 6 : n.bottom + 6;
+        const ex = cx;
+        const ey = below ? r.bottom + pad + 8 : r.top - pad - 8;
+        const mx = (sx + ex) / 2;
+        const my = (sy + ey) / 2;
+        const turn = cx < innerWidth / 2 ? -1 : 1;
+        document
+          .getElementById("coach-path")
+          .setAttribute(
+            "d",
+            `M${sx} ${sy} Q${sx} ${my} ${mx} ${my}` +
+              ` a16 16 0 1 ${turn > 0 ? 1 : 0} ${turn * 2} -1` +
+              ` Q${ex} ${my} ${ex} ${ey}`
+          );
       }
 
       // Shows the next tip at the start of each of the first few games
@@ -8689,6 +8940,7 @@
         const App = window.Capacitor?.Plugins?.App;
         // Android's Back: close what's open, then go home, then leave
         App?.addListener("backButton", () => {
+          if (!document.getElementById("coach").hidden) return endCoach();
           const dialog = ["tour-screen", "help-screen", "calendar-screen", "stats-screen", "support-screen"].find(
             (id) => !document.getElementById(id).hidden
           );
@@ -8728,6 +8980,11 @@
       document.addEventListener("keydown", (e) => {
         if (!document.getElementById("support-screen").hidden) {
           if (e.key === "Escape") hideSupport();
+          return;
+        }
+        if (!document.getElementById("coach").hidden) {
+          if (e.key === "Escape") endCoach();
+          else if (e.key === "Enter" || e.key === "ArrowRight") nextCoach();
           return;
         }
         if (!document.getElementById("tour-screen").hidden) {
