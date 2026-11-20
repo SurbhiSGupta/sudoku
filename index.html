@@ -2558,52 +2558,22 @@
         }
       }
 
-      /* Practice: one line or box, one empty square, a number pad */
-      .tour-try {
-        display: grid;
-        gap: 4px;
-        padding: 5px;
-        border-radius: 14px;
-        background: var(--board);
-      }
-
-      .tour-try.row {
-        grid-template-columns: repeat(9, 32px);
-      }
-
-      .tour-try.col {
-        grid-template-columns: 30px;
-      }
-
-      .tour-try.col span {
-        height: 26px;
-      }
-
-      .tour-try.box {
-        grid-template-columns: repeat(3, 52px);
-      }
-
-      .tour-try.box span {
-        height: 52px;
-        font-size: 24px;
-      }
-
-      .tour-try span {
-        height: 32px;
-        display: grid;
-        place-items: center;
-        border-radius: 7px;
+      /* Practice: the same board, with one line or box to finish */
+      .tour-try span.in {
+        opacity: 1;
         background: var(--given);
         color: var(--given-ink);
-        font-size: 18px;
+        font-size: 15px;
         font-weight: 800;
       }
 
       .tour-try span.gap {
+        opacity: 1;
         background: var(--slot);
+        font-size: 15px;
         box-shadow:
-          inset 0 0 0 3px var(--green),
-          inset 0 0 12px color-mix(in srgb, var(--green) 50%, transparent);
+          inset 0 0 0 2.5px var(--green),
+          inset 0 0 8px color-mix(in srgb, var(--green) 50%, transparent);
         animation: hintPulse 0.9s ease-in-out infinite alternate;
       }
 
@@ -2665,12 +2635,8 @@
         width: 100%;
       }
 
-      .tour-split {
-        display: flex;
-        gap: 14px;
-        align-items: center;
-        flex-wrap: wrap;
-        justify-content: center;
+      .tour-practice .tour-board {
+        margin: 0 auto;
       }
 
       .tour-nav {
@@ -6716,10 +6682,18 @@
         { title: "Rows", sub: "Every row has 1 to 9, each just once.", show: (r, c) => r === 4 },
         { title: "Columns", sub: "Every column too.", show: (r, c) => c === 2 },
         { title: "Boxes", sub: "And every 3×3 box.", show: (r, c) => Math.floor(r / 3) === 1 && Math.floor(c / 3) === 2 },
-        { title: "Your turn", sub: "The green square is picked. Tap the number this row is missing.", shape: "row", cells: TOUR_GRID[1], gap: 5 },
-        { title: "Now a column", sub: "Which one is missing here?", shape: "col", cells: TOUR_GRID.map((row) => row[7]), gap: 2 },
-        { title: "Last one: a box", sub: "Fill the box, and you know how to play!", shape: "box", cells: [6, 7, 8].flatMap((r) => TOUR_GRID[r].slice(3, 6)), gap: 4 },
+        // Practice: the whole board, faded, with one line or box to finish
+        { title: "Your turn", sub: "The green square is picked. Tap the number this row is missing.", practice: (r, c) => r === 1, gap: [1, 5] },
+        { title: "Now a column", sub: "Which one is missing here?", practice: (r, c) => c === 7, gap: [2, 7] },
+        { title: "Last one: a box", sub: "Fill the box, and you know how to play!", practice: (r, c) => Math.floor(r / 3) === 2 && Math.floor(c / 3) === 1, gap: [7, 4] },
       ];
+      TOUR.forEach((slide) => {
+        if (!slide.practice) return;
+        const cells = [];
+        TOUR_GRID.forEach((row, r) => row.forEach((n, c) => slide.practice(r, c) && cells.push(n)));
+        slide.cells = cells;
+        slide.answer = TOUR_GRID[slide.gap[0]][slide.gap[1]];
+      });
       let tourStep = 0;
       let tourSolved = false;
 
@@ -6745,7 +6719,7 @@
 
       function renderTour() {
         const slide = TOUR[tourStep];
-        tourSolved = !slide.shape;
+        tourSolved = !slide.practice;
         document.getElementById("tour-title").textContent = slide.title;
         document.getElementById("tour-sub").textContent = slide.sub;
         document.getElementById("tour-dots").innerHTML = TOUR.map(
@@ -6753,11 +6727,17 @@
         ).join("");
         document.getElementById("tour-back").style.visibility = tourStep ? "visible" : "hidden";
         const stage = document.getElementById("tour-stage");
-        if (slide.shape) {
+        if (slide.practice) {
           stage.innerHTML =
-            `<div class="tour-practice"><div class="tour-split"><div class="tour-try ${slide.shape}" id="tour-try">` +
-            slide.cells.map((n, i) => (i === slide.gap ? `<span class="gap" aria-label="empty"></span>` : `<span>${n}</span>`)).join("") +
-            `</div></div><div class="tour-pad">` +
+            `<div class="tour-practice"><div class="tour-board tour-try" id="tour-try">` +
+            TOUR_GRID.flatMap((row, r) =>
+              row.map((n, c) => {
+                const edge = [c === 2 || c === 5 ? "box-r" : "", r === 2 || r === 5 ? "box-b" : ""].join(" ");
+                if (r === slide.gap[0] && c === slide.gap[1]) return `<span class="gap ${edge}" aria-label="empty"></span>`;
+                return slide.practice(r, c) ? `<span class="in ${edge}">${n}</span>` : `<span class="${edge}" aria-hidden="true">${n}</span>`;
+              })
+            ).join("") +
+            `</div><div class="tour-pad">` +
             [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<button onclick="tryTour(this, ${n})">${n}</button>`).join("") +
             `</div><div class="tour-cheer" id="tour-cheer" aria-live="polite"></div></div>`;
         } else {
@@ -6787,12 +6767,12 @@
       function tryTour(button, n) {
         const slide = TOUR[tourStep];
         if (tourSolved) return;
-        const spans = [...document.querySelectorAll("#tour-try span")];
+        const spans = [...document.querySelectorAll("#tour-try span.in, #tour-try span.gap")];
         const cheer = document.getElementById("tour-cheer");
         spans.forEach((s) => s.classList.remove("seen"));
-        if (n === slide.cells[slide.gap]) {
+        if (n === slide.answer) {
           tourSolved = true;
-          const gap = spans[slide.gap];
+          const gap = document.querySelector("#tour-try .gap");
           gap.textContent = n;
           gap.classList.add("right");
           cheer.innerHTML = `<svg class="mdog" viewBox="0 96 62 47" aria-hidden="true">${MINI_DOG}</svg> Yes! That's it.`;
@@ -8752,7 +8732,7 @@
         }
         if (!document.getElementById("tour-screen").hidden) {
           if (e.key === "Escape") hideTour();
-          else if (e.key >= "1" && e.key <= "9" && TOUR[tourStep].shape) {
+          else if (e.key >= "1" && e.key <= "9" && TOUR[tourStep].practice) {
             tryTour(document.querySelectorAll(".tour-pad button")[e.key - 1], Number(e.key));
           }
           return;
