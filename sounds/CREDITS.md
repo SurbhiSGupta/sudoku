@@ -1,6 +1,10 @@
 # Sounds
 
-All sounds are from [Freesound](https://freesound.org) under **CC0** (public domain:
+The `family-1.m4a` to `family-12.m4a` laughs are Surbhi's own family recordings,
+cut to two seconds from home videos and used with the family's permission. They
+play, with the three recorded laughs below, when a puzzle is solved.
+
+All other sounds are from [Freesound](https://freesound.org) under **CC0** (public domain:
 free to use, no credit required). They are the site's 128 kbps MP3 previews, kept
 unedited; volume and trimming are set in `SAMPLES` in `index.html`.
 
@@ -13,6 +17,6 @@ unedited; volume and trimming are set in `SAMPLES` in `index.html`.
 | `awesome.mp3` | [Child saying awesome](https://freesound.org/people/boldcity/sounds/394773/) | boldcity | New best time |
 | `wow.mp3` | [Kids Say "Wow"](https://freesound.org/people/NicknameLarry/sounds/487519/) | NicknameLarry | Today's puzzle solved |
 | `frisky-happy.mp3` | [stray dog](https://freesound.org/people/rsn267/sounds/276085/) | rsn267 | Frisky joins in on the win |
-| `frisky-bark.mp3` | [Single Dog Bark](https://freesound.org/people/kwahmah_02/sounds/277058/) | kwahmah_02 | A row, column or box finished |
+| `frisky-bark.mp3` | [Single Dog Bark](https://freesound.org/people/kwahmah_02/sounds/277058/) | kwahmah_02 | Frisky in the stories |
 | `mmm.mp3` | [Mmm girl 3](https://freesound.org/people/esperar/sounds/170790/) | esperar | Saved for the ice cream story |
 | `humming.mp3` | [Humming girl](https://freesound.org/people/miguelab1998/sounds/408584/) | miguelab1998 | Saved for the paper boat story |

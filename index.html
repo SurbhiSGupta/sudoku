@@ -4558,12 +4558,28 @@
         "frisky-bark": { gain: 0.29 },
         // Saved for the stories
         mmm: { gain: 0.63 },
+        // Real laughs from Surbhi's family videos, cut to two seconds each
+        ...Object.fromEntries(
+          Array.from({ length: 12 }, (_, i) => [`family-${i + 1}`, { gain: 0.9, ext: "m4a" }])
+        ),
         humming: { gain: 0.36, from: 0.36, to: 2.2 },
       };
       const SAMPLE_VOLUME = 0.55;
-      const LAUGHS = ["laugh-girl", "laugh-boy", "laugh-child"];
+      // The win laughs: the family's own, plus the three recorded ones, played
+      // in a shuffled order so the same laugh doesn't come back too soon
+      const LAUGHS = [
+        ...Array.from({ length: 12 }, (_, i) => `family-${i + 1}`),
+        "laugh-girl",
+        "laugh-boy",
+        "laugh-child",
+      ];
+      let laughBag = [];
+
+      function nextLaugh() {
+        if (!laughBag.length) laughBag = shuffle([...LAUGHS]);
+        return laughBag.pop();
+      }
       const sampleBuffers = {};
-      let lastLaugh = -1;
 
       function ensureAudio() {
         if (!soundOn) return false;
@@ -4581,7 +4597,7 @@
       }
 
       function loadSample(name) {
-        sampleBuffers[name] ||= fetch(`sounds/${name}.mp3`)
+        sampleBuffers[name] ||= fetch(`sounds/${name}.${SAMPLES[name].ext || "mp3"}`)
           .then((res) => res.arrayBuffer())
           .then((data) => audio.decodeAudioData(data));
         return sampleBuffers[name];
@@ -4608,9 +4624,9 @@
         if (isNewBest) playSample("awesome");
         else if (dailyToday) {
           playSample("wow");
-          playSample(LAUGHS[(lastLaugh = (lastLaugh + 1) % LAUGHS.length)], 0.6);
+          playSample(nextLaugh(), 0.6);
         } else {
-          playSample(LAUGHS[(lastLaugh = (lastLaugh + 1) % LAUGHS.length)]);
+          playSample(nextLaugh());
         }
         playSample("frisky-happy", 1.1, 0.8);
       }
