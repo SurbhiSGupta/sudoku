@@ -4618,17 +4618,12 @@
           .catch(() => {});
       }
 
-      // The win card: "awesome!" for a new best, "wow!" for today's puzzle,
-      // otherwise one of the laughs in turn; Frisky barks along
+      // The win card always gets a laugh (mostly the family's own); a new best
+      // or today's puzzle adds "awesome!" or "wow!" just before it
       function playCheer({ isNewBest, dailyToday }) {
         if (isNewBest) playSample("awesome");
-        else if (dailyToday) {
-          playSample("wow");
-          playSample(nextLaugh(), 0.6);
-        } else {
-          playSample(nextLaugh());
-        }
-        playSample("frisky-happy", 1.1, 0.8);
+        else if (dailyToday) playSample("wow");
+        playSample(nextLaugh(), isNewBest || dailyToday ? 0.7 : 0);
       }
 
       function playSound(kind) {
