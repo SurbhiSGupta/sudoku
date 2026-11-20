@@ -4564,7 +4564,6 @@
       const LAUGHS = ["laugh-girl", "laugh-boy", "laugh-child"];
       const sampleBuffers = {};
       let lastLaugh = -1;
-      let lastBark = 0;
 
       function ensureAudio() {
         if (!soundOn) return false;
@@ -4624,10 +4623,6 @@
         } else if (kind === "error") {
           tone(240, t, 0.2, { volume: 0.06 });
           tone(190, t + 0.11, 0.24, { volume: 0.05 });
-        } else if (kind === "line") {
-          // Frisky barks once, even when a move finishes a row and a box together
-          if (performance.now() - lastBark > 400) playSample("frisky-bark");
-          lastBark = performance.now();
         } else if (kind === "win") {
           playSample("xylophone");
         }
@@ -5031,8 +5026,9 @@
         supportMessage("Code accepted. Enjoy the extras!");
       }
 
+      // Moves are felt, not heard: only a finished puzzle makes a sound
       function haptic(kind) {
-        playSound(kind);
+        if (kind === "win") playSound(kind);
         const haptics = window.Capacitor?.Plugins?.Haptics;
         if (!isNativeApp || !haptics || !hapticsOn) return;
         if (kind === "win") haptics.notification({ type: "SUCCESS" });
@@ -7071,7 +7067,6 @@
               `<div class="tour-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>`
             );
           haptic("win");
-          if (soundOn) playSample("frisky-bark");
           updateTourNext();
         } else {
           const seen = slide.cells.indexOf(n);
@@ -8812,7 +8807,7 @@
           }
 
           buddyReact("cheer");
-          playSound("line");
+          haptic("line");
           cellsToHighlight.forEach((cellIndex) => {
             if (cells[cellIndex]) {
               cells[cellIndex].classList.add("completion-flash");
