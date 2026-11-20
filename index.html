@@ -1433,6 +1433,22 @@
         --cross: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M1.5 1.5l7 7m0-7l-7 7' stroke='%23000' stroke-width='0.9' stroke-linecap='round'/%3E%3C/svg%3E");
       }
 
+      /* After a long press: a little pencil says the next number is a note */
+      .sudoku-grid .cell.note-once::before {
+        content: "";
+        position: absolute;
+        right: 3px;
+        bottom: 3px;
+        width: 34%;
+        height: 34%;
+        border-radius: 50%;
+        background: var(--accent)
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2310303b' d='M3 17.25V21h3.75L17.8 9.94l-3.75-3.75zM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z'/%3E%3C/svg%3E")
+          center / 70% no-repeat;
+        z-index: 2;
+        animation: tourPop 0.25s ease-out;
+      }
+
       /* Keyboard cursor: a soft green glow, shown only while you use the arrows */
       .sudoku-grid .cell.kb-cursor {
         box-shadow:
@@ -6992,6 +7008,7 @@
         { settings: true, at: () => document.getElementById("mistakes-label")?.closest(".toggle-container, .setting-stack, div"), text: "Choose how many mistakes you get, or hide them." },
         { at: () => document.querySelector(".stats .stat-btn"), text: "Tap the clock to pause. The board hides so it stays fair." },
         { at: () => document.querySelectorAll(".stats .stat-btn")[1], text: "Stuck? Tap for a hint: first where to look, then the number." },
+        { at: () => document.getElementById("grid"), text: "Hold a square for a moment, and the next number you tap goes in as a note." },
         { at: () => document.getElementById("undo-btn").parentElement, text: "Undo, Redo, and Notes to pencil in your own guesses." },
         { buddy: true, at: () => headBuddy?.me || document.getElementById("buddy-head"), text: "Tap her any time for a little story with Frisky!" },
       ];
@@ -7723,6 +7740,7 @@
           }
 
           this.setupDrag(gridElement);
+          this.setupLongPress(gridElement);
         }
 
         generateCompleteSolution() {
@@ -8030,6 +8048,46 @@
           this.selectCell(index);
         }
 
+        // Long-press a square (picking squares first): it gets a pencil badge,
+        // and the next number you tap goes in as a note. Nothing to switch off.
+        setupLongPress(grid) {
+          let hold = null;
+          const cancel = () => {
+            if (hold) clearTimeout(hold.timer);
+            hold = null;
+          };
+          grid.addEventListener("pointerdown", (e) => {
+            const cell = e.target.closest(".cell");
+            if (!cell || this.numberFirstMode || this.isFinished || this.isPaused) return;
+            const index = Number(cell.dataset.index);
+            const x = e.clientX;
+            const y = e.clientY;
+            hold = {
+              x,
+              y,
+              timer: setTimeout(() => {
+                hold = null;
+                const row = Math.floor(index / 9);
+                const col = index % 9;
+                if (this.givens[row][col] || this.grid[row][col]) return;
+                this.selectedCell = { row, col, index };
+                this.noteOnce = index;
+                // The click that ends the press shouldn't undo the selection
+                this.suppressClick = true;
+                setTimeout(() => (this.suppressClick = false), 400);
+                haptic("tap");
+                this.updateDisplay();
+              }, 450),
+            };
+          });
+          grid.addEventListener("pointermove", (e) => {
+            if (hold && Math.hypot(e.clientX - hold.x, e.clientY - hold.y) > 10) cancel();
+          });
+          ["pointerup", "pointercancel", "pointerleave"].forEach((type) => grid.addEventListener(type, cancel));
+          // No copy / share menu on a long press
+          grid.addEventListener("contextmenu", (e) => e.preventDefault());
+        }
+
         // Dragging across cells in Number First mode adds the picked number as a
         // candidate to all of them, or removes it if they all have it already
         setupDrag(grid) {
@@ -8137,6 +8195,7 @@
           }
 
           // Starting numbers can be selected (to highlight matches) but not edited
+          if (this.noteOnce !== index) this.noteOnce = null;
           this.selectedCell = { row, col, index };
           this.updateDisplay();
         }
@@ -8151,8 +8210,11 @@
             this.showMessage("Please select a cell first", "error");
             return;
           }
-          const { row, col } = this.selectedCell;
-          if (this.notesMode) this.toggleNote(row, col, num);
+          const { row, col, index } = this.selectedCell;
+          if (this.noteOnce === index) {
+            this.noteOnce = null;
+            this.toggleNote(row, col, num);
+          } else if (this.notesMode) this.toggleNote(row, col, num);
           else this.placeNumber(row, col, num);
         }
 
@@ -8416,6 +8478,7 @@
             else if (value !== 0) cell.classList.add("filled");
             if (index === this.popIndex) cell.classList.add("pop");
             if (this.keyboardOn && index === this.cursor) cell.classList.add("kb-cursor");
+            if (index === this.noteOnce) cell.classList.add("note-once");
 
             if (this.selectedCell) {
               const selectedRow = this.selectedCell.row;
