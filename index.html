@@ -1972,6 +1972,12 @@
         font-weight: 800;
       }
 
+      .rank-note {
+        margin: -4px 0 12px;
+        font-weight: 800;
+        color: var(--ink);
+      }
+
       .challenge-bar {
         margin: 0 0 10px;
         padding: 8px 12px;
@@ -4454,6 +4460,7 @@
         </div>
         <div class="new-best" id="win-new-best" hidden>⭐ New best time!</div>
         <p class="challenge-note" id="challenge-note" hidden></p>
+        <p class="rank-note" id="rank-note" hidden></p>
         <div class="share-row" id="share-row" hidden>
           <input
             id="share-name"
@@ -6075,6 +6082,9 @@
           `${levelName(level)} ${levelDotsText(level)} · ${shortTime(result.seconds)}` +
             ` · ${result.mistakes ? `${result.mistakes} mistake${result.mistakes === 1 ? "" : "s"}` : "no mistakes"}` +
             (streak > 1 ? ` · 🔥 ${streak}` : ""),
+          ...(document.getElementById("rank-note").hidden || date !== dayKey()
+            ? []
+            : [document.getElementById("rank-note").textContent.replace(/^\S+ /, "")]),
           `Beat my time: ${SITE}?${params}`,
         ];
         return lines.join("\n");
@@ -6175,6 +6185,43 @@
         if (diff > 0) return { beat: true, text: `🏆 You beat ${who} by ${shortTime(diff)}!` };
         if (diff === 0) return { beat: false, text: `🤝 A tie with ${who}, to the second!` };
         return { beat: false, text: `${who[0].toUpperCase() + who.slice(1)} was ${shortTime(-diff)} faster. Rematch tomorrow? 🐾` };
+      }
+
+      // ---------- How you did against everyone today ----------
+      // A daily solve on the day goes to our small server (just the random
+      // device ID, level and time, and only while play stats are on), which
+      // answers with how many solved it and how many were slower.
+      const RANK_URL = "https://bodai-api.bodai.workers.dev/daily";
+
+      async function showDailyRank(date) {
+        const note = document.getElementById("rank-note");
+        note.hidden = true;
+        const result = loadDaily()[date];
+        if (!statsOn || !result?.onDay || date !== dayKey()) return;
+        try {
+          const response = await fetch(RANK_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              game: STATS.game,
+              date,
+              player: anonId(),
+              level: result.level,
+              seconds: result.seconds,
+              mistakes: result.mistakes,
+            }),
+          });
+          const { players, beat } = await response.json();
+          if (!players) return;
+          note.textContent =
+            players === 1
+              ? "🥇 You're the first to solve today's puzzle!"
+              : beat === 100
+              ? `🥇 Fastest so far of ${players} players today!`
+              : `🐾 You beat ${beat}% of ${players} players today`;
+          note.hidden = false;
+          track("daily_ranked", { date, players, beat });
+        } catch (e) {}
       }
 
       // ---------- Your level, and Adaptive ----------
@@ -6300,6 +6347,8 @@
         document.getElementById("share-name").hidden = true;
         document.getElementById("share-name").value = readJson(NAME_KEY) || "";
         document.getElementById("share-btn").textContent = "📤 Share & challenge";
+        if (daily) showDailyRank(daily);
+        else document.getElementById("rank-note").hidden = true;
         const verdict = daily && challengeVerdict(daily, loadDaily()[daily]?.seconds ?? seconds);
         const note = document.getElementById("challenge-note");
         note.hidden = !verdict;
@@ -6352,6 +6401,7 @@
         showAdaptNote(adaptNote);
         document.getElementById("share-row").hidden = true;
         document.getElementById("challenge-note").hidden = true;
+        document.getElementById("rank-note").hidden = true;
         document.getElementById("wild-heart").hidden = true;
         const level = levelName(difficulty);
         document.getElementById("win-title").textContent = "Out of mistakes";
