@@ -1858,6 +1858,69 @@
         height: 40px;
       }
 
+      .wild-reason {
+        margin: 2px 0 0;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .wild-shelf-title {
+        margin: 4px 0 8px;
+        text-align: left;
+        font-size: 15px;
+      }
+
+      .wild-shelf {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+
+      .wild-found {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 10px 6px;
+        border-radius: 12px;
+        background: var(--slot);
+        font-size: 14px;
+      }
+
+      .wild-found small {
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 11px;
+      }
+
+      .wild-found button {
+        margin-top: 4px;
+        padding: 6px 8px;
+        font-size: 12px;
+      }
+
+      .wild-peek {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 34px;
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--muted);
+      }
+
+      .wild-peek .sym {
+        width: 30px;
+        height: 30px;
+        margin: 0 -4px;
+      }
+
+      .wild-found.locked {
+        border: 2px dashed color-mix(in srgb, var(--muted) 50%, transparent);
+        background: none;
+      }
+
       .wild-actions {
         display: flex;
         gap: 8px;
@@ -4275,6 +4338,7 @@
       <div class="win-card wild-card-face">
         <div class="wild-flip" id="wild-flip">
           <p class="wild-kicker">🃏 Wild card</p>
+          <p class="wild-reason" id="wild-reason"></p>
           <h2><span class="mark" id="wild-title">Planets!</span></h2>
           <p class="win-sub">Same puzzle, new symbols. Each one stands for a number.</p>
           <div class="wild-set" id="wild-set"></div>
@@ -4439,6 +4503,8 @@
         </button>
         <h2><span class="mark" id="stats-title">Your stats</span></h2>
         <div class="level-tiles" id="level-tiles"></div>
+        <h3 class="wild-shelf-title">🃏 Wild cards</h3>
+        <div class="wild-shelf" id="wild-shelf"></div>
         <div class="chart-panel" id="stats-chart"></div>
         <details class="stats-table">
           <summary>Show as a table</summary>
@@ -5673,7 +5739,17 @@
       };
 
       function wildState() {
-        return readJson(WILD_KEY) || { seen: 0, hearts: {}, declined: {} };
+        return {
+          games: 0,
+          todayGames: 0,
+          day: null,
+          round: [],
+          played: {},
+          hearts: {},
+          declined: {},
+          force: null,
+          ...(readJson(WILD_KEY) || {}),
+        };
       }
 
       // The symbol and name standing in for a number in the current game
@@ -5684,16 +5760,63 @@
         return { name, svg: set.svg(name) };
       }
 
-      // A rare surprise for now (about 1 game in 20), or ?wild in the address
-      // to try it. Milestones and the collection come next.
+      // When a Wild card turns up, and why (shown on the card). Today's
+      // puzzle never gets one unless you choose a set yourself.
+      function isPrime(n) {
+        if (n < 2) return false;
+        for (let d = 2; d * d <= n; d++) if (n % d === 0) return false;
+        return true;
+      }
+
+      function wildReason(state) {
+        const n = state.games;
+        if (n % 100 === 0) return `Your ${n}th game! 🎉`;
+        if (state.todayGames === 10) return "10 games today! 🔥";
+        // Primes from 11 up, so the first few games stay plain
+        if (n >= 11 && isPrime(n)) return `Game ${n}: a prime number!`;
+        if (Math.random() < 1 / 20) return "Surprise!";
+        return null;
+      }
+
+      // Every set once before any repeats; sets you've hearted twice as
+      // likely, ones you've turned down less likely
+      function chooseSet(state) {
+        const all = Object.keys(WILD_SETS);
+        let pool = all.filter((id) => !state.round.includes(id));
+        if (!pool.length) {
+          state.round = [];
+          pool = all;
+        }
+        const weight = (id) => (state.hearts[id] ? 2 : 1) / (1 + (state.declined[id] || 0) * 0.5);
+        let pick = Math.random() * pool.reduce((sum, id) => sum + weight(id), 0);
+        const id = pool.find((x) => (pick -= weight(x)) <= 0) || pool[0];
+        state.round.push(id);
+        return id;
+      }
+
+      function startWild(state, set, reason) {
+        const ninth = PLANET_NINTH[(state.played[set] || 0) % PLANET_NINTH.length];
+        state.played[set] = (state.played[set] || 0) + 1;
+        return { set, ninth, reason };
+      }
+
+      // Counts each new regular game, then decides whether it's a Wild card
       function pickWild() {
-        const forced = new URLSearchParams(location.search).get("wild");
-        if (!forced && Math.random() >= 1 / 20) return null;
         const state = wildState();
-        const ninth = PLANET_NINTH[state.seen % PLANET_NINTH.length];
-        state.seen++;
+        const today = dayKey();
+        state.games++;
+        state.todayGames = state.day === today ? state.todayGames + 1 : 1;
+        state.day = today;
+        let wild = null;
+        if (state.force) {
+          wild = startWild(state, state.force, "Your pick from the collection");
+          state.force = null;
+        } else {
+          const reason = new URLSearchParams(location.search).has("wild") ? "Trying it out" : wildReason(state);
+          if (reason) wild = startWild(state, chooseSet(state), reason);
+        }
         writeJson(WILD_KEY, state);
-        return { set: "planets", ninth };
+        return wild;
       }
 
       function showWildCard() {
@@ -5704,6 +5827,7 @@
         clearTimeout(game.messageTimeout);
         document.getElementById("message").style.display = "none";
         document.getElementById("wild-title").textContent = WILD_SETS[wild.set].title;
+        document.getElementById("wild-reason").textContent = wild.reason || "";
         document.getElementById("wild-set").innerHTML = [1, 2, 3, 4, 5, 6, 7, 8, 9]
           .map((n) => {
             const sym = wildSymbol(wild, n);
@@ -7803,7 +7927,42 @@
         return days;
       }
 
+      // Sets you've found, to play again any time; the rest wait as mystery cards
+      const WILD_COMING = 4;
+
+      function renderWildShelf() {
+        const state = wildState();
+        const found = Object.keys(WILD_SETS).filter((id) => state.played[id]);
+        const cards = found.map((id) => {
+          const set = WILD_SETS[id];
+          const preview = set.names().slice(0, 3).map((name) => set.svg(name)).join("");
+          return `<div class="wild-found">
+            <div class="wild-peek">${preview}</div>
+            <b>${set.title.replace("!", "")}${state.hearts[id] ? " ♥" : ""}</b>
+            <small>Played ${state.played[id]} time${state.played[id] === 1 ? "" : "s"}</small>
+            <button onclick="playWildSet('${id}')">Play with these</button>
+          </div>`;
+        });
+        const locked = WILD_COMING + Object.keys(WILD_SETS).length - found.length;
+        for (let i = 0; i < locked; i++) {
+          cards.push(`<div class="wild-found locked" aria-label="Not found yet"><div class="wild-peek">?</div><small>Not found yet</small></div>`);
+        }
+        document.getElementById("wild-shelf").innerHTML = cards.join("");
+      }
+
+      // Starts a regular game with a set you've found
+      function playWildSet(id) {
+        const state = wildState();
+        state.force = id;
+        writeJson(WILD_KEY, state);
+        hideStats();
+        hideHome();
+        const choice = savedLevel() || "easy";
+        game?.generatePuzzle(choice);
+      }
+
       function showStats() {
+        renderWildShelf();
         const history = loadHistory();
         const best = loadBestTimes();
 
