@@ -338,6 +338,18 @@ public class BodaiPlugin extends Plugin {
         if (DailyWidget.OPEN_DAILY.equals(intent.getAction())) notifyListeners("openDaily", new JSObject());
     }
 
+    // Shares the daily result card through the phone's share sheet
+    @PluginMethod
+    public void shareText(PluginCall call) {
+        Intent send = new Intent(Intent.ACTION_SEND);
+        send.setType("text/plain");
+        send.putExtra(Intent.EXTRA_TEXT, call.getString("text", ""));
+        getActivity().runOnUiThread(() -> {
+            getActivity().startActivity(Intent.createChooser(send, "Share your time"));
+            call.resolve();
+        });
+    }
+
     // Focus mode: hide the status and navigation bars; a swipe from the edge
     // shows them for a moment
     @PluginMethod

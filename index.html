@@ -1935,9 +1935,64 @@
         flex: 1;
       }
 
+      /* Daily share and "beat my time" challenges */
+      .share-row {
+        display: flex;
+        gap: 8px;
+        margin: 0 0 12px;
+      }
+
+      .share-row[hidden] {
+        display: none;
+      }
+
+      .share-row input {
+        flex: 1;
+        min-width: 0;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 2px solid var(--edge);
+        background: var(--surface);
+        color: var(--ink);
+        font: inherit;
+        font-weight: 700;
+      }
+
+      .share-row button {
+        flex: 1;
+        white-space: nowrap;
+      }
+
+      .challenge-note {
+        margin: 0 0 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: var(--accent);
+        color: var(--accent-ink);
+        font-weight: 800;
+      }
+
+      .challenge-bar {
+        margin: 0 0 10px;
+        padding: 8px 12px;
+        border-radius: 12px;
+        background: var(--accent);
+        color: var(--accent-ink);
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .challenge-bar[hidden] {
+        display: none;
+      }
+
       .wild-heart {
         margin: 0 auto 12px;
         display: block;
+      }
+
+      .wild-heart[hidden] {
+        display: none;
       }
 
       .wild-heart[aria-pressed="true"] {
@@ -4278,6 +4333,7 @@
         onclick="this.style.display = 'none'"
       ></div>
 
+      <div class="challenge-bar" id="challenge-bar" hidden></div>
       <div class="board-wrap">
         <div class="sudoku-grid" id="grid"></div>
         <button class="pause-cover" id="pause-cover" onclick="togglePause()">
@@ -4397,6 +4453,17 @@
           </div>
         </div>
         <div class="new-best" id="win-new-best" hidden>⭐ New best time!</div>
+        <p class="challenge-note" id="challenge-note" hidden></p>
+        <div class="share-row" id="share-row" hidden>
+          <input
+            id="share-name"
+            maxlength="20"
+            placeholder="Name (optional)"
+            aria-label="Your name on the challenge, optional"
+            hidden
+          />
+          <button class="btn-primary" id="share-btn" onclick="shareDaily()">📤 Share &amp; challenge</button>
+        </div>
         <div class="chart-panel" id="win-chart"></div>
         <button class="btn-primary" id="retry-btn" onclick="retryPuzzle()" hidden>
           Try this puzzle again
@@ -5987,6 +6054,129 @@
         button.textContent = state.hearts[set] ? "♥ More like this" : "♡ More like this";
       }
 
+      // ---------- Share and challenge ----------
+      // After a daily puzzle you can share a little card with your time and a
+      // link. A friend who opens the link plays the same day's puzzle with your
+      // time to beat. No server: everything rides in the link itself.
+      const SITE = "https://sudoku.bodaijewels.com/";
+      const CHALLENGE_KEY = "sudoku-challenge";
+      const NAME_KEY = "sudoku-share-name";
+
+      function shareText(date) {
+        const result = loadDaily()[date];
+        if (!result) return null;
+        const level = dailyLevel(date);
+        const name = (readJson(NAME_KEY) || "").trim();
+        const streak = date === dayKey() ? dailyStreak() : 0;
+        const params = new URLSearchParams({ d: date, t: result.seconds });
+        if (name) params.set("n", name);
+        const lines = [
+          `Bodai Sudoku 🐾 ${prettyDay(date, { weekday: "short", month: "short", day: "numeric" })}`,
+          `${levelName(level)} ${levelDotsText(level)} · ${shortTime(result.seconds)}` +
+            ` · ${result.mistakes ? `${result.mistakes} mistake${result.mistakes === 1 ? "" : "s"}` : "no mistakes"}` +
+            (streak > 1 ? ` · 🔥 ${streak}` : ""),
+          `Beat my time: ${SITE}?${params}`,
+        ];
+        return lines.join("\n");
+      }
+
+      // The calendar's share button uses the same flow as the win card
+      function shareFromCalendar(date) {
+        document.getElementById("share-row").dataset.date = date;
+        if (readJson(NAME_KEY) === null) writeJson(NAME_KEY, "");
+        shareDaily();
+      }
+
+      async function shareDaily() {
+        const date = document.getElementById("share-row").dataset.date;
+        const input = document.getElementById("share-name");
+        // The first time, offer to sign the challenge with a name
+        if (input.hidden && readJson(NAME_KEY) === null) {
+          input.hidden = false;
+          input.focus();
+          document.getElementById("share-btn").textContent = "📤 Share";
+          return;
+        }
+        if (!input.hidden) writeJson(NAME_KEY, input.value.trim());
+        const text = shareText(date);
+        if (!text) return;
+        let how = "copied";
+        try {
+          const bodai = isNativeApp ? window.Capacitor?.Plugins?.Bodai : null;
+          if (bodai?.shareText) {
+            await bodai.shareText({ text });
+            how = "app";
+          } else if (navigator.share) {
+            await navigator.share({ text });
+            how = "share-sheet";
+          } else {
+            await navigator.clipboard.writeText(text);
+          }
+        } catch (e) {
+          if (e?.name === "AbortError") return;
+          try {
+            await navigator.clipboard.writeText(text);
+          } catch (e2) {}
+        }
+        const button = document.getElementById("share-btn");
+        if (how === "copied") {
+          button.textContent = "✓ Copied! Paste it anywhere";
+          setTimeout(() => (button.textContent = "📤 Share & challenge"), 2500);
+        }
+        track("daily_shared", { date, how, named: !!readJson(NAME_KEY) });
+      }
+
+      function loadChallenge() {
+        return readJson(CHALLENGE_KEY);
+      }
+
+      // A challenge link: remember it, tidy the address, and open that puzzle
+      function takeChallengeFromLink() {
+        const params = new URLSearchParams(location.search);
+        const date = params.get("d");
+        const seconds = Number(params.get("t"));
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "") || !(seconds > 0) || date > dayKey()) return false;
+        const name = (params.get("n") || "").slice(0, 20).trim();
+        writeJson(CHALLENGE_KEY, { date, seconds, name });
+        history.replaceState(null, "", location.pathname);
+        track("challenge_opened", { date, seconds });
+        const mine = loadDaily()[date];
+        if (mine) {
+          showHome();
+          showCalendar();
+          calendarPick = date;
+          calendarMonth = new Date(dateFromKey(date).getFullYear(), dateFromKey(date).getMonth(), 1);
+          renderCalendar();
+        } else {
+          playDaily(date);
+        }
+        return true;
+      }
+
+      const challengerName = (c) => (c.name ? c.name : "your friend");
+      // 5:18 rather than 05:18 in messages
+      const shortTime = (s) => formatTime(s).replace(/^0(\d)/, "$1");
+
+      // The bar above the board while you're playing their puzzle
+      function updateChallengeBar() {
+        const bar = document.getElementById("challenge-bar");
+        const c = loadChallenge();
+        const on = !!c && game?.mode === "daily" && game.dailyDate === c.date && !game.isFinished;
+        bar.hidden = !on;
+        if (on) bar.textContent = `🏁 Beat ${c.name ? `${c.name}'s` : "your friend's"} ${shortTime(c.seconds)}`;
+      }
+
+      // How you did against the challenge, for the win card and the calendar
+      function challengeVerdict(date, seconds) {
+        const c = loadChallenge();
+        if (!c || c.date !== date) return null;
+        const diff = c.seconds - seconds;
+        const who = challengerName(c);
+        if (diff > 0) return { beat: true, text: `🏆 You beat ${who} by ${shortTime(diff)}!` };
+        if (diff === 0) return { beat: false, text: `🤝 A tie with ${who}, to the second!` };
+        return { beat: false, text: `${who[0].toUpperCase() + who.slice(1)} was ${shortTime(-diff)} faster. Rematch tomorrow? 🐾` };
+      }
+
       // ---------- Your level, and Adaptive ----------
       // Whatever level you pick is the one your next game starts on. Adaptive
       // starts at Fetch and moves in small steps after each game: a clean,
@@ -6104,6 +6294,19 @@
           : `${level} puzzle solved`;
         // Offer today's puzzle if it's still waiting
         document.getElementById("daily-btn").hidden = !!loadDaily()[today];
+        const shareRow = document.getElementById("share-row");
+        shareRow.hidden = !daily || !loadDaily()[daily];
+        shareRow.dataset.date = daily || "";
+        document.getElementById("share-name").hidden = true;
+        document.getElementById("share-name").value = readJson(NAME_KEY) || "";
+        document.getElementById("share-btn").textContent = "📤 Share & challenge";
+        const verdict = daily && challengeVerdict(daily, loadDaily()[daily]?.seconds ?? seconds);
+        const note = document.getElementById("challenge-note");
+        note.hidden = !verdict;
+        if (verdict) {
+          note.textContent = verdict.text;
+          if (celebrate) track("challenge_finished", { date: daily, beat: verdict.beat });
+        }
         document.getElementById("win-stats").hidden = false;
         countUp(document.getElementById("win-time"), seconds, celebrate);
         document.getElementById("win-best").textContent = formatTime(
@@ -6147,6 +6350,8 @@
 
       function showGameOverScreen({ difficulty, limit, adaptNote = null }) {
         showAdaptNote(adaptNote);
+        document.getElementById("share-row").hidden = true;
+        document.getElementById("challenge-note").hidden = true;
         document.getElementById("wild-heart").hidden = true;
         const level = levelName(difficulty);
         document.getElementById("win-title").textContent = "Out of mistakes";
@@ -7914,6 +8119,9 @@
             (best ? ` · your best ${formatTime(best)}` : "") +
             ` · ${LIFECYCLES[dateFromKey(key).getMonth() % LIFECYCLES.length].stages[growth(result) - 1]}` +
             (result.onDay ? "" : " · played later");
+          const verdict = challengeVerdict(key, result.seconds);
+          if (verdict) detail.innerHTML += `<br>${verdict.text}`;
+          detail.innerHTML += `<button class="btn-primary" onclick="shareFromCalendar('${key}')">📤 Share &amp; challenge</button>`;
         } else {
           detail.innerHTML =
             head +
@@ -9230,6 +9438,7 @@
           this.updateNumberPad();
           this.checkCompletions();
           this.updateFinishOffer();
+          updateChallengeBar();
         }
 
         getCandidates(row, col) {
@@ -9813,6 +10022,8 @@
         scheduleReminders();
         saveBackup();
         syncWidget();
+        // Opened from a friend's "beat my time" link
+        takeChallengeFromLink();
         // Tapping the home-screen widget opens today's puzzle
         const bodai = isNativeApp ? window.Capacitor?.Plugins?.Bodai : null;
         bodai?.launchAction().then((r) => r.openDaily && playDaily(), () => {});
