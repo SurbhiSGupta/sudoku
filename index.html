@@ -4331,6 +4331,8 @@
         <clipPath id="wc11"><circle cx="20" cy="20" r="11" /></clipPath>
         <clipPath id="wc12"><circle cx="20" cy="20" r="12" /></clipPath>
         <clipPath id="wc13"><circle cx="20" cy="20" r="13" /></clipPath>
+        <!-- The lower-right half, for a shadow side on any shape -->
+        <clipPath id="wdiag"><path d="M40 0V40H0z" /></clipPath>
       </defs>
     </svg>
 
@@ -5755,6 +5757,60 @@
         );
       }
 
+      // Surprise party: desserts. Each: [the body that gets a shadow side, the rest]
+      const DESSERT_ART = {
+        Cupcake: ['<path d="M11 21h18l-3 13H14z" fill="#85B7EB"/><path d="M9 21c0-7 5-11 11-11s11 4 11 11z" fill="#F4C0D1"/>', '<path d="M15 23l1 10M20 23v10M25 23l-1 10" stroke="#378ADD" stroke-width="1.2"/><circle cx="20" cy="8.5" r="2.6" fill="#E24B4A"/>'],
+        Donut: ['<circle cx="20" cy="20" r="13" fill="#EF9F27"/><path d="M8 18c1-7 6-11 12-11s11 4 12 11c-2 3-3 1-5 3s-3-1-6 1-3-1-5 1-5-2-8-5z" fill="#ED93B1"/>', '<circle cx="20" cy="19" r="4" fill="var(--cell-bg, #fff)"/><path d="M13 13l2 1M24 11l1 2M27 16l-2 1M15 19l1-2" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>'],
+        "Ice cream": ['<path d="M13 19h14l-7 17z" fill="#FAC775"/><circle cx="20" cy="15" r="8" fill="#9FE1CB"/>', '<path d="M15 23l8 3M14 21l10 7M17 29l5 2" stroke="#BA7517" stroke-width="1"/><circle cx="20" cy="6.5" r="2.2" fill="#E24B4A"/>'],
+        Cake: ['<path d="M7 26l26-12v18H7z" fill="#FAEEDA"/><path d="M7 26l26-12v5L7 31z" fill="#F0997B"/>', '<path d="M7 26v6M33 14v18" stroke="#D3D1C7" stroke-width="1"/><circle cx="27" cy="12" r="2.6" fill="#E24B4A"/>'],
+        Cookie: ['<circle cx="20" cy="20" r="13" fill="#BA7517"/>', '<circle cx="15" cy="15" r="1.8" fill="#412402"/><circle cx="24" cy="14" r="1.6" fill="#412402"/><circle cx="25" cy="23" r="1.9" fill="#412402"/><circle cx="15" cy="25" r="1.6" fill="#412402"/><circle cx="20" cy="20" r="1.3" fill="#412402"/>'],
+        Lollipop: ['<circle cx="20" cy="15" r="10" fill="#D4537E"/>', '<path d="M20 25v12" stroke="#B4B2A9" stroke-width="2.4" stroke-linecap="round"/><path d="M20 15m-6 0a6 6 0 1 1 6 6a3.5 3.5 0 1 1 3.5-3.5" stroke="#FBEAF0" stroke-width="2" fill="none"/>'],
+        Popsicle: ['<path d="M12 12a8 8 0 0 1 16 0v15H12z" fill="#7F77DD"/>', '<path d="M12 18h16" stroke="#CECBF6" stroke-width="2"/><rect x="18" y="27" width="4" height="9" rx="2" fill="#FAC775"/>'],
+        Macaron: ['<ellipse cx="20" cy="15" rx="12" ry="6" fill="#97C459"/><ellipse cx="20" cy="26" rx="12" ry="6" fill="#97C459"/>', '<rect x="9" y="18.5" width="22" height="3.5" rx="1.7" fill="#FAEEDA"/>'],
+        Candy: ['<ellipse cx="20" cy="20" rx="8" ry="7" fill="#378ADD"/>', '<path d="M12 20l-7-5v10zM28 20l7-5v10z" fill="#85B7EB"/><path d="M16 15l3 10M21 14l3 10" stroke="#B5D4F4" stroke-width="1.6"/>'],
+      };
+
+      function dessertSvg(name) {
+        const [body, rest] = DESSERT_ART[name];
+        return `<svg class="sym" viewBox="0 0 40 40" aria-hidden="true">${body}<g clip-path="url(#wdiag)" opacity=".14">${body.replace(/fill="[^"]+"/g, 'fill="#000"')}</g>${rest}</svg>`;
+      }
+
+      // Colors, each with its number pressed in, so color isn't the only clue
+      const COLOR_ART = {
+        Red: ["#E24B4A", "#A32D2D"], Orange: ["#EF9F27", "#854F0B"], Yellow: ["#FAC775", "#854F0B"],
+        Green: ["#639922", "#27500A"], Teal: ["#1D9E75", "#085041"], Blue: ["#378ADD", "#0C447C"],
+        Purple: ["#7F77DD", "#3C3489"], Pink: ["#ED93B1", "#993556"], Brown: ["#A8743F", "#633806"],
+      };
+      const COLOR_ORDER = Object.keys(COLOR_ART);
+
+      function colorSvg(name) {
+        const [base, deep] = COLOR_ART[name];
+        const n = COLOR_ORDER.indexOf(name) + 1;
+        return (
+          `<svg class="sym" viewBox="0 0 40 40" aria-hidden="true"><rect x="5" y="6" width="30" height="30" rx="8" fill="${deep}"/>` +
+          `<rect x="5" y="4" width="30" height="29" rx="8" fill="${base}"/><rect x="9" y="7" width="12" height="3" rx="1.5" fill="#fff" opacity=".35"/>` +
+          `<text x="20" y="25.5" text-anchor="middle" font-size="17" font-weight="800" fill="${deep}" opacity=".75">${n}</text></svg>`
+        );
+      }
+
+      // Patterns: ink only, so they need no color at all. They take the
+      // square's own text color, so they show on any square.
+      const PATTERN_ART = {
+        Stripes: '<path d="M7 13h26M7 20h26M7 27h26" stroke="currentColor" stroke-width="3"/>',
+        Dots: '<g fill="currentColor"><circle cx="13" cy="13" r="2.4"/><circle cx="27" cy="13" r="2.4"/><circle cx="20" cy="20" r="2.4"/><circle cx="13" cy="27" r="2.4"/><circle cx="27" cy="27" r="2.4"/></g>',
+        Checks: '<path fill="currentColor" d="M7 7h9v9H7zM24 7h9v9h-9zM16 16h8v8h-8zM7 24h9v9H7zM24 24h9v9h-9z"/>',
+        Zigzag: '<path d="M6 15l5-5 5 5 5-5 5 5 5-5 4 4M6 27l5-5 5 5 5-5 5 5 5-5 4 4" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linejoin="round"/>',
+        Waves: '<path d="M5 15q4-5 8 0t8 0 8 0 8 0M5 26q4-5 8 0t8 0 8 0 8 0" stroke="currentColor" stroke-width="2.6" fill="none"/>',
+        Grid: '<path d="M14 6v28M26 6v28M6 14h28M6 26h28" stroke="currentColor" stroke-width="2"/>',
+        Slants: '<path d="M0 13L13 0M0 22L22 0M0 31L31 0M3 37L37 3M12 40L40 12M21 40L40 21" stroke="currentColor" stroke-width="2.4"/>',
+        Rings: '<g fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="20" cy="20" r="4"/><circle cx="20" cy="20" r="10"/></g>',
+        Stars: '<path fill="currentColor" d="M20 8l3.2 7.3 7.8.7-5.9 5.2 1.8 7.8L20 25l-6.9 4 1.8-7.8L9 16l7.8-.7z"/>',
+      };
+
+      function patternSvg(name) {
+        return `<svg class="sym" viewBox="0 0 40 40" aria-hidden="true"><g clip-path="url(#wc13)">${PATTERN_ART[name]}</g><circle cx="20" cy="20" r="13" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>`;
+      }
+
       const WILD_SETS = {
         planets: {
           title: "Planets!",
@@ -5765,6 +5821,21 @@
           title: "Animals!",
           names: () => ["Frisky", "Cat", "Bunny", "Bear", "Panda", "Fox", "Frog", "Owl", "Penguin"],
           svg: animalSvg,
+        },
+        party: {
+          title: "Surprise party!",
+          names: () => Object.keys(DESSERT_ART),
+          svg: dessertSvg,
+        },
+        colors: {
+          title: "Colors!",
+          names: () => COLOR_ORDER,
+          svg: colorSvg,
+        },
+        patterns: {
+          title: "Patterns!",
+          names: () => Object.keys(PATTERN_ART),
+          svg: patternSvg,
         },
       };
 
@@ -7958,7 +8029,7 @@
       }
 
       // Sets you've found, to play again any time; the rest wait as mystery cards
-      const WILD_COMING = 3;
+      const WILD_COMING = 2;
 
       function renderWildShelf() {
         const state = wildState();
