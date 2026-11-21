@@ -4157,6 +4157,17 @@
           </div>
         </div>
 
+        <div class="toggle-container">
+          <span class="toggle-label">Share anonymous play stats</span>
+          <div
+            class="toggle-switch"
+            id="stats-toggle"
+            onclick="toggleStats()"
+          >
+            <div class="toggle-slider"></div>
+          </div>
+        </div>
+
         <div class="toggle-container" id="reminder-row" hidden>
           <span class="toggle-label">Daily reminder</span>
           <input
@@ -9921,6 +9932,249 @@
         },
         true
       );
+
+      // ---------- Anonymous play stats ----------
+      // A tiny tracker of our own, so no third-party script runs in the game.
+      // Events go to PostHog (EU) with a random ID per device: no names,
+      // emails or anything typed. One switch in Settings turns it all off, and
+      // a browser's "Global Privacy Control" starts it off. Every game sends
+      // to the same place with its own "game" name, so they can be compared.
+      const STATS = {
+        key: "phc_ps9vhzbx7LDPDpSKTTX2uux7GNxyyJtUGUXJToRHQuFh",
+        url: "https://eu.i.posthog.com/batch/",
+        game: "bodai-sudoku",
+        on: "sudoku-stats",
+        id: "sudoku-anon-id",
+        queue: "sudoku-stats-queue",
+      };
+      const statsDefault = !navigator.globalPrivacyControl;
+      let statsOn = readJson(STATS.on) ?? statsDefault;
+      let statsDevice = {};
+
+      function toggleStats() {
+        statsOn = !statsOn;
+        writeJson(STATS.on, statsOn);
+        document.getElementById("stats-toggle").classList.toggle("active", statsOn);
+        if (!statsOn) writeJson(STATS.queue, null);
+      }
+
+      function anonId() {
+        let id = readJson(STATS.id);
+        if (!id) {
+          id = crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now();
+          writeJson(STATS.id, id);
+        }
+        return id;
+      }
+
+      function deviceType() {
+        const w = Math.min(screen.width, screen.height);
+        return /Mobi|Android|iPhone/i.test(navigator.userAgent) ? (w >= 600 ? "Tablet" : "Mobile") : "Desktop";
+      }
+
+      // The one place the game talks to analytics. Swap the inside of this
+      // (and flushStats) to move to another tool later.
+      function track(event, props = {}) {
+        if (!statsOn) return;
+        try {
+          const queue = readJson(STATS.queue) || [];
+          queue.push({
+            event,
+            timestamp: new Date().toISOString(),
+            properties: {
+              distinct_id: anonId(),
+              $process_person_profile: false,
+              game: STATS.game,
+              platform: isNativeApp ? "android-app" : "web",
+              $device_type: deviceType(),
+              $screen_width: screen.width,
+              $lib: "bodai-tiny",
+              ...statsDevice,
+              ...props,
+            },
+          });
+          writeJson(STATS.queue, queue.slice(-200));
+          if (queue.length >= 20) flushStats();
+        } catch (e) {}
+      }
+
+      function flushStats(leaving = false) {
+        const batch = readJson(STATS.queue);
+        if (!statsOn || !batch?.length) return;
+        writeJson(STATS.queue, null);
+        const body = JSON.stringify({ api_key: STATS.key, batch });
+        // text/plain keeps the browser from asking permission first
+        if (leaving && navigator.sendBeacon) {
+          navigator.sendBeacon(STATS.url, new Blob([body], { type: "text/plain" }));
+          return;
+        }
+        fetch(STATS.url, { method: "POST", body, keepalive: true, headers: { "Content-Type": "text/plain" } }).catch(() => {
+          // Offline: put them back for next time
+          writeJson(STATS.queue, [...batch, ...(readJson(STATS.queue) || [])].slice(-200));
+        });
+      }
+
+      // Adds tracking around existing functions without touching them
+      function after(owner, name, fn) {
+        const original = owner[name];
+        owner[name] = function (...args) {
+          const before = fn.before?.call(this, ...args);
+          const result = original.apply(this, args);
+          try {
+            fn.call(this, args, result, before);
+          } catch (e) {}
+          return result;
+        };
+      }
+
+      function settingsSnapshot() {
+        return {
+          theme: getThemeChoice(),
+          palette: activeLook().palette || "bodai",
+          candidates: !!game?.showCandidates,
+          number_first: !!game?.numberFirstMode,
+          mistake_limit: game?.showMistakes === false ? "hide" : game?.mistakeLimit || 3,
+          auto_finish: autoFinishOn,
+          focus: focusOn,
+          sound: soundOn,
+          animations: motionOn,
+          level_choice: savedLevel() || "none",
+          supporter: isSupporter(),
+        };
+      }
+
+      const progressOf = (g) => {
+        const cells = g.grid.flat().filter((v, i) => !g.givens[Math.floor(i / 9)][i % 9]);
+        return cells.length ? Math.round((cells.filter(Boolean).length / cells.length) * 100) : 0;
+      };
+
+      const P = SudokuGame.prototype;
+      const gameProps = (g) => ({
+        level: g.difficulty,
+        mode: g.mode,
+        adaptive: !!g.adaptive,
+        wild_set: g.wild?.set || null,
+      });
+
+      // A regular game left unfinished when a new one starts counts as abandoned
+      const startFn = function (args) {
+        track("game_started", gameProps(this));
+      };
+      startFn.before = function () {
+        if (this.grid && this.mode === "regular" && !this.isFinished && this.timer > 0) {
+          track("game_abandoned", { ...gameProps(this), seconds: this.timer, mistakes: this.mistakes, progress: progressOf(this) });
+        }
+      };
+      after(P, "generatePuzzle", startFn);
+
+      const finishFn = function (args, result, wasSolved) {
+        if (wasSolved || !this.isSolved) return;
+        track("game_finished", {
+          ...gameProps(this),
+          seconds: this.timer,
+          mistakes: this.mistakes,
+          hints: this.hintsUsed || 0,
+          auto_finished: !!this.autoFinished,
+          streak: this.mode === "daily" ? dailyStreak() : undefined,
+        });
+      };
+      finishFn.before = function () {
+        return this.isSolved;
+      };
+      after(P, "completePuzzle", finishFn);
+
+      const lostFn = function (args, result, wasOver) {
+        if (!wasOver) track("game_lost", { ...gameProps(this), seconds: this.timer, progress: progressOf(this) });
+      };
+      lostFn.before = function () {
+        return this.isOver;
+      };
+      after(P, "endGame", lostFn);
+
+      after(P, "nudgeHint", function () {
+        track("hint_used", { ...gameProps(this), progress: progressOf(this) });
+      });
+      const autoFn = function () {
+        this.autoFinished = true;
+      };
+      autoFn.before = function () {
+        if (!this.finishing && !this.isFinished) {
+          track("auto_finish_used", { ...gameProps(this), left: this.grid.flat().filter((v) => !v).length });
+        }
+      };
+      after(P, "finishForMe", autoFn);
+      after(P, "startFresh", function () {
+        this.autoFinished = false;
+      });
+
+      // Settings: which option, and what it's now set to
+      const setting = (name, read) =>
+        after(window, name, function () {
+          track("setting_changed", { setting: name.replace(/^(toggle|set)/, "").toLowerCase(), value: read() });
+        });
+      setting("setTheme", () => getThemeChoice());
+      setting("toggleCandidates", () => !!game?.showCandidates);
+      setting("toggleNumberFirstMode", () => !!game?.numberFirstMode);
+      setting("toggleAutoFinish", () => autoFinishOn);
+      setting("toggleMotion", () => motionOn);
+      setting("toggleFocus", () => focusOn);
+      setting("toggleSound", () => soundOn);
+      setting("toggleHaptics", () => hapticsOn);
+      setting("setMistakeMode", () => (game?.showMistakes === false ? "hide" : game?.mistakeLimit));
+      after(window, "pickLook", function ([kind, value]) {
+        track("look_picked", { kind, value, supporter: isSupporter() });
+      });
+
+      // Screens and features
+      for (const [name, screenName] of [
+        ["showCalendar", "calendar"],
+        ["showStats", "stats"],
+        ["showHelp", "help"],
+        ["showSupport", "support"],
+      ]) {
+        after(window, name, () => track("screen_viewed", { screen: screenName }));
+      }
+      after(window, "openStory", () => track("story_played"));
+      after(window, "showTour", () => track("tour_opened"));
+      const tourClose = function () {
+        track("tour_closed", { slide: tourStep + 1, finished: tourStep === TOUR.length - 1 && tourSolved });
+      };
+      after(window, "hideTour", tourClose);
+      after(window, "startCoach", () => track("walkthrough_opened"));
+      const coachClose = function (args, result, step) {
+        track("walkthrough_closed", { step: step + 1, finished: step >= COACH.length - 1 });
+      };
+      coachClose.before = () => coachStep;
+      after(window, "endCoach", coachClose);
+
+      // Wild cards
+      after(window, "showWildCard", () => track("wild_card_shown", { set: game?.wild?.set, reason: game?.wild?.reason }));
+      const wildChoice = (choice) =>
+        Object.assign(function (args, result, set) {
+          track("wild_card_choice", { set, choice });
+        }, { before: () => game?.wild?.set });
+      after(window, "declineWild", wildChoice("not_today"));
+      after(window, "heartWild", function ([button]) {
+        track("wild_card_heart", { set: button.dataset.set, on: button.getAttribute("aria-pressed") === "true" });
+      });
+      document.querySelector("#wild-screen .btn-primary").addEventListener("click", () =>
+        track("wild_card_choice", { set: game?.wild?.set, choice: "play" })
+      );
+
+      // Support pack
+      after(window, "buyPack", () => track("pack_buy_tapped"));
+      after(window, "unlockPack", ([via]) => track("pack_unlocked", { via }));
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        document.getElementById("stats-toggle").classList.toggle("active", statsOn);
+        // The app knows the phone's maker, model and app version
+        const info = await window.Capacitor?.Plugins?.Bodai?.deviceInfo?.().catch(() => null);
+        if (info) statsDevice = { device_model: info.model, os_version: info.android, app_version: info.appVersion };
+        track("app_opened", settingsSnapshot());
+        flushStats();
+      });
+      setInterval(flushStats, 30000);
+      document.addEventListener("visibilitychange", () => document.hidden && flushStats(true));
     </script>
   </body>
 </html>
