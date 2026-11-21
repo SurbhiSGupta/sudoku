@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Bodai Sudoku: the app icon's 3x3 tiles, without numbers so it reads at tab size -->
+  <rect width="32" height="32" rx="7" fill="#10303b"/>
+  <g fill="#ffffff">
+    <rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="21" y="4" width="7" height="7" rx="1.6"/>
+    <rect x="4" y="21" width="7" height="7" rx="1.6"/><rect x="21" y="21" width="7" height="7" rx="1.6"/>
+  </g>
+  <g fill="#24485a">
+    <rect x="12.5" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="12.5" width="7" height="7" rx="1.6"/>
+    <rect x="21" y="12.5" width="7" height="7" rx="1.6"/><rect x="12.5" y="21" width="7" height="7" rx="1.6"/>
+  </g>
+  <rect x="12.5" y="12.5" width="7" height="7" rx="1.6" fill="#eeff41"/>
+</svg>
