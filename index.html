@@ -1765,6 +1765,181 @@
         color: var(--bad-ink);
       }
 
+      /* Auto-finish: once only easy squares are left, offer to fill them */
+      .finish-btn {
+        position: absolute;
+        left: 50%;
+        bottom: -56px;
+        z-index: 6;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        padding: 10px 18px;
+        animation: tourPop 0.35s ease-out;
+      }
+
+      .finish-btn[hidden] {
+        display: none;
+      }
+
+      /* Wild card: symbols in place of numbers */
+      .sudoku-grid .cell .sym {
+        width: 104%;
+        height: 104%;
+      }
+
+      .candidates .sym {
+        width: 100%;
+        height: 100%;
+      }
+
+      .pad-face {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        line-height: 1;
+      }
+
+      .pad-face .sym {
+        width: 30px;
+        height: 30px;
+      }
+
+      .pad-face small {
+        margin-top: 2px;
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      .wild-card-face {
+        perspective: 900px;
+      }
+
+      .wild-flip {
+        animation: wildFlip 0.9s cubic-bezier(0.3, 0.8, 0.3, 1) both;
+        transform-style: preserve-3d;
+      }
+
+      @keyframes wildFlip {
+        0% { transform: rotateY(180deg) scale(0.85); }
+        60% { transform: rotateY(-8deg) scale(1.02); }
+        100% { transform: rotateY(0) scale(1); }
+      }
+
+      .wild-kicker {
+        margin: 0;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .wild-set {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin: 14px 0 16px;
+      }
+
+      .wild-set div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        padding: 8px 4px 6px;
+        border-radius: 12px;
+        background: var(--slot);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .wild-set .sym {
+        width: 40px;
+        height: 40px;
+      }
+
+      .wild-reason {
+        margin: 2px 0 0;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .wild-shelf-title {
+        margin: 4px 0 8px;
+        text-align: left;
+        font-size: 15px;
+      }
+
+      .wild-shelf {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+
+      .wild-found {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 10px 6px;
+        border-radius: 12px;
+        background: var(--slot);
+        font-size: 14px;
+      }
+
+      .wild-found small {
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 11px;
+      }
+
+      .wild-found button {
+        margin-top: 4px;
+        padding: 6px 8px;
+        font-size: 12px;
+      }
+
+      .wild-peek {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 34px;
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--muted);
+      }
+
+      .wild-peek .sym {
+        width: 30px;
+        height: 30px;
+        margin: 0 -4px;
+      }
+
+      .wild-found.locked {
+        border: 2px dashed color-mix(in srgb, var(--muted) 50%, transparent);
+        background: none;
+      }
+
+      .wild-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .wild-actions button {
+        flex: 1;
+      }
+
+      .wild-heart {
+        margin: 0 auto 12px;
+        display: block;
+      }
+
+      .wild-heart[aria-pressed="true"] {
+        background: var(--bad);
+        color: var(--bad-ink);
+      }
+
       .number-count {
         position: absolute;
         top: 4px;
@@ -3931,6 +4106,17 @@
         </div>
 
         <div class="toggle-container">
+          <span class="toggle-label">Auto-finish</span>
+          <div
+            class="toggle-switch"
+            id="autofinish-toggle"
+            onclick="toggleAutoFinish()"
+          >
+            <div class="toggle-slider"></div>
+          </div>
+        </div>
+
+        <div class="toggle-container">
           <span class="toggle-label">Animations</span>
           <div
             class="toggle-switch"
@@ -4080,6 +4266,9 @@
           <b>Paused</b>
           <span>Tap to keep playing</span>
         </button>
+        <button class="btn-primary finish-btn" id="finish-btn" onclick="game?.finishForMe()" hidden>
+          ✨ Finish it for me
+        </button>
       </div>
 
       <div class="actions">
@@ -4133,6 +4322,36 @@
       </div>
     </div>
 
+    <!-- Shadow shapes for the Wild card planets -->
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs>
+        <clipPath id="wc8"><circle cx="20" cy="20" r="8" /></clipPath>
+        <clipPath id="wc9"><circle cx="20" cy="20" r="9" /></clipPath>
+        <clipPath id="wc10"><circle cx="20" cy="20" r="10" /></clipPath>
+        <clipPath id="wc11"><circle cx="20" cy="20" r="11" /></clipPath>
+        <clipPath id="wc12"><circle cx="20" cy="20" r="12" /></clipPath>
+        <clipPath id="wc13"><circle cx="20" cy="20" r="13" /></clipPath>
+        <!-- The lower-right half, for a shadow side on any shape -->
+        <clipPath id="wdiag"><path d="M40 0V40H0z" /></clipPath>
+      </defs>
+    </svg>
+
+    <div class="win-screen" id="wild-screen" role="dialog" aria-labelledby="wild-title" hidden>
+      <div class="win-card wild-card-face">
+        <div class="wild-flip" id="wild-flip">
+          <p class="wild-kicker">🃏 Wild card</p>
+          <p class="wild-reason" id="wild-reason"></p>
+          <h2><span class="mark" id="wild-title">Planets!</span></h2>
+          <p class="win-sub">Same puzzle, new symbols. Each one stands for a number.</p>
+          <div class="wild-set" id="wild-set"></div>
+          <div class="wild-actions">
+            <button onclick="declineWild()">Not today</button>
+            <button class="btn-primary" onclick="acceptWild()">Let's play</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="win-screen" id="win-screen" role="dialog" aria-labelledby="win-title" hidden>
       <canvas id="fireworks"></canvas>
       <div class="win-card">
@@ -4143,6 +4362,7 @@
         <h2><span class="mark" id="win-title">You did it!</span></h2>
         <p class="win-sub" id="win-sub">Puzzle solved</p>
         <p class="adapt-note" id="adapt-note" hidden></p>
+        <button class="wild-heart" id="wild-heart" onclick="heartWild(this)" aria-pressed="false" hidden>♡ More like this</button>
         <div class="win-stats" id="win-stats">
           <div class="stat-item">
             <div class="stat-label">Time</div>
@@ -4285,6 +4505,8 @@
         </button>
         <h2><span class="mark" id="stats-title">Your stats</span></h2>
         <div class="level-tiles" id="level-tiles"></div>
+        <h3 class="wild-shelf-title">🃏 Wild cards</h3>
+        <div class="wild-shelf" id="wild-shelf"></div>
         <div class="chart-panel" id="stats-chart"></div>
         <details class="stats-table">
           <summary>Show as a table</summary>
@@ -4514,6 +4736,18 @@
 
       // ---------- Sounds ----------
       // Made on the fly with Web Audio, so they work offline and weigh nothing
+      // Auto-finish: when the only squares left each have one possible number,
+      // offer to fill them in. On unless you switch it off.
+      const AUTOFINISH_KEY = "sudoku-autofinish";
+      let autoFinishOn = readJson(AUTOFINISH_KEY) !== false;
+
+      function toggleAutoFinish() {
+        autoFinishOn = !autoFinishOn;
+        writeJson(AUTOFINISH_KEY, autoFinishOn);
+        document.getElementById("autofinish-toggle").classList.toggle("active", autoFinishOn);
+        game?.updateFinishOffer();
+      }
+
       const SOUND_KEY = "sudoku-sound";
       let soundOn = true;
       try {
@@ -5467,6 +5701,273 @@
           `<option value="adaptive">Adaptive ✨</option>`;
       }
 
+      // ---------- Wild card ----------
+      // Now and then the numbers 1-9 turn into a set of symbols. The puzzle
+      // underneath is exactly the same; only how it looks changes. Planets
+      // are flat with a shadow side, lit from the top left like the Sun.
+      const WILD_KEY = "sudoku-wild";
+      const PLANET_ART = {
+        Mercury: [11, '<circle cx="20" cy="20" r="11" fill="#B4B2A9"/><circle cx="16" cy="17" r="2.5" fill="#888780"/><circle cx="24" cy="24" r="2" fill="#888780"/>'],
+        Venus: [12, '<circle cx="20" cy="20" r="12" fill="#FAC775"/><path d="M10 16c6 2 14-2 20 0M9 23c7 2 15-2 22 0" stroke="#EF9F27" stroke-width="2" fill="none"/>'],
+        Earth: [12, '<circle cx="20" cy="20" r="12" fill="#378ADD"/><path d="M13 13c5 2 4 7 1 10M24 24c3-3 7-1 7 3" stroke="#639922" stroke-width="4" stroke-linecap="round" fill="none"/>'],
+        Mars: [10, '<circle cx="20" cy="20" r="10" fill="#D85A30"/><circle cx="16" cy="18" r="2" fill="#993C1D"/><circle cx="23" cy="24" r="1.5" fill="#993C1D"/>'],
+        Jupiter: [13, '<circle cx="20" cy="20" r="13" fill="#F0997B"/><path d="M8 15h24M7 21h26M9 27h22" stroke="#FAEEDA" stroke-width="2.5"/><ellipse cx="25" cy="24" rx="3" ry="1.8" fill="#D85A30"/>'],
+        Saturn: [9, '<circle cx="20" cy="20" r="9" fill="#EF9F27"/>', '<ellipse cx="20" cy="20" rx="17" ry="5" fill="none" stroke="#BA7517" stroke-width="2.5"/>'],
+        Uranus: [10, '<circle cx="20" cy="20" r="10" fill="#9FE1CB"/><path d="M20 8v24" stroke="#5DCAA5" stroke-width="2"/>'],
+        Neptune: [10, '<circle cx="20" cy="20" r="10" fill="#185FA5"/><path d="M12 17c5 2 11-2 16 0" stroke="#85B7EB" stroke-width="2" fill="none"/>'],
+        Moon: [11, '<circle cx="20" cy="20" r="11" fill="#D3D1C7"/><circle cx="17" cy="16" r="2.5" fill="#B4B2A9"/><circle cx="24" cy="23" r="3" fill="#B4B2A9"/><circle cx="15" cy="25" r="1.5" fill="#B4B2A9"/>'],
+        Pluto: [8, '<circle cx="20" cy="20" r="8" fill="#D3D1C7"/><path d="M22 20c0-2 3-2 3 0 0 2-3 4-3 4s-3-2-3-4c0-2 3-2 3 0z" fill="#FAEEDA"/>'],
+        // The Sun makes the light, so it has no shadow
+        Sun: [0, '<path d="M20 4v5M20 31v5M4 20h5M31 20h5M8.7 8.7l3.5 3.5M27.8 27.8l3.5 3.5M8.7 31.3l3.5-3.5M27.8 12.2l3.5-3.5" stroke="#EF9F27" stroke-width="2.5" stroke-linecap="round"/><circle cx="20" cy="20" r="8.5" fill="#FAC775"/>'],
+      };
+      // The ninth planet takes turns: the Moon, the Sun, then Pluto
+      const PLANET_NINTH = ["Moon", "Sun", "Pluto"];
+
+      function planetSvg(name) {
+        const [r, body, ring = ""] = PLANET_ART[name];
+        const shade = r
+          ? `<g clip-path="url(#wc${r})"><circle cx="${20 + r * 0.55}" cy="${20 + r * 0.45}" r="${r * 1.05}" fill="#000" opacity=".28"/></g>` +
+            `<circle cx="${20 - r * 0.4}" cy="${20 - r * 0.4}" r="${r * 0.22}" fill="#fff" opacity=".35"/>`
+          : "";
+        return `<svg class="sym" viewBox="0 0 40 40" aria-hidden="true">${body}${shade}${ring}</svg>`;
+      }
+
+      // Animal faces, same flat-with-a-shadow look. Frisky leads the pack.
+      // Each: [head circle cx, cy, r] for the shadow, then the drawing.
+      const EYES = (y, a = 16, b = 24, r = 1.4) =>
+        `<circle cx="${a}" cy="${y}" r="${r}" fill="#2C2C2A"/><circle cx="${b}" cy="${y}" r="${r}" fill="#2C2C2A"/>`;
+      const ANIMAL_ART = {
+        Frisky: [20, 21, 11, `<ellipse cx="10" cy="18" rx="4" ry="8" fill="#c9da1e" transform="rotate(18 10 18)"/><ellipse cx="30" cy="18" rx="4" ry="8" fill="#c9da1e" transform="rotate(-18 30 18)"/><circle cx="20" cy="21" r="11" fill="#eeff41"/>${EYES(20)}<ellipse cx="20" cy="25" rx="2.4" ry="1.7" fill="#2C2C2A"/><path d="M20 26.5v1.5" stroke="#2C2C2A" stroke-width="1"/>`],
+        Cat: [20, 21, 11, `<path d="M10 15L12 4L19 11zM30 15L28 4L21 11z" fill="#B4B2A9"/><circle cx="20" cy="21" r="11" fill="#B4B2A9"/><path d="M17 11.5v4M20 10.5v4M23 11.5v4" stroke="#888780" stroke-width="1.5" stroke-linecap="round"/>${EYES(20)}<path d="M19 24h2l-1 1.4z" fill="#D4537E"/><path d="M8 24h6M8 27l6-1.5M32 24h-6M32 27l-6-1.5" stroke="#5F5E5A" stroke-width=".8"/>`],
+        Bunny: [20, 24, 10, `<ellipse cx="15" cy="10" rx="3.4" ry="8.5" fill="#F1EFE8" stroke="#D3D1C7"/><ellipse cx="25" cy="10" rx="3.4" ry="8.5" fill="#F1EFE8" stroke="#D3D1C7"/><ellipse cx="15" cy="10" rx="1.5" ry="5.5" fill="#F4C0D1"/><ellipse cx="25" cy="10" rx="1.5" ry="5.5" fill="#F4C0D1"/><circle cx="20" cy="24" r="10" fill="#F1EFE8" stroke="#D3D1C7"/>${EYES(23, 16.5, 23.5)}<path d="M19 26.5h2l-1 1.3z" fill="#D4537E"/>`],
+        Bear: [20, 21, 11, `<circle cx="11" cy="12" r="4.2" fill="#A8743F"/><circle cx="29" cy="12" r="4.2" fill="#A8743F"/><circle cx="11" cy="12" r="2" fill="#854F0B"/><circle cx="29" cy="12" r="2" fill="#854F0B"/><circle cx="20" cy="21" r="11" fill="#A8743F"/><ellipse cx="20" cy="25.5" rx="5" ry="3.8" fill="#FAC775"/>${EYES(19)}<ellipse cx="20" cy="24" rx="1.9" ry="1.3" fill="#2C2C2A"/>`],
+        Panda: [20, 21, 11, `<circle cx="11" cy="12" r="4.2" fill="#2C2C2A"/><circle cx="29" cy="12" r="4.2" fill="#2C2C2A"/><circle cx="20" cy="21" r="11" fill="#fff" stroke="#D3D1C7"/><ellipse cx="15.5" cy="20" rx="3" ry="3.8" fill="#2C2C2A" transform="rotate(-25 15.5 20)"/><ellipse cx="24.5" cy="20" rx="3" ry="3.8" fill="#2C2C2A" transform="rotate(25 24.5 20)"/><circle cx="16" cy="19.5" r="1" fill="#fff"/><circle cx="24" cy="19.5" r="1" fill="#fff"/><ellipse cx="20" cy="25" rx="1.8" ry="1.2" fill="#2C2C2A"/>`],
+        Fox: [20, 20, 11, `<path d="M9 15L11 3L18 11zM31 15L29 3L22 11z" fill="#D85A30"/><path d="M10.5 9L11 5L13.5 8zM29.5 9L29 5L26.5 8z" fill="#712B13"/><circle cx="20" cy="20" r="11" fill="#D85A30"/><path d="M9 21q6 1 11 7q5-6 11-7q-2 8-11 10q-9-2-11-10z" fill="#FAEEDA"/>${EYES(18, 15.5, 24.5)}<circle cx="20" cy="27.5" r="1.6" fill="#2C2C2A"/>`],
+        Frog: [20, 24, 11, `<circle cx="13" cy="15" r="5" fill="#97C459"/><circle cx="27" cy="15" r="5" fill="#97C459"/><ellipse cx="20" cy="24" rx="13" ry="9" fill="#97C459"/><circle cx="13" cy="15" r="3" fill="#fff"/><circle cx="27" cy="15" r="3" fill="#fff"/>${EYES(15, 13, 27, 1.5)}<path d="M13 26q7 4.5 14 0" stroke="#27500A" stroke-width="1.5" fill="none" stroke-linecap="round"/>`],
+        Owl: [20, 21, 12, `<path d="M9 13L10 4L16 10zM31 13L30 4L24 10z" fill="#7F77DD"/><circle cx="20" cy="21" r="12" fill="#AFA9EC"/><circle cx="15" cy="19" r="4.6" fill="#fff"/><circle cx="25" cy="19" r="4.6" fill="#fff"/>${EYES(19, 15, 25, 2)}<path d="M18.5 23h3l-1.5 3.2z" fill="#EF9F27"/>`],
+        Penguin: [20, 21, 12, `<circle cx="20" cy="21" r="12" fill="#2C2C2A"/><path d="M20 17c-2-3-8-2-8 4 0 6 5 9 8 9s8-3 8-9c0-6-6-7-8-4z" fill="#fff"/>${EYES(21, 16.5, 23.5, 1.3)}<path d="M18 24.5h4l-2 3z" fill="#EF9F27"/>`],
+      };
+
+      function animalSvg(name) {
+        const [cx, cy, r, art] = ANIMAL_ART[name];
+        const id = `wa-${name}`;
+        return (
+          `<svg class="sym" viewBox="0 0 40 40" aria-hidden="true"><defs><clipPath id="${id}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath></defs>${art}` +
+          `<g clip-path="url(#${id})"><circle cx="${cx + r * 0.6}" cy="${cy + r * 0.5}" r="${r * 1.05}" fill="#000" opacity=".16"/></g></svg>`
+        );
+      }
+
+      // Surprise party: desserts. Each: [the body that gets a shadow side, the rest]
+      const DESSERT_ART = {
+        Cupcake: ['<path d="M11 21h18l-3 13H14z" fill="#85B7EB"/><path d="M9 21c0-7 5-11 11-11s11 4 11 11z" fill="#F4C0D1"/>', '<path d="M15 23l1 10M20 23v10M25 23l-1 10" stroke="#378ADD" stroke-width="1.2"/><circle cx="20" cy="8.5" r="2.6" fill="#E24B4A"/>'],
+        Donut: ['<circle cx="20" cy="20" r="13" fill="#EF9F27"/><path d="M8 18c1-7 6-11 12-11s11 4 12 11c-2 3-3 1-5 3s-3-1-6 1-3-1-5 1-5-2-8-5z" fill="#ED93B1"/>', '<circle cx="20" cy="19" r="4" fill="var(--cell-bg, #fff)"/><path d="M13 13l2 1M24 11l1 2M27 16l-2 1M15 19l1-2" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>'],
+        "Ice cream": ['<path d="M13 19h14l-7 17z" fill="#FAC775"/><circle cx="20" cy="15" r="8" fill="#9FE1CB"/>', '<path d="M15 23l8 3M14 21l10 7M17 29l5 2" stroke="#BA7517" stroke-width="1"/><circle cx="20" cy="6.5" r="2.2" fill="#E24B4A"/>'],
+        Cake: ['<path d="M7 26l26-12v18H7z" fill="#FAEEDA"/><path d="M7 26l26-12v5L7 31z" fill="#F0997B"/>', '<path d="M7 26v6M33 14v18" stroke="#D3D1C7" stroke-width="1"/><circle cx="27" cy="12" r="2.6" fill="#E24B4A"/>'],
+        Cookie: ['<circle cx="20" cy="20" r="13" fill="#BA7517"/>', '<circle cx="15" cy="15" r="1.8" fill="#412402"/><circle cx="24" cy="14" r="1.6" fill="#412402"/><circle cx="25" cy="23" r="1.9" fill="#412402"/><circle cx="15" cy="25" r="1.6" fill="#412402"/><circle cx="20" cy="20" r="1.3" fill="#412402"/>'],
+        Lollipop: ['<circle cx="20" cy="15" r="10" fill="#D4537E"/>', '<path d="M20 25v12" stroke="#B4B2A9" stroke-width="2.4" stroke-linecap="round"/><path d="M20 15m-6 0a6 6 0 1 1 6 6a3.5 3.5 0 1 1 3.5-3.5" stroke="#FBEAF0" stroke-width="2" fill="none"/>'],
+        Popsicle: ['<path d="M12 12a8 8 0 0 1 16 0v15H12z" fill="#7F77DD"/>', '<path d="M12 18h16" stroke="#CECBF6" stroke-width="2"/><rect x="18" y="27" width="4" height="9" rx="2" fill="#FAC775"/>'],
+        Macaron: ['<ellipse cx="20" cy="15" rx="12" ry="6" fill="#97C459"/><ellipse cx="20" cy="26" rx="12" ry="6" fill="#97C459"/>', '<rect x="9" y="18.5" width="22" height="3.5" rx="1.7" fill="#FAEEDA"/>'],
+        Candy: ['<ellipse cx="20" cy="20" rx="8" ry="7" fill="#378ADD"/>', '<path d="M12 20l-7-5v10zM28 20l7-5v10z" fill="#85B7EB"/><path d="M16 15l3 10M21 14l3 10" stroke="#B5D4F4" stroke-width="1.6"/>'],
+      };
+
+      function dessertSvg(name) {
+        const [body, rest] = DESSERT_ART[name];
+        return `<svg class="sym" viewBox="0 0 40 40" aria-hidden="true">${body}<g clip-path="url(#wdiag)" opacity=".14">${body.replace(/fill="[^"]+"/g, 'fill="#000"')}</g>${rest}</svg>`;
+      }
+
+      // Colors, each with its number pressed in, so color isn't the only clue
+      const COLOR_ART = {
+        Red: ["#E24B4A", "#A32D2D"], Orange: ["#EF9F27", "#854F0B"], Yellow: ["#FAC775", "#854F0B"],
+        Green: ["#639922", "#27500A"], Teal: ["#1D9E75", "#085041"], Blue: ["#378ADD", "#0C447C"],
+        Purple: ["#7F77DD", "#3C3489"], Pink: ["#ED93B1", "#993556"], Brown: ["#A8743F", "#633806"],
+      };
+      const COLOR_ORDER = Object.keys(COLOR_ART);
+
+      function colorSvg(name) {
+        const [base, deep] = COLOR_ART[name];
+        const n = COLOR_ORDER.indexOf(name) + 1;
+        return (
+          `<svg class="sym" viewBox="0 0 40 40" aria-hidden="true"><rect x="5" y="6" width="30" height="30" rx="8" fill="${deep}"/>` +
+          `<rect x="5" y="4" width="30" height="29" rx="8" fill="${base}"/><rect x="9" y="7" width="12" height="3" rx="1.5" fill="#fff" opacity=".35"/>` +
+          `<text x="20" y="25.5" text-anchor="middle" font-size="17" font-weight="800" fill="${deep}" opacity=".75">${n}</text></svg>`
+        );
+      }
+
+      // Patterns: ink only, so they need no color at all. They take the
+      // square's own text color, so they show on any square.
+      const PATTERN_ART = {
+        Stripes: '<path d="M7 13h26M7 20h26M7 27h26" stroke="currentColor" stroke-width="3"/>',
+        Dots: '<g fill="currentColor"><circle cx="13" cy="13" r="2.4"/><circle cx="27" cy="13" r="2.4"/><circle cx="20" cy="20" r="2.4"/><circle cx="13" cy="27" r="2.4"/><circle cx="27" cy="27" r="2.4"/></g>',
+        Checks: '<path fill="currentColor" d="M7 7h9v9H7zM24 7h9v9h-9zM16 16h8v8h-8zM7 24h9v9H7zM24 24h9v9h-9z"/>',
+        Zigzag: '<path d="M6 15l5-5 5 5 5-5 5 5 5-5 4 4M6 27l5-5 5 5 5-5 5 5 5-5 4 4" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linejoin="round"/>',
+        Waves: '<path d="M5 15q4-5 8 0t8 0 8 0 8 0M5 26q4-5 8 0t8 0 8 0 8 0" stroke="currentColor" stroke-width="2.6" fill="none"/>',
+        Grid: '<path d="M14 6v28M26 6v28M6 14h28M6 26h28" stroke="currentColor" stroke-width="2"/>',
+        Slants: '<path d="M0 13L13 0M0 22L22 0M0 31L31 0M3 37L37 3M12 40L40 12M21 40L40 21" stroke="currentColor" stroke-width="2.4"/>',
+        Rings: '<g fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="20" cy="20" r="4"/><circle cx="20" cy="20" r="10"/></g>',
+        Stars: '<path fill="currentColor" d="M20 8l3.2 7.3 7.8.7-5.9 5.2 1.8 7.8L20 25l-6.9 4 1.8-7.8L9 16l7.8-.7z"/>',
+      };
+
+      function patternSvg(name) {
+        return `<svg class="sym" viewBox="0 0 40 40" aria-hidden="true"><g clip-path="url(#wc13)">${PATTERN_ART[name]}</g><circle cx="20" cy="20" r="13" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>`;
+      }
+
+      const WILD_SETS = {
+        planets: {
+          title: "Planets!",
+          names: (ninth) => ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", ninth || "Moon"],
+          svg: planetSvg,
+        },
+        animals: {
+          title: "Animals!",
+          names: () => ["Frisky", "Cat", "Bunny", "Bear", "Panda", "Fox", "Frog", "Owl", "Penguin"],
+          svg: animalSvg,
+        },
+        party: {
+          title: "Surprise party!",
+          names: () => Object.keys(DESSERT_ART),
+          svg: dessertSvg,
+        },
+        colors: {
+          title: "Colors!",
+          names: () => COLOR_ORDER,
+          svg: colorSvg,
+        },
+        patterns: {
+          title: "Patterns!",
+          names: () => Object.keys(PATTERN_ART),
+          svg: patternSvg,
+        },
+      };
+
+      function wildState() {
+        return {
+          games: 0,
+          todayGames: 0,
+          day: null,
+          round: [],
+          played: {},
+          hearts: {},
+          declined: {},
+          force: null,
+          ...(readJson(WILD_KEY) || {}),
+        };
+      }
+
+      // The symbol and name standing in for a number in the current game
+      function wildSymbol(wild, num) {
+        const set = WILD_SETS[wild?.set];
+        if (!set) return null;
+        const name = set.names(wild.ninth)[num - 1];
+        return { name, svg: set.svg(name) };
+      }
+
+      // When a Wild card turns up, and why (shown on the card). Today's
+      // puzzle never gets one unless you choose a set yourself.
+      function isPrime(n) {
+        if (n < 2) return false;
+        for (let d = 2; d * d <= n; d++) if (n % d === 0) return false;
+        return true;
+      }
+
+      function wildReason(state) {
+        const n = state.games;
+        if (n % 100 === 0) return `Your ${n}th game! 🎉`;
+        if (state.todayGames === 10) return "10 games today! 🔥";
+        // Primes from 11 up, so the first few games stay plain
+        if (n >= 11 && isPrime(n)) return `Game ${n}: a prime number!`;
+        if (Math.random() < 1 / 20) return "Surprise!";
+        return null;
+      }
+
+      // Every set once before any repeats; sets you've hearted twice as
+      // likely, ones you've turned down less likely
+      function chooseSet(state) {
+        const all = Object.keys(WILD_SETS);
+        let pool = all.filter((id) => !state.round.includes(id));
+        if (!pool.length) {
+          state.round = [];
+          pool = all;
+        }
+        const weight = (id) => (state.hearts[id] ? 2 : 1) / (1 + (state.declined[id] || 0) * 0.5);
+        let pick = Math.random() * pool.reduce((sum, id) => sum + weight(id), 0);
+        const id = pool.find((x) => (pick -= weight(x)) <= 0) || pool[0];
+        state.round.push(id);
+        return id;
+      }
+
+      function startWild(state, set, reason) {
+        const ninth = PLANET_NINTH[(state.played[set] || 0) % PLANET_NINTH.length];
+        state.played[set] = (state.played[set] || 0) + 1;
+        return { set, ninth, reason };
+      }
+
+      // Counts each new regular game, then decides whether it's a Wild card
+      function pickWild() {
+        const state = wildState();
+        const today = dayKey();
+        state.games++;
+        state.todayGames = state.day === today ? state.todayGames + 1 : 1;
+        state.day = today;
+        let wild = null;
+        if (state.force) {
+          wild = startWild(state, state.force, "Your pick from the collection");
+          state.force = null;
+        } else {
+          const reason = new URLSearchParams(location.search).has("wild") ? "Trying it out" : wildReason(state);
+          if (reason) wild = startWild(state, chooseSet(state), reason);
+        }
+        writeJson(WILD_KEY, state);
+        return wild;
+      }
+
+      function showWildCard() {
+        const wild = game?.wild;
+        if (!wild) return;
+        game.stopTimer();
+        // The "Good luck" note would sit over the card
+        clearTimeout(game.messageTimeout);
+        document.getElementById("message").style.display = "none";
+        document.getElementById("wild-title").textContent = WILD_SETS[wild.set].title;
+        document.getElementById("wild-reason").textContent = wild.reason || "";
+        document.getElementById("wild-set").innerHTML = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+          .map((n) => {
+            const sym = wildSymbol(wild, n);
+            return `<div>${sym.svg}${sym.name}</div>`;
+          })
+          .join("");
+        const flip = document.getElementById("wild-flip");
+        flip.style.animation = "none";
+        void flip.offsetWidth;
+        flip.style.animation = "";
+        document.getElementById("wild-screen").hidden = false;
+      }
+
+      function acceptWild() {
+        document.getElementById("wild-screen").hidden = true;
+        game?.resume();
+      }
+
+      // Plain numbers for this game; we remember, so it comes up less
+      function declineWild() {
+        const state = wildState();
+        state.declined[game.wild.set] = (state.declined[game.wild.set] || 0) + 1;
+        writeJson(WILD_KEY, state);
+        game.wild = null;
+        game.renderPad();
+        game.updateDisplay();
+        game.saveGame();
+        acceptWild();
+      }
+
+      function heartWild(button) {
+        const set = button.dataset.set;
+        const state = wildState();
+        state.hearts[set] = !state.hearts[set];
+        writeJson(WILD_KEY, state);
+        button.setAttribute("aria-pressed", String(!!state.hearts[set]));
+        button.textContent = state.hearts[set] ? "♥ More like this" : "♡ More like this";
+      }
+
       // ---------- Your level, and Adaptive ----------
       // Whatever level you pick is the one your next game starts on. Adaptive
       // starts at Fetch and moves in small steps after each game: a clean,
@@ -5564,6 +6065,14 @@
 
       function showWinScreen({ seconds, difficulty, isNewBest, celebrate, mistakes, daily = null, adaptNote = null }) {
         showAdaptNote(adaptNote);
+        const heart = document.getElementById("wild-heart");
+        heart.hidden = !game?.wild;
+        if (game?.wild) {
+          const loved = !!wildState().hearts[game.wild.set];
+          heart.dataset.set = game.wild.set;
+          heart.setAttribute("aria-pressed", String(loved));
+          heart.textContent = loved ? "♥ More like this" : "♡ More like this";
+        }
         const level = levelName(difficulty);
         const best = loadBestTimes()[difficulty];
         const today = dayKey();
@@ -5619,6 +6128,7 @@
 
       function showGameOverScreen({ difficulty, limit, adaptNote = null }) {
         showAdaptNote(adaptNote);
+        document.getElementById("wild-heart").hidden = true;
         const level = levelName(difficulty);
         document.getElementById("win-title").textContent = "Out of mistakes";
         document.getElementById("win-sub").textContent =
@@ -7085,6 +7595,7 @@
         { settings: true, at: () => settingRow("candidates-toggle"), text: "Show Candidates pencils in every number that could still fit in each square." },
         { settings: true, at: () => settingRow("number-first-toggle"), text: "Number First: pick a number, then tap every square it goes in. Fast for filling one number." },
         { settings: true, at: () => settingRow("number-first-toggle"), text: "In Number First, double-tap a square, or drag across several, to add or remove that number as a note." },
+        { settings: true, at: () => settingRow("autofinish-toggle"), text: "Auto-finish: when only easy squares are left, a button can fill them in for you." },
         { settings: true, at: () => document.querySelector("[data-theme-choice]")?.closest(".toggle-container"), text: "Try this! Light, dark, or follow your phone." },
         { settings: true, at: () => settingRow("focus-toggle"), text: "Focus Mode hides everything but the board and the numbers." },
         { settings: true, at: () => document.getElementById("mistakes-label")?.closest(".toggle-container, .setting-stack, div"), text: "Choose how many mistakes you get, or hide them." },
@@ -7517,7 +8028,42 @@
         return days;
       }
 
+      // Sets you've found, to play again any time; the rest wait as mystery cards
+      const WILD_COMING = 2;
+
+      function renderWildShelf() {
+        const state = wildState();
+        const found = Object.keys(WILD_SETS).filter((id) => state.played[id]);
+        const cards = found.map((id) => {
+          const set = WILD_SETS[id];
+          const preview = set.names().slice(0, 3).map((name) => set.svg(name)).join("");
+          return `<div class="wild-found">
+            <div class="wild-peek">${preview}</div>
+            <b>${set.title.replace("!", "")}${state.hearts[id] ? " ♥" : ""}</b>
+            <small>Played ${state.played[id]} time${state.played[id] === 1 ? "" : "s"}</small>
+            <button onclick="playWildSet('${id}')">Play with these</button>
+          </div>`;
+        });
+        const locked = WILD_COMING + Object.keys(WILD_SETS).length - found.length;
+        for (let i = 0; i < locked; i++) {
+          cards.push(`<div class="wild-found locked" aria-label="Not found yet"><div class="wild-peek">?</div><small>Not found yet</small></div>`);
+        }
+        document.getElementById("wild-shelf").innerHTML = cards.join("");
+      }
+
+      // Starts a regular game with a set you've found
+      function playWildSet(id) {
+        const state = wildState();
+        state.force = id;
+        writeJson(WILD_KEY, state);
+        hideStats();
+        hideHome();
+        const choice = savedLevel() || "easy";
+        game?.generatePuzzle(choice);
+      }
+
       function showStats() {
+        renderWildShelf();
         const history = loadHistory();
         const best = loadBestTimes();
 
@@ -7648,6 +8194,7 @@
                 dailyDate: this.dailyDate,
                 adaptive: !!this.adaptive,
                 hintsUsed: this.hintsUsed || 0,
+                wild: this.wild || null,
               })
             );
           } catch (e) {
@@ -7685,7 +8232,9 @@
             isPaused: !!saved.isPaused,
             adaptive: !!saved.adaptive && this.mode === "regular",
             hintsUsed: saved.hintsUsed || 0,
+            wild: saved.wild && WILD_SETS[saved.wild.set] ? saved.wild : null,
           });
+          this.renderPad();
           this.setDifficulty(saved.difficulty);
 
           // Mark already-finished rows/columns/boxes so they don't flash on load
@@ -7866,6 +8415,7 @@
           if (this.adaptive) ({ level: difficulty, blanks: blanksWanted } = adaptivePuzzle());
           this.hintsUsed = 0;
           this.adaptNote = null;
+          this.wild = !date && difficulty !== "test" ? pickWild() : null;
           // Leaving the daily for a regular game: it stays saved in its slot
           if (this.mode === "daily" && !date) this.saveGame();
           this.mode = date ? "daily" : "regular";
@@ -7901,7 +8451,9 @@
 
           this.emptyCellCount = removed;
           this.rng = Math.random;
+          this.renderPad();
           this.startFresh();
+          if (this.wild) setTimeout(showWildCard, 300);
           const tip = homeOpen() ? null : nextTip();
           this.showMessage(
             tip || (date ? "☀ Today's puzzle. Good luck!" : "New puzzle generated! Good luck!"),
@@ -8400,6 +8952,48 @@
           this.saveGame();
         }
 
+        // The offer shows when 3 to 15 squares are left, everything on the
+        // board so far is right, and each remaining square can be filled just
+        // by spotting the one number that fits
+        updateFinishOffer() {
+          const button = document.getElementById("finish-btn");
+          let show = false;
+          if (autoFinishOn && !this.isFinished && !this.isPaused && !this.finishing) {
+            const empty = this.grid.flat().filter((v) => !v).length;
+            const allRight = this.grid.every((row, r) => row.every((v, c) => !v || v === this.solution[r][c]));
+            show = empty >= 3 && empty <= 15 && allRight && gradePuzzle(this.grid, 0) === 0;
+          }
+          button.hidden = !show;
+        }
+
+        // Fills the easy squares one by one with a little pop, then wins
+        finishForMe() {
+          if (this.isFinished || this.finishing) return;
+          this.finishing = true;
+          this.stopTimer();
+          document.getElementById("finish-btn").hidden = true;
+          const left = [];
+          this.grid.forEach((row, r) => row.forEach((v, c) => v || left.push([r, c])));
+          const step = () => {
+            const next = left.shift();
+            if (!next) {
+              this.finishing = false;
+              this.saveGame();
+              this.completePuzzle();
+              return;
+            }
+            const [r, c] = next;
+            this.grid[r][c] = this.solution[r][c];
+            this.notes[r][c] = [];
+            this.popIndex = r * 9 + c;
+            this.updateDisplay();
+            this.updateProgress();
+            haptic("tap");
+            setTimeout(step, motionOff() ? 0 : 90);
+          };
+          step();
+        }
+
         selectNumberForPlacement(num, keepSelected = false) {
           if (this.selectedNumber === num && !keepSelected) {
             this.selectedNumber = null;
@@ -8547,8 +9141,10 @@
                   for (let num = 1; num <= 9; num++) {
                     const candidateDiv = document.createElement("div");
                     candidateDiv.className = "candidate-number";
-                    if (candidates.includes(num))
-                      candidateDiv.textContent = num;
+                    if (candidates.includes(num)) {
+                      if (this.wild) candidateDiv.innerHTML = wildSymbol(this.wild, num).svg;
+                      else candidateDiv.textContent = num;
+                    }
                     candidateContainer.appendChild(candidateDiv);
                   }
                   cell.appendChild(candidateContainer);
@@ -8557,6 +9153,8 @@
                   }
                 }
               }
+            } else if (this.wild) {
+              cell.innerHTML = wildSymbol(this.wild, value).svg;
             } else {
               cell.textContent = value;
             }
@@ -8564,7 +9162,9 @@
             cell.setAttribute(
               "aria-label",
               `Row ${row + 1}, column ${col + 1}, ${
-                value ? (this.givens[row][col] ? `${value}, given` : value) : "empty"
+                value
+                  ? `${this.wild ? wildSymbol(this.wild, value).name : value}${this.givens[row][col] ? ", given" : ""}`
+                  : "empty"
               }`
             );
 
@@ -8610,6 +9210,7 @@
           this.checkConflicts();
           this.updateNumberPad();
           this.checkCompletions();
+          this.updateFinishOffer();
         }
 
         getCandidates(row, col) {
@@ -8639,6 +9240,24 @@
                 cell.setAttribute("aria-label", `${cell.getAttribute("aria-label")}, wrong`);
               }
             }
+          }
+        }
+
+        // The number keys show the digit, or the symbol and its name
+        renderPad() {
+          for (let num = 1; num <= 9; num++) {
+            const button = document.getElementById(`num-btn-${num}`);
+            if (!button) continue;
+            let face = button.querySelector(".pad-face");
+            if (!face) {
+              face = document.createElement("span");
+              face.className = "pad-face";
+              button.firstChild.remove();
+              button.prepend(face);
+            }
+            const sym = this.wild && wildSymbol(this.wild, num);
+            face.innerHTML = sym ? `${sym.svg}<small>${sym.name}</small>` : String(num);
+            button.setAttribute("aria-label", sym ? sym.name : String(num));
           }
         }
 
@@ -8952,7 +9571,7 @@
           const correctNumber = this.solution[row][col];
           this.selectedCell = { row, col, index: row * 9 + col };
           this.showMessage(
-            `Hint: ${correctNumber} goes at row ${row + 1}, column ${col + 1}`,
+            `Hint: ${this.wild ? wildSymbol(this.wild, correctNumber).name : correctNumber} goes at row ${row + 1}, column ${col + 1}`,
             "success"
           );
           this.placeNumber(row, col, correctNumber);
@@ -9160,6 +9779,7 @@
           resizeWait = setTimeout(fitShortWindow, 200);
         });
         document.getElementById("sound-toggle").classList.toggle("active", soundOn);
+        document.getElementById("autofinish-toggle").classList.toggle("active", autoFinishOn);
         document.getElementById("reminder-row").hidden = !isNativeApp;
         saveReminder(loadReminder());
         startBuddies();
@@ -9183,6 +9803,7 @@
         // Android's Back: close what's open, then go home, then leave
         App?.addListener("backButton", () => {
           if (!document.getElementById("coach").hidden) return endCoach();
+          if (!document.getElementById("wild-screen").hidden) return acceptWild();
           const dialog = ["tour-screen", "help-screen", "calendar-screen", "stats-screen", "support-screen"].find(
             (id) => !document.getElementById(id).hidden
           );
@@ -9222,6 +9843,10 @@
       document.addEventListener("keydown", (e) => {
         if (!document.getElementById("support-screen").hidden) {
           if (e.key === "Escape") hideSupport();
+          return;
+        }
+        if (!document.getElementById("wild-screen").hidden) {
+          if (e.key === "Escape" || e.key === "Enter") acceptWild();
           return;
         }
         if (!document.getElementById("coach").hidden) {
