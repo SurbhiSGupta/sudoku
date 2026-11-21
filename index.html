@@ -8,6 +8,11 @@
     />
     <meta name="theme-color" content="#f6f4ec" />
     <title>Bodai Sudoku</title>
+    <!-- Tab and home-screen icons for the website (the app has its own) -->
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <script>
       // Apply the saved theme before the page paints, so there's no flash
       try {
@@ -3092,9 +3097,11 @@
         margin: 0;
       }
 
+      /* minmax(0, 1fr) lets the seven columns shrink to fit narrow phones;
+         a plain 1fr can't go below its content's width */
       .cal-grid {
         display: grid;
-        grid-template-columns: repeat(7, 1fr);
+        grid-template-columns: repeat(7, minmax(0, 1fr));
         gap: 4px;
       }
 
@@ -3106,6 +3113,7 @@
       }
 
       .cal-day {
+        min-width: 0;
         aspect-ratio: 1 / 1.15;
         padding: 5px 2px 6px;
         border-radius: 10px;
@@ -3139,7 +3147,7 @@
 
       /* Each solved day grows a little picture: closer to your best time, the
          further along it is. Stages differ by shape, not just color. */
-      .stage {
+      .cal-stage {
         width: 70%;
         max-width: 28px;
         aspect-ratio: 1;
@@ -3150,15 +3158,15 @@
         stroke-linejoin: round;
       }
 
-      .stage .lf { fill: #7ccf5a; }
-      .stage .wood { fill: #a8743f; }
-      .stage .fruit { fill: #ff6b4a; }
-      .stage .egg { fill: #fff6dc; }
-      .stage .bug { fill: #c4e65a; }
-      .stage .coc { fill: #e2c98f; }
-      .stage .wing { fill: #ffb547; }
+      .cal-stage .lf { fill: #7ccf5a; }
+      .cal-stage .wood { fill: #a8743f; }
+      .cal-stage .fruit { fill: #ff6b4a; }
+      .cal-stage .egg { fill: #fff6dc; }
+      .cal-stage .bug { fill: #c4e65a; }
+      .cal-stage .coc { fill: #e2c98f; }
+      .cal-stage .wing { fill: #ffb547; }
 
-      .cal-day.missed .stage {
+      .cal-day.missed .cal-stage {
         opacity: 0.35;
       }
 
@@ -3170,7 +3178,7 @@
         margin-top: 12px;
       }
 
-      .cal-legend .stage {
+      .cal-legend .cal-stage {
         width: 30px;
         max-width: none;
       }
@@ -7819,7 +7827,7 @@
 
       function stageIcon(month, stage, label) {
         const art = LIFECYCLES[month % LIFECYCLES.length].art[stage];
-        return `<svg class="stage" viewBox="0 0 24 24" ${label ? `role="img" aria-label="${label}"` : 'aria-hidden="true"'}>${art}</svg>`;
+        return `<svg class="cal-stage" viewBox="0 0 24 24" ${label ? `role="img" aria-label="${label}"` : 'aria-hidden="true"'}>${art}</svg>`;
       }
 
       function renderCalendar() {
