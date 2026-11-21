@@ -1765,6 +1765,22 @@
         color: var(--bad-ink);
       }
 
+      /* Auto-finish: once only easy squares are left, offer to fill them */
+      .finish-btn {
+        position: absolute;
+        left: 50%;
+        bottom: -56px;
+        z-index: 6;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        padding: 10px 18px;
+        animation: tourPop 0.35s ease-out;
+      }
+
+      .finish-btn[hidden] {
+        display: none;
+      }
+
       /* Wild card: symbols in place of numbers */
       .sudoku-grid .cell .sym {
         width: 104%;
@@ -4027,6 +4043,17 @@
         </div>
 
         <div class="toggle-container">
+          <span class="toggle-label">Auto-finish</span>
+          <div
+            class="toggle-switch"
+            id="autofinish-toggle"
+            onclick="toggleAutoFinish()"
+          >
+            <div class="toggle-slider"></div>
+          </div>
+        </div>
+
+        <div class="toggle-container">
           <span class="toggle-label">Animations</span>
           <div
             class="toggle-switch"
@@ -4175,6 +4202,9 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
           <b>Paused</b>
           <span>Tap to keep playing</span>
+        </button>
+        <button class="btn-primary finish-btn" id="finish-btn" onclick="game?.finishForMe()" hidden>
+          ✨ Finish it for me
         </button>
       </div>
 
@@ -4638,6 +4668,18 @@
 
       // ---------- Sounds ----------
       // Made on the fly with Web Audio, so they work offline and weigh nothing
+      // Auto-finish: when the only squares left each have one possible number,
+      // offer to fill them in. On unless you switch it off.
+      const AUTOFINISH_KEY = "sudoku-autofinish";
+      let autoFinishOn = readJson(AUTOFINISH_KEY) !== false;
+
+      function toggleAutoFinish() {
+        autoFinishOn = !autoFinishOn;
+        writeJson(AUTOFINISH_KEY, autoFinishOn);
+        document.getElementById("autofinish-toggle").classList.toggle("active", autoFinishOn);
+        game?.updateFinishOffer();
+      }
+
       const SOUND_KEY = "sudoku-sound";
       let soundOn = true;
       try {
@@ -7328,6 +7370,7 @@
         { settings: true, at: () => settingRow("candidates-toggle"), text: "Show Candidates pencils in every number that could still fit in each square." },
         { settings: true, at: () => settingRow("number-first-toggle"), text: "Number First: pick a number, then tap every square it goes in. Fast for filling one number." },
         { settings: true, at: () => settingRow("number-first-toggle"), text: "In Number First, double-tap a square, or drag across several, to add or remove that number as a note." },
+        { settings: true, at: () => settingRow("autofinish-toggle"), text: "Auto-finish: when only easy squares are left, a button can fill them in for you." },
         { settings: true, at: () => document.querySelector("[data-theme-choice]")?.closest(".toggle-container"), text: "Try this! Light, dark, or follow your phone." },
         { settings: true, at: () => settingRow("focus-toggle"), text: "Focus Mode hides everything but the board and the numbers." },
         { settings: true, at: () => document.getElementById("mistakes-label")?.closest(".toggle-container, .setting-stack, div"), text: "Choose how many mistakes you get, or hide them." },
@@ -8649,6 +8692,48 @@
           this.saveGame();
         }
 
+        // The offer shows when 3 to 15 squares are left, everything on the
+        // board so far is right, and each remaining square can be filled just
+        // by spotting the one number that fits
+        updateFinishOffer() {
+          const button = document.getElementById("finish-btn");
+          let show = false;
+          if (autoFinishOn && !this.isFinished && !this.isPaused && !this.finishing) {
+            const empty = this.grid.flat().filter((v) => !v).length;
+            const allRight = this.grid.every((row, r) => row.every((v, c) => !v || v === this.solution[r][c]));
+            show = empty >= 3 && empty <= 15 && allRight && gradePuzzle(this.grid, 0) === 0;
+          }
+          button.hidden = !show;
+        }
+
+        // Fills the easy squares one by one with a little pop, then wins
+        finishForMe() {
+          if (this.isFinished || this.finishing) return;
+          this.finishing = true;
+          this.stopTimer();
+          document.getElementById("finish-btn").hidden = true;
+          const left = [];
+          this.grid.forEach((row, r) => row.forEach((v, c) => v || left.push([r, c])));
+          const step = () => {
+            const next = left.shift();
+            if (!next) {
+              this.finishing = false;
+              this.saveGame();
+              this.completePuzzle();
+              return;
+            }
+            const [r, c] = next;
+            this.grid[r][c] = this.solution[r][c];
+            this.notes[r][c] = [];
+            this.popIndex = r * 9 + c;
+            this.updateDisplay();
+            this.updateProgress();
+            haptic("tap");
+            setTimeout(step, motionOff() ? 0 : 90);
+          };
+          step();
+        }
+
         selectNumberForPlacement(num, keepSelected = false) {
           if (this.selectedNumber === num && !keepSelected) {
             this.selectedNumber = null;
@@ -8865,6 +8950,7 @@
           this.checkConflicts();
           this.updateNumberPad();
           this.checkCompletions();
+          this.updateFinishOffer();
         }
 
         getCandidates(row, col) {
@@ -9433,6 +9519,7 @@
           resizeWait = setTimeout(fitShortWindow, 200);
         });
         document.getElementById("sound-toggle").classList.toggle("active", soundOn);
+        document.getElementById("autofinish-toggle").classList.toggle("active", autoFinishOn);
         document.getElementById("reminder-row").hidden = !isNativeApp;
         saveReminder(loadReminder());
         startBuddies();
