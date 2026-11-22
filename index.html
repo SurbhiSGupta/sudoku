@@ -6140,15 +6140,23 @@
         return readJson(CHALLENGE_KEY);
       }
 
-      // A challenge link: remember it, tidy the address, and open that puzzle
-      function takeChallengeFromLink() {
-        const params = new URLSearchParams(location.search);
+      // A challenge link: remember it, tidy the address, and open that puzzle.
+      // In the app, the link arrives from Android instead of the address bar.
+      function takeChallengeFromLink(link = location.href) {
+        let params;
+        try {
+          params = new URL(link).searchParams;
+        } catch (e) {
+          return false;
+        }
         const date = params.get("d");
         const seconds = Number(params.get("t"));
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "") || !(seconds > 0) || date > dayKey()) return false;
         const name = (params.get("n") || "").slice(0, 20).trim();
-        writeJson(CHALLENGE_KEY, { date, seconds, name });
-        history.replaceState(null, "", location.pathname);
+        // "until": if the app restarts right away (first launch restores a
+        // backup), it still opens the puzzle
+        writeJson(CHALLENGE_KEY, { date, seconds, name, until: Date.now() + 60000 });
+        if (location.search) history.replaceState(null, "", location.pathname);
         track("challenge_opened", { date, seconds });
         const mine = loadDaily()[date];
         if (mine) {
@@ -10072,8 +10080,20 @@
         scheduleReminders();
         saveBackup();
         syncWidget();
-        // Opened from a friend's "beat my time" link
-        takeChallengeFromLink();
+        // Opened from a friend's "beat my time" link: on the web it's in the
+        // address; in the app, Android hands it over at launch or later
+        if (!takeChallengeFromLink()) {
+          const pending = loadChallenge();
+          if (pending?.until > Date.now() && !loadDaily()[pending.date]) {
+            writeJson(CHALLENGE_KEY, { ...pending, until: 0 });
+            playDaily(pending.date);
+          }
+        }
+        if (isNativeApp) {
+          const AppPlugin = window.Capacitor?.Plugins?.App;
+          AppPlugin?.getLaunchUrl?.().then((r) => r?.url && takeChallengeFromLink(r.url), () => {});
+          AppPlugin?.addListener?.("appUrlOpen", (event) => takeChallengeFromLink(event.url));
+        }
         // Tapping the home-screen widget opens today's puzzle
         const bodai = isNativeApp ? window.Capacitor?.Plugins?.Bodai : null;
         bodai?.launchAction().then((r) => r.openDaily && playDaily(), () => {});
