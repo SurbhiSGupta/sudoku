@@ -19,6 +19,15 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- Links to the website (like a friend's "beat my time" challenge)
+                 open here; .well-known/assetlinks.json on the site proves it's ours -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="sudoku.bodaijewels.com" android:path="/" />
+            </intent-filter>
         </activity>
 
         <!-- Home-screen widget with today's puzzle (DailyWidget.java) -->

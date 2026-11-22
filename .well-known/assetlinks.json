@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.bodaijewels.sudoku",
+      "sha256_cert_fingerprints": [
+        "86:83:B0:D2:C3:81:DB:81:21:7C:35:1D:46:72:C3:25:3C:E4:74:0A:69:2A:4A:6F:65:F7:61:21:AB:2F:EF:30",
+        "4E:76:6B:8F:80:9E:0C:60:1B:3D:43:2A:E6:E8:F4:86:37:90:FF:3C:7A:A3:1D:7B:74:BC:0D:11:07:1B:2F:F3"
+      ]
+    }
+  }
+]
