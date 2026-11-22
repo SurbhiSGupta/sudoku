@@ -1,0 +1,9 @@
+# Cloudflare Worker for Bodai games (free tier). Deploy: npx wrangler deploy
+name = "bodai-api"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "bodai"
+database_id = "e9d2354c-af7c-4fde-89df-a50deee957e7"
